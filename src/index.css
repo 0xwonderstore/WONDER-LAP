@@ -3,35 +3,9 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    direction: rtl;
+  body {
+    @apply bg-light-background text-light-text-primary;
+    @apply dark:bg-dark-background dark:text-dark-text-primary;
+    @apply transition-colors duration-300;
   }
-}
-
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.dark {
-  color-scheme: dark;
-}
-
-/* Custom animations */
-@keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
-}
-
-.hover-float:hover {
-  animation: float 3s ease-in-out infinite;
 }

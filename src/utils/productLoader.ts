@@ -1,25 +1,46 @@
 import { Product } from '../types';
 
-export async function loadProducts(): Promise<Product[]> {
-  const productFiles = [
-    '/src/data/products_1.json',
-    '/src/data/products_2.json',
-    '/src/data/products_3.json',
-    '/src/data/products_4.json',
-    '/src/data/products_5.json',
-    '/src/data/products_6.json',
+const normalizeTitle = (title: string): string => {
+  if (!title) return '';
+  return title.toLowerCase().replace(/\s+/g, ' ').trim();
+};
 
-  ];
+export async function loadProducts(): Promise<Product[]> {
+  const productModules = import.meta.glob('../data/products_*.json', { eager: true, import: 'default' });
+
   try {
-    const products: Product[] = [];
-    
-    for (const file of productFiles) {
-      const response = await fetch(file);
-      const data = await response.json();
-      products.push(...data.products);
+    const uniqueProducts = new Map<string, Product>();
+    const processedCompositeKeys = new Set<string>();
+
+    for (const path in productModules) {
+      const fileContent: any = productModules[path];
+      
+      if (fileContent && Array.isArray(fileContent.products)) {
+        for (const product of fileContent.products) {
+          if (!product.url || !product.title || !product.vendor) {
+            continue;
+          }
+
+          if (uniqueProducts.has(product.url)) {
+            continue;
+          }
+
+          const normalizedTitle = normalizeTitle(product.title);
+          const compositeKey = `${product.vendor}||${normalizedTitle}`;
+
+          if (processedCompositeKeys.has(compositeKey)) {
+            continue; 
+          }
+
+          uniqueProducts.set(product.url, product);
+          processedCompositeKeys.add(compositeKey);
+        }
+      }
     }
 
-    return products.sort((a, b) => 
+    const allProducts = Array.from(uniqueProducts.values());
+
+    return allProducts.sort((a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
   } catch (error) {

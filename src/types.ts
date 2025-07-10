@@ -1,4 +1,5 @@
 export interface Product {
+  [key: string]: any;
   url: string;
   title: string;
   avg_price: number;
@@ -19,47 +20,16 @@ export interface ProductImage {
   height: number;
 }
 
-export interface DisplayConfig {
-  itemsPerPage: number;
-  dateRange: {
-    start?: string;
-    end?: string;
-  };
-  search: string;
-  gridCols: number;
-  vendors: string[];
-  sortBy: SortOption;
-  sortOrder: 'asc' | 'desc';
-}
-
-export type DateRangeFilter = 
+export type DateRangePreset = 
   | 'all' 
-  | 'today' 
-  | 'week' 
-  | 'month' 
-  | 'three_months'
-  | 'six_months'
-  | 'year'
+  | 'past_week' 
+  | 'past_month' 
   | 'custom';
 
 export interface FilterConfig {
-  search: string;
+  title?: string;
   vendor?: string;
-}
-
-export interface SortConfig {
-  field: keyof Product;
-  direction: 'asc' | 'desc';
-}
-
-export type SortOption = 'price' | 'date' | 'title';
-
-export interface VendorStats {
-  name: string;
-  count: number;
-  totalProducts: number;
-  minPrice: number;
-  maxPrice: number;
-  latestProduct: string;
-  languages: string[];
+  dateRange?: DateRangePreset;
+  customStartDate?: string;
+  customEndDate?: string;
 }

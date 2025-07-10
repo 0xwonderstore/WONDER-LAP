@@ -1,0 +1,13 @@
+{
+  "products": [
+    {
+      "url": "https://example.com/product-52",
+      "title": "مجموعة أوزان",
+      "avg_price": 100,
+      "vendor": "Vendor F",
+      "created_at": "2024-06-09T11:00:00Z",
+      "variants": [],
+      "images": []
+    }
+  ]
+}
