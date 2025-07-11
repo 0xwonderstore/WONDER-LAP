@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Moon, Sun, Sparkles, BarChart2, Heart, Shirt } from 'lucide-react';
+import { Moon, Sun, Sparkles, BarChart2, Heart, Shirt, Settings as SettingsIcon } from 'lucide-react';
 import ProductView from './components/ProductView';
 import VendorAnalytics from './components/VendorAnalytics';
+import Settings from './components/Settings';
 import ScrollButtons from './components/ScrollButtons';
 import Tooltip from './components/Tooltip';
 import { Product, FilterConfig } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { useClothingBlacklist } from './hooks/useClothingBlacklist';
 import { loadProducts } from './utils/productLoader';
 
-type View = 'products' | 'analytics';
+type View = 'products' | 'analytics' | 'settings';
 
 const INITIAL_FILTERS: FilterConfig = {
   title: '',
@@ -23,13 +25,14 @@ function App() {
   const [view, setView] = useLocalStorage<View>('view', 'products');
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
+  
   const [showOnlyFavorites, setShowOnlyFavorites] = useLocalStorage<boolean>('showOnlyFavorites', false);
   const [hideClothing, setHideClothing] = useLocalStorage<boolean>('hideClothing', false);
   const [currentPage, setCurrentPage] = useLocalStorage<number>('currentPage', 1);
   const [pageBeforeFavorites, setPageBeforeFavorites] = useLocalStorage<number>('pageBeforeFavorites', 1);
   const [filters, setFilters] = useLocalStorage<FilterConfig>('filters', INITIAL_FILTERS);
-
+  
+  const [clothingBlacklist] = useClothingBlacklist();
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
@@ -45,29 +48,10 @@ function App() {
     loadData();
   }, []);
 
-  const handleShowOnlyFavorites = () => {
-    setShowOnlyFavorites(isCurrentlyShowing => {
-      if (!isCurrentlyShowing) {
-        setPageBeforeFavorites(currentPage);
-        setCurrentPage(1);
-      } else {
-        setCurrentPage(pageBeforeFavorites || 1);
-      }
-      return !isCurrentlyShowing;
-    });
-  };
-
-  const handleHideClothing = () => {
-    setHideClothing(prev => !prev);
-    setCurrentPage(1);
-  };
-
-  const handleClearFilters = useCallback(() => {
-    setFilters(INITIAL_FILTERS);
-    if(showOnlyFavorites) setShowOnlyFavorites(false);
-    if(hideClothing) setHideClothing(false);
-    setCurrentPage(1);
-  }, [setFilters, setShowOnlyFavorites, setHideClothing, setCurrentPage]);
+  const handleShowOnlyFavorites = () => { setShowOnlyFavorites(isCurrentlyShowing => { if (!isCurrentlyShowing) { setPageBeforeFavorites(currentPage); setCurrentPage(1); } else { setCurrentPage(pageBeforeFavorites || 1); } return !isCurrentlyShowing; }); };
+  const handleHideClothing = () => { setHideClothing(prev => !prev); setCurrentPage(1); };
+  const handleClearFilters = useCallback(() => { setFilters(INITIAL_FILTERS); if(showOnlyFavorites) setShowOnlyFavorites(false); if(hideClothing) setHideClothing(false); setCurrentPage(1); }, [setFilters, setShowOnlyFavorites, setHideClothing, setCurrentPage]);
+  const handleVendorSelect = (vendor: string) => { setFilters(prev => ({ ...prev, vendor: vendor, title: '' })); setView('products'); setCurrentPage(1); };
 
   const renderContent = () => {
     if (isLoading && view === 'products') {
@@ -76,15 +60,22 @@ function App() {
     
     switch (view) {
       case 'analytics':
-        return <VendorAnalytics products={products} onBack={() => setView('products')} />;
+        return <VendorAnalytics products={products} onBack={() => setView('products')} onVendorSelect={handleVendorSelect} />;
+      case 'settings':
+        return <Settings onBack={() => setView('products')} />;
       case 'products':
       default:
         return <ProductView 
                   products={products} 
                   isLoading={isLoading} 
+                  filters={filters}
+                  setFilters={setFilters}
                   showOnlyFavorites={showOnlyFavorites}
+                  onShowOnlyFavoritesChange={handleShowOnlyFavorites}
                   hideClothing={hideClothing}
+                  onHideClothingChange={handleHideClothing}
                   onClearFilters={handleClearFilters}
+                  clothingBlacklist={clothingBlacklist}
                />;
     }
   };
@@ -95,28 +86,17 @@ function App() {
         <header className="flex justify-between items-center mb-8">
            <div className="flex items-center gap-3">
              <Sparkles className="w-8 h-8 text-yellow-500" />
-             <h1 dir="ltr" className="text-3xl font-bold bg-gradient-to-r from-brand-primary to-purple-600 bg-clip-text text-transparent">
-               WONDER LAB
-             </h1>
+             <h1 dir="ltr" className="text-3xl font-bold bg-gradient-to-r from-brand-primary to-purple-600 bg-clip-text text-transparent">WONDER LAB</h1>
            </div>
            <div className="flex items-center gap-4">
-              <Tooltip text={view === 'products' ? 'عرض الإحصائيات' : 'عرض المنتجات'}>
-                <button onClick={() => setView(v => v === 'products' ? 'analytics' : 'products')} className={`p-2 rounded-lg transition-colors ${view === 'analytics' ? 'bg-brand-danger text-white' : 'bg-light-surface dark:bg-dark-surface'}`}><BarChart2 className="w-5 h-5" /></button>
-              </Tooltip>
-              <Tooltip text="إخفاء الملابس">
-                <button onClick={handleHideClothing} className={`p-2 rounded-lg transition-colors ${hideClothing ? 'bg-brand-danger text-white' : 'bg-light-surface dark:bg-dark-surface'}`}><Shirt className="w-5 h-5" /></button>
-              </Tooltip>
-              <Tooltip text="المفضلة">
-                <button onClick={handleShowOnlyFavorites} className={`p-2 rounded-lg transition-colors ${showOnlyFavorites ? 'bg-brand-danger text-white' : 'bg-light-surface dark:bg-dark-surface'}`}><Heart className="w-5 h-5" /></button>
-              </Tooltip>
-              <Tooltip text="تبديل الوضع">
-                <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-lg bg-light-surface dark:bg-dark-surface">{darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5" />}</button>
-              </Tooltip>
+              <Tooltip text="الإحصائيات"><button onClick={() => setView('analytics')} className={`p-2 rounded-lg ${view === 'analytics' ? 'bg-brand-danger text-white' : 'bg-light-surface dark:bg-dark-surface'}`}><BarChart2 className="w-5 h-5" /></button></Tooltip>
+              <Tooltip text="إعدادات الفلترة"><button onClick={() => setView('settings')} className={`p-2 rounded-lg ${view === 'settings' ? 'bg-brand-danger text-white' : 'bg-light-surface dark:bg-dark-surface'}`}><SettingsIcon className="w-5 h-5" /></button></Tooltip>
+              <Tooltip text="إخفاء الملابس"><button onClick={handleHideClothing} className={`p-2 rounded-lg ${hideClothing ? 'bg-brand-danger text-white' : 'bg-light-surface dark:bg-dark-surface'}`}><Shirt className="w-5 h-5" /></button></Tooltip>
+              <Tooltip text="المفضلة"><button onClick={handleShowOnlyFavorites} className={`p-2 rounded-lg ${showOnlyFavorites ? 'bg-brand-danger text-white' : 'bg-light-surface dark:bg-dark-surface'}`}><Heart className="w-5 h-5" /></button></Tooltip>
+              <Tooltip text="تبديل الوضع"><button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-lg bg-light-surface dark:bg-dark-surface">{darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5" />}</button></Tooltip>
            </div>
         </header>
-        
         {renderContent()}
-
       </div>
       <ScrollButtons />
     </div>

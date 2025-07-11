@@ -3,36 +3,33 @@ import { useState, useEffect, useCallback } from 'react';
 const FAVORITES_KEY = 'wonder_lab_favorites';
 
 /**
- * A helper function to get the initial state from localStorage.
- * This runs only once when the component is first mounted.
+ * A helper function to get the initial state from localStorage synchronously.
+ * This runs only once when the hook is first called.
  */
 const getInitialFavorites = (): Set<string> => {
   try {
-    const storedFavorites = window.localStorage.getItem(FAVORITES_KEY);
-    if (storedFavorites) {
-      // Parse the stored JSON and create a Set from the array
-      return new Set(JSON.parse(storedFavorites));
-    }
+    const item = window.localStorage.getItem(FAVORITES_KEY);
+    // If an item is found, parse it and create a Set, otherwise return an empty Set.
+    return item ? new Set(JSON.parse(item)) : new Set();
   } catch (error) {
     console.error('Error reading favorites from localStorage:', error);
+    // If there's an error, default to an empty set for safety.
+    return new Set();
   }
-  // Return an empty set if nothing is stored or an error occurs
-  return new Set();
 };
-
 
 /**
  * Custom hook to manage a list of favorite products stored in localStorage.
+ * This version safely initializes state from localStorage on the first render.
  * @returns A tuple containing:
  *  - A Set of favorite product URLs.
  *  - A function to toggle a product's favorite status.
  */
 export function useFavorites(): [Set<string>, (productUrl: string) => void] {
-  // Initialize state lazily from localStorage
+  // Initialize state lazily and synchronously from localStorage.
   const [favorites, setFavorites] = useState<Set<string>>(getInitialFavorites);
 
-  // This effect now only runs when the 'favorites' state changes,
-  // saving the updated list to localStorage.
+  // This effect runs ONLY when the 'favorites' state changes, saving the new version.
   useEffect(() => {
     try {
       window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(favorites)));
