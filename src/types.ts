@@ -7,6 +7,7 @@ export interface Product {
   created_at: string;
   variants: ProductVariant[];
   images: ProductImage[];
+  language?: string; // Re-added language property
 }
 
 export interface ProductVariant {
@@ -29,6 +30,7 @@ export type DateRangePreset =
 export interface FilterConfig {
   title?: string;
   vendor?: string;
+  language?: string; // Re-added language filter
   dateRange?: DateRangePreset;
   customStartDate?: string;
   customEndDate?: string;

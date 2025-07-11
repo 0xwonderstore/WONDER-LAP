@@ -1,5 +1,4 @@
 import { Product } from '../types';
-import { isClothingProduct } from './clothingFilter';
 
 const normalizeTitle = (title: string): string => {
   if (!title) return '';
@@ -8,8 +7,6 @@ const normalizeTitle = (title: string): string => {
 
 export async function loadProducts(): Promise<Product[]> {
   // Use a recursive glob pattern to find all product files within the /src directory.
-  // This is much more flexible and will discover files in any sub-folder.
-  // e.g., /src/data/products_1.json, /src/data/shopify/products_a.json, etc.
   const productModules = import.meta.glob('/src/**/products_*.json', { eager: true, import: 'default' });
 
   try {
@@ -44,7 +41,6 @@ export async function loadProducts(): Promise<Product[]> {
 
     const allProducts = Array.from(uniqueProducts.values());
 
-    // The default sort is always newest first.
     return allProducts.sort((a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );

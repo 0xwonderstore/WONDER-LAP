@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Product } from '../types';
-import { ArrowLeft, ArrowDown, ArrowUp } from 'lucide-react';
+import { ArrowLeft, ArrowDown, ArrowUp, Facebook } from 'lucide-react';
 import { formatDate, getFacebookAdLibraryUrl } from '../utils';
 
 interface VendorAnalyticsProps {
