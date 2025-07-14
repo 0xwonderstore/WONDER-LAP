@@ -1,51 +1,45 @@
+
 import { Product } from '../types';
 
-const normalizeTitle = (title: string): string => {
-  if (!title) return '';
-  return title.toLowerCase().replace(/\s+/g, ' ').trim();
-};
+async function fetchProducts(page: number): Promise<Product[]> {
+    try {
+        const response = await fetch(`/src/data/products_${page}.json`);
+        if (!response.ok) {
+            // A 404 is an expected way to signal we're out of files.
+            if (response.status === 404) return [];
+            throw new Error(`Failed to fetch products page ${page}: ${response.statusText}`);
+        }
+        const data = await response.json();
+        return data.products;
+    } catch (error) {
+        // A SyntaxError is also expected when the server returns an HTML fallback for a non-existent file.
+        // We can safely ignore it and treat it as the end of the data.
+        if (error instanceof SyntaxError) {
+            return [];
+        }
+        // For any other type of error (network issues, etc.), we should still log it.
+        console.error(`Error fetching or parsing products page ${page}:`, error);
+        return [];
+    }
+}
 
 export async function loadProducts(): Promise<Product[]> {
-  // Use a recursive glob pattern to find all product files within the /src directory.
-  const productModules = import.meta.glob('/src/**/products_*.json', { eager: true, import: 'default' });
+    const allProducts: Product[] = [];
+    let page = 1;
+    let productsPage: any[];
 
-  try {
-    const uniqueProducts = new Map<string, Product>();
-    const processedCompositeKeys = new Set<string>();
-
-    for (const path in productModules) {
-      const fileContent: any = productModules[path];
-      
-      if (fileContent && Array.isArray(fileContent.products)) {
-        for (const product of fileContent.products) {
-          if (!product.url || !product.title || !product.vendor) {
-            continue; 
-          }
-
-          if (uniqueProducts.has(product.url)) {
-            continue;
-          }
-
-          const normalizedTitle = normalizeTitle(product.title);
-          const compositeKey = `${product.vendor}||${normalizedTitle}`;
-
-          if (processedCompositeKeys.has(compositeKey)) {
-            continue; 
-          }
-
-          uniqueProducts.set(product.url, product);
-          processedCompositeKeys.add(compositeKey);
+    do {
+        productsPage = await fetchProducts(page);
+        if (productsPage && productsPage.length > 0) {
+            // Clean the data as it's loaded to ensure consistency
+            const cleanedProducts = productsPage.map(({ language, ...rest }) => rest);
+            allProducts.push(...cleanedProducts);
         }
-      }
-    }
+        page++;
+    } while (productsPage.length > 0 && page <= 50); // Set a reasonable limit
 
-    const allProducts = Array.from(uniqueProducts.values());
-
-    return allProducts.sort((a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-  } catch (error) {
-    console.error('Error loading products:', error);
-    return [];
-  }
+    // Ensure uniqueness based on product URL
+    const uniqueProducts = Array.from(new Map(allProducts.map(p => [p.url, p])).values());
+    
+    return uniqueProducts;
 }

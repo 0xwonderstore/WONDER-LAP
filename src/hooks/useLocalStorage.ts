@@ -8,14 +8,22 @@ export function useLocalStorage<T>(key: string, defaultValue: T): [T, (value: T 
         }
         try {
             const item = window.localStorage.getItem(key);
-            return item ? JSON.parse(item) : defaultValue;
+            if (!item) {
+                return defaultValue;
+            }
+            const storedValue = JSON.parse(item);
+            // Merge stored value with default value to ensure all keys are present
+            if (typeof defaultValue === 'object' && defaultValue !== null && !Array.isArray(defaultValue)) {
+                return { ...defaultValue, ...storedValue };
+            }
+            return storedValue;
         } catch (error) {
             console.error(error);
             return defaultValue;
         }
     });
 
-    const setStoredValue = useCallback((valueToSet) => {
+    const setStoredValue = useCallback((valueToSet: T | ((prev: T) => T)) => {
         try {
             const valueToStore = valueToSet instanceof Function ? valueToSet(value) : valueToSet;
             setValue(valueToStore);

@@ -2,7 +2,7 @@
 import React, { useState, memo } from 'react';
 import { Calendar } from 'lucide-react';
 import { Product } from '../types';
-import { formatDate } from '../utils';
+import { formatDate } from '../utils/productUtils';
 
 interface ProductCardProps {
   product: Product;

@@ -2,11 +2,7 @@
 import React from 'react';
 import { SearchX } from 'lucide-react';
 
-interface EmptyStateProps {
-  onClearFilters: () => void;
-}
-
-export default function EmptyState({ onClearFilters }: EmptyStateProps) {
+export default function EmptyState() {
   return (
     <div className="text-center py-24 px-6 bg-light-surface dark:bg-dark-surface rounded-2xl shadow-lg animate-fade-in border border-dashed border-light-border dark:border-dark-border">
       <div className="mx-auto w-fit p-4 bg-light-background dark:bg-dark-background rounded-full">
@@ -16,14 +12,8 @@ export default function EmptyState({ onClearFilters }: EmptyStateProps) {
         لم يتم العثور على منتجات
       </h2>
       <p className="mt-2 text-base text-light-text-secondary dark:text-dark-text-secondary">
-        جرّب تعديل معايير البحث أو الفلترة الخاصة بك.
+        يبدو أنه لا توجد بيانات لعرضها في الوقت الحالي.
       </p>
-      <button
-        onClick={onClearFilters}
-        className="mt-8 px-5 py-3 bg-brand-primary text-white font-semibold rounded-lg shadow-md hover:bg-brand-primaryHover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary dark:focus:ring-offset-dark-surface transition-all"
-      >
-        مسح جميع الفلاتر
-      </button>
     </div>
   );
 }

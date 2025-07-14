@@ -12,11 +12,8 @@ export const applyFiltersAndSort = (
   if (filters.title) {
     filteredProducts = filteredProducts.filter(p => p.title.toLowerCase().includes(filters.title.toLowerCase()));
   }
-  if (filters.vendors && filters.vendors.length > 0) {
-    filteredProducts = filteredProducts.filter(p => filters.vendors.includes(p.vendor));
-  }
-  if (filters.language) {
-    filteredProducts = filteredProducts.filter(p => p.language === filters.language);
+  if (filters.vendor) {
+    filteredProducts = filteredProducts.filter(p => p.vendor === filters.vendor);
   }
 
   if (filters.dateRange === 'custom' && filters.customStartDate && filters.customEndDate) {

@@ -6,12 +6,11 @@ import EmptyState from './EmptyState';
 
 interface ProductGridProps {
   products: Product[];
-  onClearFilters: () => void;
 }
 
-function ProductGrid({ products, onClearFilters }: ProductGridProps) {
+function ProductGrid({ products }: ProductGridProps) {
   if (!products.length) {
-    return <EmptyState onClearFilters={onClearFilters} />;
+    return <EmptyState />;
   }
 
   return (

@@ -1,7 +1,7 @@
 
 import React, { memo } from 'react';
 import { Product } from '../types';
-import { formatDate } from '../utils';
+import { formatDate } from '../utils/productUtils';
 
 interface ProductTableProps {
   products: Product[];
