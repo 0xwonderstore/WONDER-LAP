@@ -1,115 +1,95 @@
-import React, { useState, memo, useMemo, useEffect } from 'react';
-import { Search, Store, Calendar, LayoutGrid, List, X, ListFilter, Languages } from 'lucide-react';
-import { FilterConfig, Product, DateRangePreset } from '../types';
-import { getAvailableLanguages } from '../utils';
+
+import React, { useMemo } from 'react';
+import { Product, FilterConfig, SortKey, SortOrder } from '../types';
+import VendorFilter from './VendorFilter';
+import { List, LayoutGrid, ArrowDown, ArrowUp } from 'lucide-react';
 
 interface FilterPanelProps {
   filters: FilterConfig;
-  onFilterChange: (filters: Partial<FilterConfig>) => void;
+  onFilterChange: (newFilters: Partial<FilterConfig>) => void;
   onClearFilters: () => void;
   products: Product[];
+  sortKey: SortKey;
+  onSortKeyChange: (key: SortKey) => void;
+  sortOrder: SortOrder;
+  onSortOrderChange: (order: SortOrder) => void;
   displayMode: 'grid' | 'table';
   onDisplayModeChange: (mode: 'grid' | 'table') => void;
   itemsPerPage: number;
-  onItemsPerPageChange: (count: number) => void;
+  onItemsPerPageChange: (value: number) => void;
 }
 
-function FilterPanel({
+export default function FilterPanel({
   filters,
   onFilterChange,
   onClearFilters,
   products,
-  itemsPerPage,
-  onItemsPerPageChange,
+  sortKey,
+  onSortKeyChange,
+  sortOrder,
+  onSortOrderChange,
   displayMode,
   onDisplayModeChange,
+  itemsPerPage,
+  onItemsPerPageChange,
 }: FilterPanelProps) {
-  const [searchTerm, setSearchTerm] = useState(filters.title || '');
+  const allVendors = useMemo(() => {
+    const vendors = new Set(products.map(p => p.vendor));
+    return Array.from(vendors).sort();
+  }, [products]);
 
-  useEffect(() => {
-    setSearchTerm(filters.title || '');
-  }, [filters.title]);
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onFilterChange({ title: searchTerm });
-  };
-  
-  const handleClear = () => {
-    setSearchTerm('');
-    onClearFilters();
-  };
-
-  const vendors = useMemo(() => Array.from(new Set(products.map(p => p.vendor).filter(Boolean))), [products]);
-  const availableLanguages = useMemo(() => getAvailableLanguages(products), [products]);
-  const isAnyFilterActive = filters.title || filters.vendor || filters.language || (filters.dateRange && filters.dateRange !== 'all');
-  const showCustomDatePickers = filters.dateRange === 'custom';
-  
-  const commonInputClasses = "w-full appearance-none pl-10 pr-4 py-2 rounded-xl border border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface focus:ring-2 focus:ring-brand-primary";
+  const allLanguages = useMemo(() => {
+    const languages = new Set(products.map(p => p.language).filter(Boolean));
+    return Array.from(languages).sort();
+  }, [products]);
 
   return (
-    <div dir="rtl" className="p-4 bg-light-surface dark:bg-dark-surface rounded-2xl shadow-md mb-6 transition-colors">
+    <div className="bg-light-surface dark:bg-dark-surface p-4 rounded-2xl shadow-lg mb-8 space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <input
+          type="text"
+          placeholder="بحث بالاسم..."
+          value={filters.title}
+          onChange={(e) => onFilterChange({ title: e.target.value })}
+          className="p-2 w-full rounded-lg border-light-border dark:border-dark-border bg-light-background dark:bg-dark-background focus:ring-2 focus:ring-brand-primary"
+        />
+        <VendorFilter
+          allVendors={allVendors}
+          selectedVendors={filters.vendors}
+          onSelectionChange={(selected) => onFilterChange({ vendors: selected })}
+        />
+        <select
+          value={filters.language}
+          onChange={(e) => onFilterChange({ language: e.target.value })}
+          className="p-2 w-full rounded-lg border-light-border dark:border-dark-border bg-light-background dark:bg-dark-background focus:ring-2 focus:ring-brand-primary"
+        >
+          <option value="">كل اللغات</option>
+          {allLanguages.map(lang => <option key={lang} value={lang}>{lang}</option>)}
+        </select>
+      </div>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        
-        <div className="flex-grow min-w-[250px] relative">
-          <form onSubmit={handleSearchSubmit}>
-            <input type="text" placeholder="البحث عن المنتجات..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={commonInputClasses} />
-            <button type="submit" className="absolute left-3 top-1/2 -translate-y-1/2 text-light-text-secondary"><Search className="w-5 h-5" /></button>
-          </form>
-        </div>
-        
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="relative">
-            <select value={filters.vendor || ''} onChange={(e) => onFilterChange({ vendor: e.target.value || undefined })} className={commonInputClasses}>
-              <option value="">كل المتاجر</option>
-              {vendors.map(v => <option key={v} value={v}>{v}</option>)}
+        <div className="flex items-center gap-2">
+            <select value={sortKey} onChange={e => onSortKeyChange(e.target.value as SortKey)} className="p-2 rounded-lg border-light-border dark:border-dark-border bg-light-background dark:bg-dark-background">
+                <option value="created_at">تاريخ الإضافة</option>
+                <option value="title">الاسم</option>
+                <option value="vendor">المورّد</option>
             </select>
-            <Store className="absolute left-3 top-1/2 -translate-y-1/2 text-light-text-secondary w-5 h-5" />
-          </div>
-          <div className="relative">
-            <select value={filters.language || ''} onChange={(e) => onFilterChange({ language: e.target.value || undefined })} className={commonInputClasses}>
-              <option value="">كل اللغات</option>
-              {availableLanguages.map(lang => <option key={lang} value={lang}>{lang}</option>)}
-            </select>
-            <Languages className="absolute left-3 top-1/2 -translate-y-1/2 text-light-text-secondary w-5 h-5" />
-          </div>
-          <div className="relative">
-            <select value={filters.dateRange || 'all'} onChange={(e) => onFilterChange({ dateRange: e.target.value as DateRangePreset })} className={commonInputClasses}>
-              <option value="all">كل الأوقات</option>
-              <option value="past_week">آخر أسبوع</option>
-              <option value="past_month">آخر شهر</option>
-              <option value="custom">تاريخ مخصص</option>
-            </select>
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-light-text-secondary w-5 h-5" />
-          </div>
-          {showCustomDatePickers && (
-              <>
-                <div className="relative"><input type="date" value={filters.customStartDate || ''} onChange={(e) => onFilterChange({customStartDate: e.target.value})} className={commonInputClasses.replace('pl-10', 'px-3')} /></div>
-                <div className="relative"><input type="date" value={filters.customEndDate || ''} onChange={(e) => onFilterChange({customEndDate: e.target.value})} className={commonInputClasses.replace('pl-10', 'px-3')} /></div>
-              </>
-          )}
-           <div className="relative">
-                <select value={itemsPerPage} onChange={(e) => onItemsPerPageChange(Number(e.target.value))} className={commonInputClasses}>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                  <option value={160}>160</option>
-                </select>
-                <ListFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-light-text-secondary w-5 h-5" />
-             </div>
-          {isAnyFilterActive && (
-            <button onClick={handleClear} className="flex items-center gap-2 text-sm text-brand-danger hover:text-brand-dangerHover transition-colors"><X className="w-4 h-4" /> مسح</button>
-          )}
+            <button onClick={() => onSortOrderChange(sortOrder === 'asc' ? 'desc' : 'asc')} className="p-2 rounded-lg bg-light-background dark:bg-dark-background">
+                {sortOrder === 'asc' ? <ArrowUp size={20} /> : <ArrowDown size={20} />}
+            </button>
         </div>
-
-        <div className="flex items-center bg-light-background dark:bg-dark-background rounded-xl p-1">
-          <button onClick={() => onDisplayModeChange('grid')} className={`px-3 py-1 rounded-lg ${displayMode === 'grid' ? 'bg-light-surface dark:bg-dark-surface shadow' : 'text-light-text-secondary'}`}><LayoutGrid className="w-5 h-5" /></button>
-          <button onClick={() => onDisplayModeChange('table')} className={`px-3 py-1 rounded-lg ${displayMode === 'table' ? 'bg-light-surface dark:bg-dark-surface shadow' : 'text-light-text-secondary'}`}><List className="w-5 h-5" /></button>
+        <div className="flex items-center gap-2">
+            <button onClick={() => onDisplayModeChange('grid')} className={`p-2 rounded-lg ${displayMode === 'grid' ? 'bg-brand-primary text-white' : 'bg-light-background dark:bg-dark-background'}`}>
+                <LayoutGrid size={20} />
+            </button>
+            <button onClick={() => onDisplayModeChange('table')} className={`p-2 rounded-lg ${displayMode === 'table' ? 'bg-brand-primary text-white' : 'bg-light-background dark:bg-dark-background'}`}>
+                <List size={20} />
+            </button>
         </div>
-
+        <button onClick={onClearFilters} className="px-4 py-2 bg-brand-danger/10 text-brand-danger font-semibold rounded-lg hover:bg-brand-danger/20">
+          مسح الفلاتر
+        </button>
       </div>
     </div>
   );
 }
-
-export default memo(FilterPanel);

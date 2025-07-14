@@ -1,37 +1,36 @@
+
 export interface Product {
-  [key: string]: any;
-  url: string;
-  title: string;
-  avg_price: number;
-  vendor: string;
-  created_at: string;
-  variants: ProductVariant[];
-  images: ProductImage[];
-  language?: string; // Re-added language property
-}
+    id: string;
+    title: string;
+    vendor: string;
+    body_html: string;
+    images: { src: string }[];
+    created_at: string;
+    language: string;
+    url: string;
+  }
+  
+  export interface FilterConfig {
+    title: string;
+    vendors: string[]; // Changed from 'vendor' to 'vendors' to support multiple
+    language: string;
+    dateRange: 'all' | 'custom';
+    customStartDate: string;
+    customEndDate: string;
+  }
 
-export interface ProductVariant {
-  price: string;
-  compare_at_price: string | null;
-}
+  export type SortKey = 'created_at' | 'title' | 'vendor';
 
-export interface ProductImage {
-  src: string;
-  width: number;
-  height: number;
-}
+  export type SortOrder = 'asc' | 'desc';
 
-export type DateRangePreset = 
-  | 'all' 
-  | 'past_week' 
-  | 'past_month' 
-  | 'custom';
-
-export interface FilterConfig {
-  title?: string;
-  vendor?: string;
-  language?: string; // Re-added language filter
-  dateRange?: DateRangePreset;
-  customStartDate?: string;
-  customEndDate?: string;
-}
+  export type VendorStat = {
+    name: string;
+    productCount: number;
+    oldestProductDate: Date;
+    newestProductDate: Date;
+  };
+  
+  export type SortConfig<T> = {
+    key: keyof T;
+    direction: 'asc' | 'desc';
+  };

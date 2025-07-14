@@ -1,3 +1,4 @@
+
 import React, { memo } from 'react';
 import { Product } from '../types';
 import ProductCard from './ProductCard';
@@ -5,12 +6,10 @@ import EmptyState from './EmptyState';
 
 interface ProductGridProps {
   products: Product[];
-  favorites: Set<string>;
-  onToggleFavorite: (productUrl: string) => void;
   onClearFilters: () => void;
 }
 
-function ProductGrid({ products, favorites, onToggleFavorite, onClearFilters }: ProductGridProps) {
+function ProductGrid({ products, onClearFilters }: ProductGridProps) {
   if (!products.length) {
     return <EmptyState onClearFilters={onClearFilters} />;
   }
@@ -21,8 +20,6 @@ function ProductGrid({ products, favorites, onToggleFavorite, onClearFilters }: 
         <ProductCard
           key={product.url}
           product={product}
-          isFavorite={favorites.has(product.url)}
-          onToggleFavorite={onToggleFavorite}
         />
       ))}
     </div>
