@@ -1,44 +1,53 @@
-
 import { Product } from '../types';
 
-async function fetchProducts(page: number): Promise<Product[]> {
+async function fetchProductFile(fileName: string): Promise<any[]> {
     try {
-        const response = await fetch(`/src/data/products_${page}.json`);
+        const response = await fetch(`/src/data/${fileName}`);
         if (!response.ok) {
-            // A 404 is an expected way to signal we're out of files.
-            if (response.status === 404) return [];
-            throw new Error(`Failed to fetch products page ${page}: ${response.statusText}`);
+            if (response.status === 404) return []; // File not found, expected for some names
+            throw new Error(`Failed to fetch ${fileName}: ${response.statusText}`);
         }
         const data = await response.json();
+        // The data is an object with a "products" key
         return data.products;
     } catch (error) {
-        // A SyntaxError is also expected when the server returns an HTML fallback for a non-existent file.
-        // We can safely ignore it and treat it as the end of the data.
         if (error instanceof SyntaxError) {
+            console.warn(`Syntax error in ${fileName}, skipping.`);
             return [];
         }
-        // For any other type of error (network issues, etc.), we should still log it.
-        console.error(`Error fetching or parsing products page ${page}:`, error);
+        console.error(`Error loading ${fileName}:`, error);
         return [];
     }
 }
 
 export async function loadProducts(): Promise<Product[]> {
     const allProducts: Product[] = [];
-    let page = 1;
-    let productsPage: any[];
-
-    do {
-        productsPage = await fetchProducts(page);
+    
+    for (let i = 1; i <= 40; i++) {
+        const productsPage = await fetchProductFile(`products_${i}.json`);
+        
         if (productsPage && productsPage.length > 0) {
-            // Clean the data as it's loaded to ensure consistency
-            const cleanedProducts = productsPage.map(({ language, ...rest }) => rest);
-            allProducts.push(...cleanedProducts);
+            const mappedProducts = productsPage.map((p: any) => ({
+                id: p.id,
+                // --- FIX: Use 'title' from JSON for the product name ---
+                name: p.title, 
+                url: p.url,
+                store: {
+                    name: p.vendor,
+                    url: p.vendor_url, 
+                },
+                images: p.images,
+                price: p.price,
+                currency: p.currency,
+                language: p.language || 'en',
+                country: p.country,
+                created_at: p.created_at,
+                description: p.description
+            }));
+            allProducts.push(...mappedProducts);
         }
-        page++;
-    } while (productsPage.length > 0 && page <= 50); // Set a reasonable limit
-
-    // Ensure uniqueness based on product URL
+    }
+    
     const uniqueProducts = Array.from(new Map(allProducts.map(p => [p.url, p])).values());
     
     return uniqueProducts;

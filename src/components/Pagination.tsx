@@ -1,5 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Locale } from '../types';
+
+const translations = {
+  ar: {
+    showing: 'عرض',
+    of: 'من إجمالي',
+    product: 'منتج',
+    products: 'منتجات',
+    previous: 'السابق',
+    next: 'التالي',
+    goTo: 'الذهاب إلى',
+  },
+  en: {
+    showing: 'Showing',
+    of: 'of',
+    product: 'product',
+    products: 'products',
+    previous: 'Previous',
+    next: 'Next',
+    goTo: 'Go to',
+  }
+};
 
 interface PaginationProps {
   currentPage: number;
@@ -7,20 +29,39 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
   totalItems: number;
   itemsPerPage: number;
+  locale: Locale;
 }
 
 export default function Pagination({
-  currentPage,
-  totalPages,
+  currentPage: initialCurrentPage,
+  totalPages: initialTotalPages,
   onPageChange,
-  totalItems,
-  itemsPerPage,
+  totalItems: initialTotalItems,
+  itemsPerPage: initialItemsPerPage,
+  locale,
 }: PaginationProps) {
+  const t = translations[locale];
+
+  const currentPage = initialCurrentPage || 1;
+  const totalPages = initialTotalPages || 0;
+  const totalItems = initialTotalItems || 0;
+  const itemsPerPage = initialItemsPerPage || 10;
+
   const [inputPage, setInputPage] = useState<string>(String(currentPage));
 
   useEffect(() => {
     setInputPage(String(currentPage));
   }, [currentPage]);
+
+  if (totalItems === 0) {
+    return null;
+  }
+  
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+  
+  const displayStart = isNaN(startItem) ? 0 : startItem;
+  const displayEnd = isNaN(endItem) ? 0 : endItem;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputPage(e.target.value);
@@ -64,18 +105,12 @@ export default function Pagination({
     return pages;
   };
 
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-
-  if (totalItems === 0) {
-     return null; // EmptyState is now handled by the parent component
-  }
 
   return (
-    <div dir="rtl" className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-light-text-secondary dark:text-dark-text-secondary">
+    <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-light-text-secondary dark:text-dark-text-secondary">
       
       <div className="font-semibold">
-        عرض <span className="font-bold text-light-text-primary dark:text-dark-text-primary">{startItem}-{endItem}</span> من إجمالي <span className="font-bold text-light-text-primary dark:text-dark-text-primary">{totalItems}</span> منتج
+        {t.showing} <span className="font-bold text-light-text-primary dark:text-dark-text-primary">{displayStart}-{displayEnd}</span> {t.of} <span className="font-bold text-light-text-primary dark:text-dark-text-primary">{totalItems}</span> {totalItems === 1 ? t.product : t.products}
       </div>
 
       {totalPages > 1 && (
@@ -84,11 +119,11 @@ export default function Pagination({
             <button
               onClick={() => onPageChange(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
-              className="flex items-center justify-center px-3 py-2 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:bg-light-background dark:hover:bg-dark-background disabled:opacity-50"
-              aria-label="الصفحة السابقة"
+              className="flex items-center justify-center px-3 py-2 rounded-xl bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:bg-light-background dark:hover:bg-dark-background disabled:opacity-50"
+              aria-label="Previous Page"
             >
               <ChevronRight className="w-4 h-4" />
-              <span>السابق</span>
+              <span>{t.previous}</span>
             </button>
 
             <div className="hidden sm:flex items-center gap-1">
@@ -99,7 +134,7 @@ export default function Pagination({
                   <button
                     key={page}
                     onClick={() => onPageChange(Number(page))}
-                    className={`px-4 py-2 rounded-lg ${
+                    className={`px-4 py-2 rounded-xl ${
                       currentPage === page
                         ? 'bg-brand-primary text-white shadow'
                         : 'bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:bg-light-background dark:hover:bg-dark-background'
@@ -114,24 +149,24 @@ export default function Pagination({
             <button
               onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
-              className="flex items-center justify-center px-3 py-2 rounded-lg bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:bg-light-background dark:hover:bg-dark-background disabled:opacity-50"
-              aria-label="الصفحة التالية"
+              className="flex items-center justify-center px-3 py-2 rounded-xl bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border hover:bg-light-background dark:hover:bg-dark-background disabled:opacity-50"
+              aria-label="Next Page"
             >
-              <span>التالي</span>
+              <span>{t.next}</span>
               <ChevronLeft className="w-4 h-4" />
             </button>
           </div>
           
           <div className="flex items-center gap-2">
             <form onSubmit={handleGoToPage} className="flex items-center gap-2">
-              <span>الذهاب إلى</span>
+              <span>{t.goTo}</span>
               <input
                 type="number"
                 min="1"
                 max={totalPages}
                 value={inputPage}
                 onChange={handleInputChange}
-                className="w-16 text-center p-2 rounded-lg border border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface focus:ring-2 focus:ring-brand-primary"
+                className="w-16 text-center p-2 rounded-xl border border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface focus:ring-2 focus:ring-brand-primary"
               />
             </form>
           </div>
