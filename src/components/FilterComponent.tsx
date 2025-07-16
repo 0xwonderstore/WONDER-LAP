@@ -1,9 +1,7 @@
 import React from 'react';
 import { LayoutGrid, List, ChevronDown } from 'lucide-react';
 import { Locale } from '../types';
-
-const languageNames: { [key: string]: string } = { ar: 'العربية', en: 'English' };
-const getLanguageName = (code: string) => languageNames[code] || code;
+import { getLanguageName } from '../utils/languageUtils'; // Import the new function
 
 interface FilterComponentProps {
   locale: Locale;
@@ -77,45 +75,46 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
   return (
     <div className="bg-light-surface dark:bg-dark-surface p-4 rounded-2xl mb-6 shadow-md">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7 gap-4 items-end">
-        {/* Search & Main Selects */}
         <div className="flex-grow min-w-[150px] md:col-span-1 lg:col-span-2">
           <label htmlFor="name-search" className={labelClasses}>{t.searchByName}</label>
           <input type="text" id="name-search" placeholder={t.searchPlaceholder} value={filters.name} onChange={(e) => onFilterChange('name', e.target.value)} className="w-full p-2.5 border border-light-border dark:border-dark-border rounded-xl bg-light-background dark:bg-dark-background focus:ring-2 focus:ring-brand-primary"/>
         </div>
         {[
           { id: 'store', label: t.selectStore, options: [{ value: '', label: t.allStores }, ...stores.map(s => ({ value: s, label: s }))] },
-          { id: 'language', label: t.selectLanguage, options: [{ value: '', label: t.allLanguages }, ...languages.map(l => ({ value: l, label: getLanguageName(l) }))] }
+          { id: 'language', label: t.selectLanguage, options: [{ value: '', label: t.allLanguages }, ...languages.map(l => ({ value: l, label: getLanguageName(l) }))] } // Use getLanguageName here
         ].map(s => (
           <div key={s.id} className={selectWrapperClasses}>
             <label htmlFor={s.id} className={labelClasses}>{s.label}</label>
-            <select id={s.id} value={(filters as any)[s.id]} onChange={e => onFilterChange(s.id, e.target.value)} className={`${commonSelectClasses} text-right ltr:text-left`}>
-              {s.options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-            </select>
-            <ChevronDown className="w-5 h-5 absolute top-1/2 -translate-y-1/2 ltr:right-3 rtl:left-3 text-gray-400 pointer-events-none mt-3" />
+            <div className="relative">
+                <select id={s.id} value={(filters as any)[s.id]} onChange={e => onFilterChange(s.id, e.target.value)} className={`${commonSelectClasses} text-right ltr:text-left pr-10 rtl:pl-10`}>
+                    {s.options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                </select>
+                <ChevronDown className="w-5 h-5 absolute top-1/2 -translate-y-1/2 ltr:right-3 rtl:left-3 text-gray-400 pointer-events-none" />
+            </div>
           </div>
         ))}
-        {/* Date Range Select */}
         <div className={selectWrapperClasses}>
             <label htmlFor='date-range-select' className={labelClasses}>{t.creationDate}</label>
-            <select id='date-range-select' value={filters.dateRange} onChange={e => onDateRangeOptionChange(e.target.value)} className={`${commonSelectClasses} text-right ltr:text-left`}>
-                <option value="">{t.allTime}</option>
-                <option value="last_week">{t.lastWeek}</option>
-                <option value="last_month">{t.lastMonth}</option>
-                <option value="last_3_months">{t.last3Months}</option>
-                <option value="last_6_months">{t.last6Months}</option>
-                <option value="last_year">{t.lastYear}</option>
-                <option value="custom">{t.customDate}</option>
-            </select>
-            <ChevronDown className="w-5 h-5 absolute top-1/2 -translate-y-1/2 ltr:right-3 rtl:left-3 text-gray-400 pointer-events-none mt-3" />
+            <div className="relative">
+                <select id='date-range-select' value={filters.dateRange} onChange={e => onDateRangeOptionChange(e.target.value)} className={`${commonSelectClasses} text-right ltr:text-left pr-10 rtl:pl-10`}>
+                    <option value="">{t.allTime}</option>
+                    <option value="last_week">{t.lastWeek}</option>
+                    <option value="last_month">{t.lastMonth}</option>
+                    <option value="last_3_months">{t.last3Months}</option>
+                    <option value="last_6_months">{t.last6Months}</option>
+                    <option value="last_year">{t.lastYear}</option>
+                    <option value="custom">{t.customDate}</option>
+                </select>
+                <ChevronDown className="w-5 h-5 absolute top-1/2 -translate-y-1/2 ltr:right-3 rtl:left-3 text-gray-400 pointer-events-none" />
+            </div>
         </div>
-        {/* Per Page & View Mode */}
         <div className="flex-grow min-w-[140px]">
           <label htmlFor='per-page-select' className={labelClasses}>{t.show}</label>
           <div className="relative">
-            <select id='per-page-select' value={productsPerPage} onChange={e => onProductsPerPageChange(Number(e.target.value))} className={`${commonSelectClasses} text-right ltr:text-left`}>
+            <select id='per-page-select' value={productsPerPage} onChange={e => onProductsPerPageChange(Number(e.target.value))} className={`${commonSelectClasses} text-right ltr:text-left pr-10 rtl:pl-10`}>
               {[24, 48, 100, 160].map(v => <option key={v} value={v}>{`${v} ${t.product}`}</option>)}
             </select>
-            <ChevronDown className="w-5 h-5 absolute top-1/2 -translate-y-1/2 ltr:right-3 rtl:left-3 text-gray-400 pointer-events-none mt-3" />
+            <ChevronDown className="w-5 h-5 absolute top-1/2 -translate-y-1/2 ltr:right-3 rtl:left-3 text-gray-400 pointer-events-none" />
           </div>
         </div>
         <div className="flex items-center justify-end">
