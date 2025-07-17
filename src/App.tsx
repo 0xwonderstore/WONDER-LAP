@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { Moon, Sun, Sparkles, Languages, Heart, BarChart2, EyeOff } from 'lucide-react';
-import { Product, Locale } from './types';
+import { Product, Locale, FavoritesData } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { loadProducts } from './utils/productLoader';
 
+// --- Lazy Imports ---
 const ProductView = React.lazy(() => import('./components/ProductView'));
 const FavoritesPage = React.lazy(() => import('./components/FavoritesPage'));
 const StatisticsPage = React.lazy(() => import('./components/StatisticsPage'));
@@ -11,6 +12,7 @@ const BlacklistPage = React.lazy(() => import('./components/BlacklistPage'));
 const ScrollButtons = React.lazy(() => import('./components/ScrollButtons'));
 const Toast = React.lazy(() => import('./components/Toast'));
 
+// --- Type Definitions ---
 type ToastState = { message: string; type: 'added' | 'removed'; } | null;
 type Page = 'home' | 'favorites' | 'statistics' | 'blacklist';
 type InitialFilter = { store?: string; language?: string };
@@ -21,12 +23,28 @@ const LoadingFallback: React.FC = () => (
   </div>
 );
 
+// --- Migration function for old favorites format ---
+const migrateFavorites = (data: any): FavoritesData => {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return {
+      my_main_favorites: {
+        name: 'My Favorites',
+        products: Array.isArray(data) ? data : [],
+      },
+    };
+  }
+  return data as FavoritesData;
+};
+
 const App: React.FC = () => {
+  // --- State Hooks ---
   const [darkMode, setDarkMode] = useLocalStorage('darkMode', false);
   const [locale, setLocale] = useLocalStorage<Locale>('locale', 'ar');
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [favorites, setFavorites] = useLocalStorage<string[]>('favoriteUrls', []);
+  
+  const [favoritesData, setFavoritesData] = useLocalStorage<FavoritesData>('favoritesData', {}, migrateFavorites);
+  
   const [blacklist, setBlacklist] = useLocalStorage<string[]>('blacklist', ['t-shirt', 'shorts', 'tshirt']);
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [toast, setToast] = useState<ToastState>(null);
@@ -37,6 +55,7 @@ const App: React.FC = () => {
     en: { stats: 'Statistics', favorites: 'Favorites', language: 'Change Language', theme: 'Change Theme', blacklist: 'Blacklist' }
   }[locale];
 
+  // --- Effects ---
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
     document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
@@ -48,13 +67,41 @@ const App: React.FC = () => {
     loadData();
   }, []);
 
+  // --- Handlers ---
   const showToast = (message: string, type: 'added' | 'removed') => { setToast({ message, type }); };
+  
   const toggleFavorite = (productUrl: string) => {
-    const isFavorite = favorites.includes(productUrl);
-    setFavorites(prev => isFavorite ? prev.filter(url => url !== productUrl) : [...prev, productUrl]);
-    showToast(isFavorite ? (locale === 'ar' ? 'تمت الإزالة من المفضلة' : 'Removed from favorites') : (locale === 'ar' ? 'تمت الإضافة إلى المفضلة' : 'Added to favorites'), isFavorite ? 'removed' : 'added');
+    setFavoritesData(prev => {
+      const mainList = prev.my_main_favorites || { name: 'My Favorites', products: [] };
+      const isFavorite = mainList.products.includes(productUrl);
+      
+      const newProducts = isFavorite
+        ? mainList.products.filter(url => url !== productUrl)
+        : [...mainList.products, productUrl];
+
+      showToast(isFavorite ? (locale === 'ar' ? 'تمت الإزالة من المفضلة' : 'Removed from favorites') : (locale === 'ar' ? 'تمت الإضافة إلى المفضلة' : 'Added to favorites'), isFavorite ? 'removed' : 'added');
+      
+      return { ...prev, my_main_favorites: { ...mainList, products: newProducts }};
+    });
   };
-  const clearFavorites = () => setFavorites([]);
+
+  const favoritesManagement = {
+    addList: (id: string, name: string, products: string[] = []) => {
+      setFavoritesData(prev => ({ ...prev, [id]: { name, products } }));
+    },
+    removeList: (listId: string) => {
+      if (listId === 'my_main_favorites') return; // Cannot delete main list
+      setFavoritesData(prev => {
+        const newData = { ...prev };
+        delete newData[listId];
+        return newData;
+      });
+    },
+    renameList: (listId: string, newName: string) => {
+      setFavoritesData(prev => ({ ...prev, [listId]: { ...prev[listId], name: newName } }));
+    },
+  };
+
   const toggleLocale = () => setLocale(prev => (prev === 'ar' ? 'en' : 'ar'));
   const navigateTo = (page: Page) => setCurrentPage(prev => (prev === page ? 'home' : page));
   const navigateToHomeWithFilter = (filter: InitialFilter) => { setInitialFilters(filter); setCurrentPage('home'); };
@@ -63,8 +110,8 @@ const App: React.FC = () => {
   const addWordToBlacklist = (word: string) => { if (word && !blacklist.includes(word.toLowerCase())) { setBlacklist(prev => [...prev, word.toLowerCase()]); } };
   const removeWordFromBlacklist = (word: string) => { setBlacklist(prev => prev.filter(item => item !== word)); };
   
-  const uniqueStores = useMemo(() => [...new Set(allProducts.map(p => p.store?.name).filter(Boolean as any))], [allProducts]);
-  const uniqueLanguages = useMemo(() => [...new Set(allProducts.map(p => p.language).filter(Boolean as any))], [allProducts]);
+  const uniqueStores = useMemo(() => [...new Set(allProducts.map(p => p.store?.name).filter(Boolean))], [allProducts]);
+  const uniqueLanguages = useMemo(() => [...new Set(allProducts.map(p => p.language).filter(Boolean))], [allProducts]);
 
   const HeaderButton: React.FC<{ onClick: () => void; className?: string; tooltip: string; 'aria-label': string; children?: React.ReactNode; }> = 
     ({ onClick, className, tooltip, children, ...props }) => (
@@ -77,17 +124,17 @@ const App: React.FC = () => {
   const renderContent = () => {
     const pageKey = `${currentPage}-${initialFilters ? JSON.stringify(initialFilters) : ''}`;
     switch (currentPage) {
-      case 'favorites': return <FavoritesPage key={pageKey} allProducts={allProducts} favorites={favorites} onToggleFavorite={toggleFavorite} onClearFavorites={clearFavorites} locale={locale} onShowHome={() => setCurrentPage('home')} />;
+      case 'favorites': return <FavoritesPage key={pageKey} allProducts={allProducts} favoritesData={favoritesData} onToggleFavorite={toggleFavorite} onManageLists={favoritesManagement} locale={locale} />;
       case 'statistics': return <StatisticsPage key={pageKey} allProducts={allProducts} locale={locale} onNavigateWithFilter={navigateToHomeWithFilter} />;
       case 'blacklist': return <BlacklistPage key={pageKey} locale={locale} blacklist={blacklist} onAddWord={addWordToBlacklist} onRemoveWord={removeWordFromBlacklist} />;
-      default: return <ProductView key={pageKey} products={allProducts} isLoading={isLoading} stores={uniqueStores} languages={uniqueLanguages} locale={locale} favorites={favorites} blacklist={blacklist} onToggleFavorite={toggleFavorite} onClearInitialFilters={clearInitialFilters} />;
+      default: return <ProductView key={pageKey} products={allProducts} isLoading={isLoading} stores={uniqueStores} languages={uniqueLanguages} locale={locale} favorites={favoritesData.my_main_favorites?.products || []} blacklist={blacklist} onToggleFavorite={toggleFavorite} onClearInitialFilters={clearInitialFilters} />;
     }
   };
 
   const isStatsActive = currentPage === 'statistics';
   const isFavoritesActive = currentPage === 'favorites';
   const isBlacklistActive = currentPage === 'blacklist';
-  const favoritesCount = favorites.length;
+  const favoritesCount = favoritesData.my_main_favorites?.products?.length || 0;
 
   return (
     <div className="min-h-screen">

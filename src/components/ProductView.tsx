@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Product, Locale } from '../types';
-import ProductGrid from './ProductGrid';
 import ProductTable from './ProductTable';
 import EmptyState from './EmptyState';
 import Pagination from './Pagination';
 import FilterComponent from './FilterComponent';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import ProductCard from './ProductCard';
 
 interface ProductViewProps {
   products: Product[];
@@ -16,21 +16,37 @@ interface ProductViewProps {
   favorites: string[];
   blacklist: string[];
   onToggleFavorite: (productId: string) => void;
-  onOpenBlacklist: () => void;
-  initialFilters: { store?: string; language?: string } | null;
   onClearInitialFilters: () => void;
+  initialFilters: { store?: string; language?: string } | null;
 }
 
-const ProductView: React.FC<ProductViewProps> = ({ products, isLoading, stores, languages, locale, favorites, blacklist, onToggleFavorite, onOpenBlacklist, initialFilters, onClearInitialFilters }) => {
-  const [viewMode, setViewMode] = useLocalStorage<'grid' | 'table'>('viewMode','grid');
+const ProductView: React.FC<ProductViewProps> = ({
+  products,
+  isLoading,
+  stores,
+  languages,
+  locale,
+  favorites,
+  blacklist,
+  onToggleFavorite,
+  initialFilters,
+  onClearInitialFilters,
+}) => {
+  const [viewMode, setViewMode] = useLocalStorage<'grid' | 'table'>('viewMode', 'grid');
   const [currentPage, setCurrentPage] = useLocalStorage('currentPage', 1);
   const [productsPerPage, setProductsPerPage] = useLocalStorage('productsPerPage', 24);
-  const [filters, setFilters] = useState({ name: '', store: '', language: '', dateRange: '', startDate: '', endDate: '' });
+  const [filters, setFilters] = useState<{
+    name: string;
+    store: string;
+    language: string;
+    dateRange: string;
+    startDate: Date | null;
+    endDate: Date | null;
+  }>({ name: '', store: '', language: '', dateRange: '', startDate: null, endDate: null });
 
   useEffect(() => {
     if (initialFilters) {
       setFilters(prev => ({ ...prev, store: initialFilters.store || '', language: initialFilters.language || '' }));
-      setCurrentPage(1);
       onClearInitialFilters();
     }
   }, [initialFilters, onClearInitialFilters]);
@@ -40,100 +56,108 @@ const ProductView: React.FC<ProductViewProps> = ({ products, isLoading, stores, 
     setCurrentPage(1);
   };
   
-  const handleDateChange = (field: 'startDate' | 'endDate', value: string) => {
-    setFilters(prev => ({ ...prev, dateRange: 'custom', [field]: value }));
+  const handleDateRangeChange = (range: string, startDate?: Date | null, endDate?: Date | null) => {
+    setFilters(prev => ({ ...prev, dateRange: range, startDate: startDate || null, endDate: endDate || null }));
     setCurrentPage(1);
   };
   
-  const handleDateRangeOptionChange = (range: string) => {
-    const newFilters = { ...filters, dateRange: range };
-    if (range !== 'custom') {
-      newFilters.startDate = '';
-      newFilters.endDate = '';
-    }
-    setFilters(newFilters);
-    setCurrentPage(1);
-  };
-
   const handleProductsPerPageChange = (value: number) => {
     setProductsPerPage(value);
     setCurrentPage(1);
   };
 
   const processedProducts = useMemo(() => {
-    return products
-      .filter(product => {
-        const { name, store, language, dateRange, startDate, endDate } = filters;
-        if (blacklist.length > 0 && new RegExp(blacklist.join('|'), 'i').test(product.name)) return false;
+    const blacklistRegex = new RegExp(blacklist.join('|'), 'i');
+    const normalizeText = (text: string) => text.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+    const normalizedFilterName = normalizeText(filters.name);
 
-        const nameMatch = name ? product.name.toLowerCase().includes(name.toLowerCase()) : true;
-        const storeMatch = store ? product.store?.name === store : true;
-        const languageMatch = language ? product.language === language : true;
+    const filtered = products.filter(product => {
+      if (blacklist.length > 0 && product.name && blacklistRegex.test(product.name)) {
+        return false;
+      }
+      
+      const normalizedProductName = product.name ? normalizeText(product.name) : '';
+      const nameMatch = filters.name ? normalizedProductName.includes(normalizedFilterName) : true;
+      const storeMatch = filters.store ? product.store?.name === filters.store : true;
+      const languageMatch = filters.language ? product.language === filters.language : true;
+      
+      let dateMatch = true;
+      if (product.created_at) {
+        const productDate = new Date(product.created_at);
 
-        let dateMatch = true;
-        if (dateRange) {
-          const productDate = new Date(product.created_at);
-          if (isNaN(productDate.getTime())) return false;
-          
-          if (dateRange === 'custom') {
-            if (startDate) {
-              const start = new Date(startDate + 'T00:00:00.000Z');
-              if (productDate < start) dateMatch = false;
-            }
-            if (dateMatch && endDate) {
-              const end = new Date(endDate + 'T23:59:59.999Z');
-              if (productDate > end) dateMatch = false;
-            }
-          } else {
-            const now = new Date();
-            let fromDate: Date | null = null;
-            switch (dateRange) {
-              case 'last_week': fromDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 7)); break;
-              case 'last_month': fromDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, now.getUTCDate())); break;
-              case 'last_3_months': fromDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 3, now.getUTCDate())); break;
-              case 'last_6_months': fromDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 6, now.getUTCDate())); break;
-              case 'last_year': fromDate = new Date(Date.UTC(now.getUTCFullYear() - 1, now.getUTCMonth(), now.getUTCDate())); break;
-            }
-            if (fromDate && productDate < fromDate) dateMatch = false;
+        if (filters.dateRange && filters.dateRange !== 'custom') {
+          const now = new Date();
+          let fromDate = new Date();
+          switch (filters.dateRange) {
+            case 'last_week': fromDate.setDate(now.getDate() - 7); break;
+            case 'last_month': fromDate.setMonth(now.getMonth() - 1); break;
+            case 'last_3_months': fromDate.setMonth(now.getMonth() - 3); break;
+            case 'last_6_months': fromDate.setMonth(now.getMonth() - 6); break;
+            case 'last_year': fromDate.setFullYear(now.getFullYear() - 1); break;
+          }
+          dateMatch = productDate >= fromDate && productDate <= now;
+        } else if (filters.dateRange === 'custom') {
+          const startDate = filters.startDate;
+          const endDate = filters.endDate;
+          if (startDate && endDate) {
+            dateMatch = productDate >= startDate && productDate <= endDate;
+          } else if (startDate) {
+            dateMatch = productDate >= startDate;
+          } else if (endDate) {
+            dateMatch = productDate <= endDate;
           }
         }
-        return nameMatch && storeMatch && languageMatch && dateMatch;
-      })
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      }
+      
+      return nameMatch && storeMatch && languageMatch && dateMatch;
+    });
+
+    return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [products, filters, blacklist]);
 
   const totalPages = Math.ceil(processedProducts.length / productsPerPage);
   const currentProducts = processedProducts.slice((currentPage - 1) * productsPerPage, currentPage * productsPerPage);
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const handlePageChange = (page: number) => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   
   return (
     <div className="animate-fade-in-up">
-      <FilterComponent
+       <FilterComponent
         locale={locale}
         stores={stores}
         languages={languages}
         filters={filters}
         onFilterChange={handleFilterChange}
-        onDateChange={handleDateChange}
-        onDateRangeOptionChange={handleDateRangeOptionChange}
+        onDateRangeChange={handleDateRangeChange}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         productsPerPage={productsPerPage}
         onProductsPerPageChange={handleProductsPerPageChange}
-        onOpenBlacklist={onOpenBlacklist}
       />
+
       {isLoading ? (
         <div className="flex justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-primary border-t-transparent"></div></div>
       ) : currentProducts.length > 0 ? (
         <>
-          {viewMode === 'grid' ? <ProductGrid products={currentProducts} favorites={favorites} onToggleFavorite={onToggleFavorite} /> : <ProductTable products={currentProducts} favorites={favorites} onToggleFavorite={onToggleFavorite} />}
-          <Pagination locale={locale} currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} totalItems={processedProducts.length} itemsPerPage={productsPerPage} />
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {currentProducts.map(p => (
+                <ProductCard key={p.url} product={p} isFavorite={favorites.includes(p.url)} onToggleFavorite={onToggleFavorite} />
+              ))}
+            </div>
+          ) : (
+            <ProductTable products={currentProducts} favorites={favorites} onToggleFavorite={onToggleFavorite} />
+          )}
+          <Pagination
+            locale={locale}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            totalItems={processedProducts.length}
+            itemsPerPage={productsPerPage}
+          />
         </>
       ) : (
-        <EmptyState onOpenBlacklist={onOpenBlacklist} />
+        <EmptyState />
       )}
     </div>
   );
