@@ -55,6 +55,14 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, favoritesDat
     return allProducts.filter(p => activeList.products.includes(p.url))
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [allProducts, activeList]);
+  
+  // Persist activeListId when favoritesData changes
+  React.useEffect(() => {
+    if (!favoritesData[activeListId]) {
+      setActiveListId('my_main_favorites');
+    }
+  }, [favoritesData, activeListId]);
+
 
   const handleToggleSelection = (url: string) => {
     setSelectedProducts(prev => prev.includes(url) ? prev.filter(u => u !== url) : [...prev, url]);
@@ -175,7 +183,8 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, favoritesDat
                 <ProductCard 
                   product={p} 
                   isFavorite={(favoritesData.my_main_favorites?.products || []).includes(p.url)}
-                  onToggleFavorite={onToggleFavorite} 
+                  onToggleFavorite={onToggleFavorite}
+                  onNavigateWithFilter={() => {}}
                 />
               </div>
             ))}

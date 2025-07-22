@@ -23,13 +23,13 @@ async function fetchProductFile(fileName: string): Promise<any[]> {
 export async function loadProducts(): Promise<Product[]> {
     const allProducts: Product[] = [];
     
+    // There are 40 product files, from products_1.json to products_40.json
     for (let i = 1; i <= 40; i++) {
         const productsPage = await fetchProductFile(`products_${i}.json`);
         
         if (productsPage && productsPage.length > 0) {
             const mappedProducts = productsPage.map((p: any) => ({
                 id: p.id,
-                // --- FIX: Use 'title' from JSON for the product name ---
                 name: p.title, 
                 url: p.url,
                 store: {
@@ -48,6 +48,7 @@ export async function loadProducts(): Promise<Product[]> {
         }
     }
     
+    // Ensure all products are unique by their URL
     const uniqueProducts = Array.from(new Map(allProducts.map(p => [p.url, p])).values());
     
     return uniqueProducts;

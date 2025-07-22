@@ -139,7 +139,14 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ allProducts, locale, on
             <tbody>
               {sortedStores.map((store) => (
                 <tr key={store.name} className="border-t border-light-border dark:border-dark-border">
-                  <td className="p-4 font-medium"><span className="cursor-pointer hover:text-brand-primary" onClick={() => onNavigateWithFilter({ store: store.name })}>{store.name}</span></td>
+                  <td className="p-4 font-medium">
+                    <span 
+                      className="font-bold text-brand-primary cursor-pointer hover:underline" 
+                      onClick={() => onNavigateWithFilter({ store: store.name })}
+                    >
+                      {store.name}
+                    </span>
+                  </td>
                   <td className="p-4 font-mono text-center">{store.productCount}</td>
                   <td className="p-4 whitespace-nowrap">{store.firstProductDate ? formatDate(store.firstProductDate) : 'N/A'}</td>
                   <td className="p-4 whitespace-nowrap">{store.lastProductDate ? formatDate(store.lastProductDate) : 'N/A'}</td>

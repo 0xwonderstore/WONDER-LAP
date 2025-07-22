@@ -18,6 +18,7 @@ interface ProductViewProps {
   onToggleFavorite: (productId: string) => void;
   onClearInitialFilters: () => void;
   initialFilters: { store?: string; language?: string } | null;
+  onNavigateWithFilter: (filter: { store?: string; language?: string }) => void;
 }
 
 const ProductView: React.FC<ProductViewProps> = ({
@@ -31,6 +32,7 @@ const ProductView: React.FC<ProductViewProps> = ({
   onToggleFavorite,
   initialFilters,
   onClearInitialFilters,
+  onNavigateWithFilter
 }) => {
   const [viewMode, setViewMode] = useLocalStorage<'grid' | 'table'>('viewMode', 'grid');
   const [currentPage, setCurrentPage] = useLocalStorage('currentPage', 1);
@@ -39,14 +41,20 @@ const ProductView: React.FC<ProductViewProps> = ({
     name: string;
     store: string;
     language: string;
-    dateRange: string;
-    startDate: Date | null;
-    endDate: Date | null;
-  }>({ name: '', store: '', language: '', dateRange: '', startDate: null, endDate: null });
+  }>(() => ({
+    name: '',
+    store: initialFilters?.store || '',
+    language: initialFilters?.language || '',
+  }));
 
   useEffect(() => {
     if (initialFilters) {
-      setFilters(prev => ({ ...prev, store: initialFilters.store || '', language: initialFilters.language || '' }));
+      setFilters({
+        name: '',
+        store: initialFilters.store || '',
+        language: initialFilters.language || '',
+      });
+      setCurrentPage(1);
       onClearInitialFilters();
     }
   }, [initialFilters, onClearInitialFilters]);
@@ -56,13 +64,13 @@ const ProductView: React.FC<ProductViewProps> = ({
     setCurrentPage(1);
   };
   
-  const handleDateRangeChange = (range: string, startDate?: Date | null, endDate?: Date | null) => {
-    setFilters(prev => ({ ...prev, dateRange: range, startDate: startDate || null, endDate: endDate || null }));
-    setCurrentPage(1);
-  };
-  
   const handleProductsPerPageChange = (value: number) => {
     setProductsPerPage(value);
+    setCurrentPage(1);
+  };
+
+  const handleResetFilters = () => {
+    setFilters({ name: '', store: '', language: '' });
     setCurrentPage(1);
   };
 
@@ -81,35 +89,7 @@ const ProductView: React.FC<ProductViewProps> = ({
       const storeMatch = filters.store ? product.store?.name === filters.store : true;
       const languageMatch = filters.language ? product.language === filters.language : true;
       
-      let dateMatch = true;
-      if (product.created_at) {
-        const productDate = new Date(product.created_at);
-
-        if (filters.dateRange && filters.dateRange !== 'custom') {
-          const now = new Date();
-          let fromDate = new Date();
-          switch (filters.dateRange) {
-            case 'last_week': fromDate.setDate(now.getDate() - 7); break;
-            case 'last_month': fromDate.setMonth(now.getMonth() - 1); break;
-            case 'last_3_months': fromDate.setMonth(now.getMonth() - 3); break;
-            case 'last_6_months': fromDate.setMonth(now.getMonth() - 6); break;
-            case 'last_year': fromDate.setFullYear(now.getFullYear() - 1); break;
-          }
-          dateMatch = productDate >= fromDate && productDate <= now;
-        } else if (filters.dateRange === 'custom') {
-          const startDate = filters.startDate;
-          const endDate = filters.endDate;
-          if (startDate && endDate) {
-            dateMatch = productDate >= startDate && productDate <= endDate;
-          } else if (startDate) {
-            dateMatch = productDate >= startDate;
-          } else if (endDate) {
-            dateMatch = productDate <= endDate;
-          }
-        }
-      }
-      
-      return nameMatch && storeMatch && languageMatch && dateMatch;
+      return nameMatch && storeMatch && languageMatch;
     });
 
     return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -127,7 +107,7 @@ const ProductView: React.FC<ProductViewProps> = ({
         languages={languages}
         filters={filters}
         onFilterChange={handleFilterChange}
-        onDateRangeChange={handleDateRangeChange}
+        onResetFilters={handleResetFilters}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         productsPerPage={productsPerPage}
@@ -141,11 +121,11 @@ const ProductView: React.FC<ProductViewProps> = ({
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {currentProducts.map(p => (
-                <ProductCard key={p.url} product={p} isFavorite={favorites.includes(p.url)} onToggleFavorite={onToggleFavorite} />
+                <ProductCard key={p.url} product={p} isFavorite={favorites.includes(p.url)} onToggleFavorite={onToggleFavorite} onNavigateWithFilter={onNavigateWithFilter} />
               ))}
             </div>
           ) : (
-            <ProductTable products={currentProducts} favorites={favorites} onToggleFavorite={onToggleFavorite} />
+            <ProductTable products={currentProducts} favorites={favorites} onToggleFavorite={onToggleFavorite} onNavigateWithFilter={onNavigateWithFilter} />
           )}
           <Pagination
             locale={locale}
