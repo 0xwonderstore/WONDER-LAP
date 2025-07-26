@@ -1,30 +1,34 @@
 import React, { useMemo, useState } from 'react';
 import { Product, Locale } from '../types';
 import { formatDate } from '../utils/productUtils';
-import { ArrowUpDown, Library } from 'lucide-react';
+import { ArrowUpDown, Library, Flame } from 'lucide-react';
 
 const translations = {
   ar: {
     statistics: 'الإحصائيات',
     storeStatistics: 'إحصائيات المتاجر',
     languageStatistics: 'إحصائيات اللغات',
+    trendingStores: 'المتاجر الرائجة',
     store: 'المتجر',
     productCount: 'عدد المنتجات',
     firstProductDate: 'أول منتج',
     lastProductDate: 'آخر منتج',
     language: 'اللغة',
     adLibrary: 'مكتبة الإعلانات',
+    newProductsLast30Days: 'منتجات جديدة (آخر 30 يوم)',
   },
   en: {
     statistics: 'Statistics',
     storeStatistics: 'Store Statistics',
     languageStatistics: 'Language Statistics',
+    trendingStores: 'Trending Stores',
     store: 'Store',
     productCount: 'Product Count',
     firstProductDate: 'First Product',
     lastProductDate: 'Last Product',
     language: 'Language',
     adLibrary: 'Ad Library',
+    newProductsLast30Days: 'New Products (Last 30 Days)',
   }
 };
 
@@ -34,9 +38,9 @@ const languageNames: { [key: string]: string } = {
 };
 const getLanguageName = (code: string) => languageNames[code] || code;
 
-type SortKey = 'name' | 'productCount' | 'firstProductDate' | 'lastProductDate';
+type SortKey = 'name' | 'productCount' | 'firstProductDate' | 'lastProductDate' | 'trendingScore';
 type SortDirection = 'asc' | 'desc';
-type ActiveTab = 'stores' | 'languages';
+type ActiveTab = 'stores' | 'languages' | 'trending';
 
 interface StatisticsPageProps {
   allProducts: Product[];
@@ -46,12 +50,14 @@ interface StatisticsPageProps {
 
 const StatisticsPage: React.FC<StatisticsPageProps> = ({ allProducts, locale, onNavigateWithFilter }) => {
   const t = translations[locale];
-  const [activeTab, setActiveTab] = useState<ActiveTab>('stores');
-  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({ key: 'productCount', direction: 'desc' });
+  const [activeTab, setActiveTab] = useState<ActiveTab>('trending');
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({ key: 'trendingScore', direction: 'desc' });
 
   const { languages, stores } = useMemo(() => {
     const storeData: { [key: string]: { products: Product[] } } = {};
     const languageCounts: { [key: string]: number } = {};
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     for (const product of allProducts) {
       languageCounts[product.language || 'unknown'] = (languageCounts[product.language || 'unknown'] || 0) + 1;
@@ -63,11 +69,13 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ allProducts, locale, on
 
     const processedStores = Object.entries(storeData).map(([name, data]) => {
       const dates = data.products.map(p => new Date(p.created_at).getTime()).filter(d => !isNaN(d));
+      const trendingScore = data.products.filter(p => new Date(p.created_at) > thirtyDaysAgo).length;
       return {
         name,
         productCount: data.products.length,
         firstProductDate: dates.length ? new Date(Math.min(...dates)) : null,
         lastProductDate: dates.length ? new Date(Math.max(...dates)) : null,
+        trendingScore,
       };
     });
 
@@ -105,7 +113,7 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ allProducts, locale, on
   );
   
   const TabButton: React.FC<{ tabName: ActiveTab, children: React.ReactNode }> = ({ tabName, children }) => (
-    <button onClick={() => setActiveTab(tabName)} className={`px-4 py-3 font-semibold transition-all duration-200 border-b-2 ${activeTab === tabName ? 'border-brand-primary text-brand-primary' : 'border-transparent text-light-text-secondary dark:text-dark-text-secondary hover:border-brand-primary/50 hover:text-brand-primary/80'}`}>
+    <button onClick={() => setActiveTab(tabName)} className={`px-4 py-3 font-semibold transition-all duration-200 border-b-2 flex items-center gap-2 ${activeTab === tabName ? 'border-brand-primary text-brand-primary' : 'border-transparent text-light-text-secondary dark:text-dark-text-secondary hover:border-brand-primary/50 hover:text-brand-primary/80'}`}>
       {children}
     </button>
   );
@@ -115,17 +123,39 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ allProducts, locale, on
     return `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&q=${query}&search_type=keyword_unordered&media_type=all`;
   };
 
-  return (
-    <div className="animate-fade-in-up">
-      <h2 className="text-3xl font-bold mb-4">{t.statistics}</h2>
-      
-      <div className="border-b border-light-border dark:border-dark-border mb-6">
-        <TabButton tabName="stores">{t.storeStatistics}</TabButton>
-        <TabButton tabName="languages">{t.languageStatistics}</TabButton>
-      </div>
-
-      <div className="bg-light-surface dark:bg-dark-surface rounded-2xl shadow-md overflow-x-auto">
-        {activeTab === 'stores' ? (
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'trending':
+        return (
+          <table className="w-full text-sm">
+            <thead className="bg-light-background dark:bg-dark-background/50">
+              <tr>
+                <SortableHeader sortKey="name">{t.store}</SortableHeader>
+                <SortableHeader sortKey="trendingScore">{t.newProductsLast30Days}</SortableHeader>
+                <SortableHeader sortKey="productCount">{t.productCount}</SortableHeader>
+                <th className="p-4 text-center font-semibold">{t.adLibrary}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedStores.map((store) => (
+                <tr key={store.name} className="border-t border-light-border dark:border-dark-border">
+                  <td className="p-4 font-medium">
+                    <span className="font-bold text-brand-primary cursor-pointer hover:underline" onClick={() => onNavigateWithFilter({ store: store.name })}>{store.name}</span>
+                  </td>
+                  <td className="p-4 font-mono text-center text-lg font-bold text-orange-500">{store.trendingScore}</td>
+                  <td className="p-4 font-mono text-center">{store.productCount}</td>
+                  <td className="p-4 text-center">
+                    <a href={getAdLibraryUrl(store.name)} target="_blank" rel="noopener noreferrer" className="inline-block p-2 rounded-xl hover:bg-light-background dark:hover:bg-dark-background transition-colors">
+                      <Library className="w-5 h-5 text-brand-primary" />
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
+      case 'stores':
+        return (
           <table className="w-full text-sm">
             <thead className="bg-light-background dark:bg-dark-background/50">
               <tr>
@@ -140,12 +170,7 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ allProducts, locale, on
               {sortedStores.map((store) => (
                 <tr key={store.name} className="border-t border-light-border dark:border-dark-border">
                   <td className="p-4 font-medium">
-                    <span 
-                      className="font-bold text-brand-primary cursor-pointer hover:underline" 
-                      onClick={() => onNavigateWithFilter({ store: store.name })}
-                    >
-                      {store.name}
-                    </span>
+                    <span className="font-bold text-brand-primary cursor-pointer hover:underline" onClick={() => onNavigateWithFilter({ store: store.name })}>{store.name}</span>
                   </td>
                   <td className="p-4 font-mono text-center">{store.productCount}</td>
                   <td className="p-4 whitespace-nowrap">{store.firstProductDate ? formatDate(store.firstProductDate) : 'N/A'}</td>
@@ -159,7 +184,9 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ allProducts, locale, on
               ))}
             </tbody>
           </table>
-        ) : (
+        );
+      case 'languages':
+        return (
           <table className="w-full text-sm">
             <thead className="bg-light-background dark:bg-dark-background/50">
               <tr>
@@ -176,7 +203,22 @@ const StatisticsPage: React.FC<StatisticsPageProps> = ({ allProducts, locale, on
               ))}
             </tbody>
           </table>
-        )}
+        );
+    }
+  };
+
+  return (
+    <div className="animate-fade-in-up">
+      <h2 className="text-3xl font-bold mb-4">{t.statistics}</h2>
+      
+      <div className="border-b border-light-border dark:border-dark-border mb-6">
+        <TabButton tabName="trending"><Flame className="w-5 h-5 text-orange-500" />{t.trendingStores}</TabButton>
+        <TabButton tabName="stores">{t.storeStatistics}</TabButton>
+        <TabButton tabName="languages">{t.languageStatistics}</TabButton>
+      </div>
+
+      <div className="bg-light-surface dark:bg-dark-surface rounded-2xl shadow-md overflow-x-auto">
+        {renderContent()}
       </div>
     </div>
   );

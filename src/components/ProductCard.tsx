@@ -1,8 +1,9 @@
 import React, { useState, memo } from 'react';
-import { Calendar, Camera } from 'lucide-react';
+import { Calendar, Camera, Heart } from 'lucide-react';
 import { Product } from '../types';
 import { formatDate } from '../utils/productUtils';
 import MetaIcon from './MetaIcon';
+import { useFavoritesStore } from '../stores/favoritesStore';
 
 interface ProductCardProps {
   product: Product;
@@ -11,6 +12,14 @@ interface ProductCardProps {
 
 function ProductCard({ product, onNavigateWithFilter }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
+  const { favorites, toggleFavorite } = useFavoritesStore();
+
+  const isFavorite = favorites.my_main_favorites?.products.includes(product.url) ?? false;
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    toggleFavorite(product.url);
+  };
 
   const getImageUrl = () => {
     if (imageError || !product.images?.length) {
@@ -50,6 +59,19 @@ function ProductCard({ product, onNavigateWithFilter }: ProductCardProps) {
           />
         </a>
         
+        <div className="absolute top-3 right-3">
+            <button
+            onClick={handleFavoriteClick}
+            className="p-1.5 bg-white/70 dark:bg-black/50 backdrop-blur-sm rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
+            aria-label="Toggle Favorite"
+            >
+            <Heart 
+                className={`w-5 h-5 transition-all ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-700 dark:text-gray-300'}`} 
+                strokeWidth={isFavorite ? 2 : 2.5}
+            />
+            </button>
+        </div>
+
         <div className="absolute top-3 left-3 flex flex-col gap-2">
           <div className="group/tooltip relative">
               <a

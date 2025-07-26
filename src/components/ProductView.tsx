@@ -72,7 +72,7 @@ const ProductView: React.FC<ProductViewProps> = ({
 
   const processedProducts = useMemo(() => {
     const blacklistRegex = new RegExp(blacklist.join('|'), 'i');
-    const normalizeText = (text: string) => text.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+    const normalizeText = (text: string) => text.toLowerCase().replace(/[^a-z0-d\s]/g, '');
     const normalizedFilterName = normalizeText(filters.name);
 
     const filtered = products.filter(product => {
