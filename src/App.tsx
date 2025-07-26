@@ -34,6 +34,10 @@ const migrateFavorites = (data: any): FavoritesData => {
       },
     };
   }
+  // Ensure the main list always exists
+  if (!data.my_main_favorites) {
+    data.my_main_favorites = { name: 'My Favorites', products: [] };
+  }
   return data as FavoritesData;
 };
 
@@ -71,19 +75,32 @@ const App: React.FC = () => {
   const showToast = (message: string, type: 'added' | 'removed') => { setToast({ message, type }); };
   
   const toggleFavorite = useCallback((productUrl: string) => {
-    setFavoritesData(prev => {
-      const mainList = prev.my_main_favorites || { name: 'My Favorites', products: [] };
-      const isFavorite = mainList.products.includes(productUrl);
-      
-      const newProducts = isFavorite
-        ? mainList.products.filter(url => url !== productUrl)
-        : [...mainList.products, productUrl];
+    setFavoritesData(currentFavoritesData => {
+      // Create a deep copy to avoid direct mutation.
+      const newFavoritesData = JSON.parse(JSON.stringify(currentFavoritesData));
 
-      showToast(isFavorite ? (locale === 'ar' ? 'تمت الإزالة من المفضلة' : 'Removed from favorites') : (locale === 'ar' ? 'تمت الإضافة إلى المفضلة' : 'Added to favorites'), isFavorite ? 'removed' : 'added');
+      // Ensure the main list exists.
+      if (!newFavoritesData.my_main_favorites) {
+        newFavoritesData.my_main_favorites = { name: 'My Favorites', products: [] };
+      }
       
-      return { ...prev, my_main_favorites: { ...mainList, products: newProducts }};
+      const mainListProducts = newFavoritesData.my_main_favorites.products;
+      const isFavorite = mainListProducts.includes(productUrl);
+
+      if (isFavorite) {
+        // Remove the product URL from the main list.
+        newFavoritesData.my_main_favorites.products = mainListProducts.filter((url: string) => url !== productUrl);
+        showToast(locale === 'ar' ? 'تمت الإزالة من المفضلة' : 'Removed from favorites', 'removed');
+      } else {
+        // Add the product URL to the main list.
+        newFavoritesData.my_main_favorites.products.push(productUrl);
+        showToast(locale === 'ar' ? 'تمت الإضافة إلى المفضلة' : 'Added to favorites', 'added');
+      }
+
+      return newFavoritesData;
     });
   }, [locale]);
+
 
   const favoritesManagement = {
     addList: useCallback((id: string, name: string, products: string[] = []) => {

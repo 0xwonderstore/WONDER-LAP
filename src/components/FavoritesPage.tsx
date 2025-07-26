@@ -49,20 +49,12 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, favoritesDat
   const [newName, setNewName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const activeList = useMemo(() => favoritesData[activeListId] || { name: t.myFavorites, products: [] }, [favoritesData, activeListId, t.myFavorites]);
+  const activeList = useMemo(() => favoritesData[activeListId] || favoritesData['my_main_favorites'] || { name: t.myFavorites, products: [] }, [favoritesData, activeListId, t.myFavorites]);
 
   const productsInList = useMemo(() => {
     return allProducts.filter(p => activeList.products.includes(p.url))
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [allProducts, activeList]);
-  
-  // Persist activeListId when favoritesData changes
-  React.useEffect(() => {
-    if (!favoritesData[activeListId]) {
-      setActiveListId('my_main_favorites');
-    }
-  }, [favoritesData, activeListId]);
-
 
   const handleToggleSelection = (url: string) => {
     setSelectedProducts(prev => prev.includes(url) ? prev.filter(u => u !== url) : [...prev, url]);
@@ -115,6 +107,16 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, favoritesDat
         setActiveListId(listId);
       }
     });
+    event.target.value = ''; // Reset file input
+  };
+  
+  const handleDeleteList = (listIdToDelete: string) => {
+    if (window.confirm(t.confirmDelete)) {
+      if (activeListId === listIdToDelete) {
+        setActiveListId('my_main_favorites');
+      }
+      onManageLists.removeList(listIdToDelete);
+    }
   };
 
   const startRename = (listId: string) => {
@@ -148,7 +150,7 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, favoritesDat
                   <span className="font-semibold">{list.name}</span>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button onClick={(e) => { e.stopPropagation(); startRename(id); }} aria-label={t.renameList}><Edit2 className="w-4 h-4" /></button>
-                    {id !== 'my_main_favorites' && <button onClick={(e) => { e.stopPropagation(); if(window.confirm(t.confirmDelete)) onManageLists.removeList(id); }} aria-label={t.deleteList}><Trash2 className="w-4 h-4 text-red-500"/></button>}
+                    {id !== 'my_main_favorites' && <button onClick={(e) => { e.stopPropagation(); handleDeleteList(id); }} aria-label={t.deleteList}><Trash2 className="w-4 h-4 text-red-500"/></button>}
                   </div>
                 </div>
               )}
