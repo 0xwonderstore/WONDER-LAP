@@ -1,17 +1,14 @@
 
 import React, { memo } from 'react';
-import { Heart } from 'lucide-react';
 import { Product } from '../types';
 import { formatDate } from '../utils/productUtils';
 
 interface ProductTableProps {
   products: Product[];
-  favorites: string[];
-  onToggleFavorite: (productUrl: string) => void;
   onNavigateWithFilter: (filter: { store?: string }) => void;
 }
 
-function ProductTable({ products, favorites, onToggleFavorite, onNavigateWithFilter }: ProductTableProps) {
+function ProductTable({ products, onNavigateWithFilter }: ProductTableProps) {
   
   const handleStoreClick = (storeName: string | undefined) => {
     if (storeName) {
@@ -32,7 +29,6 @@ function ProductTable({ products, favorites, onToggleFavorite, onNavigateWithFil
         </thead>
         <tbody className="divide-y divide-light-border dark:divide-dark-border">
           {products.map((product) => {
-            const isFavorite = favorites.includes(product.url);
             return (
               <tr key={product.url} className="hover:bg-light-background dark:hover:bg-dark-background transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -64,21 +60,9 @@ function ProductTable({ products, favorites, onToggleFavorite, onNavigateWithFil
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-light-text-secondary dark:text-dark-text-secondary">{formatDate(product.created_at)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <a href={product.url} target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:text-brand-primary-dark">
-                      عرض المنتج
-                    </a>
-                    <button
-                      onClick={() => onToggleFavorite(product.url)}
-                      className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50"
-                      aria-label="Toggle Favorite"
-                    >
-                      <Heart 
-                          className={`w-5 h-5 transition-all ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-500'}`} 
-                          strokeWidth={2}
-                      />
-                    </button>
-                  </div>
+                  <a href={product.url} target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:text-brand-primary-dark">
+                    عرض المنتج
+                  </a>
                 </td>
               </tr>
             )

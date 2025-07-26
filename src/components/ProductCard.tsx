@@ -1,17 +1,15 @@
 import React, { useState, memo } from 'react';
-import { Calendar, Heart, Camera } from 'lucide-react';
+import { Calendar, Camera } from 'lucide-react';
 import { Product } from '../types';
 import { formatDate } from '../utils/productUtils';
-import MetaIcon from './MetaIcon'; // Import the new MetaIcon component
+import MetaIcon from './MetaIcon';
 
 interface ProductCardProps {
   product: Product;
-  isFavorite: boolean;
-  onToggleFavorite: (productUrl: string) => void;
   onNavigateWithFilter: (filter: { store?: string }) => void;
 }
 
-function ProductCard({ product, isFavorite, onToggleFavorite, onNavigateWithFilter }: ProductCardProps) {
+function ProductCard({ product, onNavigateWithFilter }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
 
   const getImageUrl = () => {
@@ -19,11 +17,6 @@ function ProductCard({ product, isFavorite, onToggleFavorite, onNavigateWithFilt
       return 'https://via.placeholder.com/400';
     }
     return product.images[0].src;
-  };
-
-  const handleFavoriteClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    onToggleFavorite(product.url);
   };
 
   const handleStoreClick = () => {
@@ -57,19 +50,6 @@ function ProductCard({ product, isFavorite, onToggleFavorite, onNavigateWithFilt
           />
         </a>
         
-        <div className="absolute top-3 right-3">
-            <button
-              onClick={handleFavoriteClick}
-              className="p-1.5 bg-white/70 dark:bg-black/50 backdrop-blur-sm rounded-full transition-all duration-200 hover:scale-110 active:scale-95"
-              aria-label="Toggle Favorite"
-            >
-              <Heart 
-                  className={`w-5 h-5 transition-all ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-700 dark:text-gray-300'}`} 
-                  strokeWidth={isFavorite ? 2 : 2.5}
-              />
-            </button>
-        </div>
-
         <div className="absolute top-3 left-3 flex flex-col gap-2">
           <div className="group/tooltip relative">
               <a
@@ -95,7 +75,7 @@ function ProductCard({ product, isFavorite, onToggleFavorite, onNavigateWithFilt
                 className="p-1.5 bg-white/70 dark:bg-black/50 backdrop-blur-sm rounded-full transition-all duration-200 hover:scale-110 active:scale-95 inline-block"
                 aria-label="Go to Ad Library"
               >
-                <MetaIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <MetaIcon className="w-5 h-5" />
               </a>
               <div className="absolute top-1/2 -translate-y-1/2 left-full ml-3 w-max bg-gray-800 text-white text-xs rounded-lg py-1 px-3 opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 pointer-events-none z-10 scale-95 group-hover/tooltip:scale-100 whitespace-nowrap">
                 {product.store.name} Ad Library

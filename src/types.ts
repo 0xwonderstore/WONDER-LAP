@@ -1,22 +1,22 @@
+export type Locale = 'ar' | 'en';
 
 export interface Product {
-    id: string;
-    title: string;
-    vendor: string;
-    body_html: string;
-    images: { src: string }[];
-    created_at: string;
+  id: number;
+  name: string;
+  url: string;
+  store: {
+    name: string;
     url: string;
-  }
-  
-  export interface FilterConfig {
-    title: string;
-    vendor: string;
-    dateRange: 'all' | 'custom';
-    customStartDate: string;
-    customEndDate: string;
-  }
-
-  export type SortKey = 'created_at' | 'title' | 'vendor';
-
-  export type SortOrder = 'asc' | 'desc';
+  };
+  images: {
+    id: number;
+    src: string;
+    alt: string | null;
+  }[];
+  price: string;
+  currency: string;
+  language: string;
+  country: string;
+  created_at: string;
+  description: string;
+}
