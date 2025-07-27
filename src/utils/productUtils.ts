@@ -1,46 +1,18 @@
 
-import { Product, FilterConfig, SortKey, SortOrder } from '../types';
+import { Product } from '../types';
 
-export const applyFiltersAndSort = (
-  products: Product[],
-  filters: FilterConfig,
-  sortKey: SortKey,
-  sortOrder: SortOrder
-): Product[] => {
-  let filteredProducts = [...products];
-
-  if (filters.title) {
-    filteredProducts = filteredProducts.filter(p => p.title.toLowerCase().includes(filters.title.toLowerCase()));
-  }
-  if (filters.vendor) {
-    filteredProducts = filteredProducts.filter(p => p.vendor === filters.vendor);
-  }
-
-  if (filters.dateRange === 'custom' && filters.customStartDate && filters.customEndDate) {
-    const startDate = new Date(filters.customStartDate);
-    const endDate = new Date(filters.customEndDate);
-    filteredProducts = filteredProducts.filter(p => {
-      const productDate = new Date(p.created_at);
-      return productDate >= startDate && productDate <= endDate;
-    });
-  }
-
-  filteredProducts.sort((a, b) => {
-    const aValue = a[sortKey];
-    const bValue = b[sortKey];
-    if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-    if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
-    return 0;
-  });
-
-  return filteredProducts;
-};
-
-export const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+export const formatDate = (dateString: string | Date): string => {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
     return new Intl.DateTimeFormat('ar-EG', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     }).format(date);
+};
+
+export const getMonthYear = (date: Date, locale: string): string => {
+  return date.toLocaleString(locale === 'ar' ? 'ar-EG' : 'en-US', {
+    month: 'short',
+    year: 'numeric',
+  });
 };

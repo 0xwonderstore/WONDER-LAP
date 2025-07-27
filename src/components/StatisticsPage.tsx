@@ -1,224 +1,200 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { Product, Locale } from '../types';
 import { formatDate } from '../utils/productUtils';
-import { ArrowUpDown, Library, Flame } from 'lucide-react';
+import { ArrowUpDown, Library, Calendar as CalendarIcon, GripVertical } from 'lucide-react';
+import { DateRange } from 'react-day-picker';
+import { addDays, format, sub } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Button } from './ui/button';
+import { Calendar } from './ui/calendar';
 
 const translations = {
   ar: {
     statistics: 'الإحصائيات',
-    storeStatistics: 'إحصائيات المتاجر',
-    languageStatistics: 'إحصائيات اللغات',
-    trendingStores: 'المتاجر الرائجة',
     store: 'المتجر',
-    productCount: 'عدد المنتجات',
-    firstProductDate: 'أول منتج',
-    lastProductDate: 'آخر منتج',
-    language: 'اللغة',
+    totalProducts: 'إجمالي المنتجات',
+    newProducts: 'المنتجات الجديدة',
     adLibrary: 'مكتبة الإعلانات',
-    newProductsLast30Days: 'منتجات جديدة (آخر 30 يوم)',
+    dateRange: 'الفترة الزمنية',
+    last7Days: 'آخر 7 أيام',
+    last30Days: 'آخر 30 يومًا',
+    last3Months: 'آخر 3 أشهر',
+    last6Months: 'آخر 6 أشهر',
+    lastYear: 'آخر سنة',
+    custom: 'تاريخ مخصص',
+    selectDate: 'اختر تاريخًا',
+    from: 'من',
+    to: 'إلى',
+    apply: 'تطبيق',
+    trendingStores: 'تحليل المتاجر',
   },
   en: {
     statistics: 'Statistics',
-    storeStatistics: 'Store Statistics',
-    languageStatistics: 'Language Statistics',
-    trendingStores: 'Trending Stores',
     store: 'Store',
-    productCount: 'Product Count',
-    firstProductDate: 'First Product',
-    lastProductDate: 'Last Product',
-    language: 'Language',
+    totalProducts: 'Total Products',
+    newProducts: 'New Products',
     adLibrary: 'Ad Library',
-    newProductsLast30Days: 'New Products (Last 30 Days)',
+    dateRange: 'Date Range',
+    last7Days: 'Last 7 Days',
+    last30Days: 'Last 30 Days',
+    last3Months: 'Last 3 Months',
+    last6Months: 'Last 6 Months',
+    lastYear: 'Last Year',
+    custom: 'Custom',
+    selectDate: 'Select a date',
+    from: 'from',
+    to: 'to',
+    apply: 'Apply',
+    trendingStores: 'Store Analysis',
   }
 };
 
-const languageNames: { [key: string]: string } = {
-  ar: 'العربية', en: 'English', es: 'Español', fr: 'Français', 
-  de: 'Deutsch', ja: '日本語', ru: 'Русский',
-};
-const getLanguageName = (code: string) => languageNames[code] || code;
+type Preset = '7d' | '30d' | '3m' | '6m' | '1y' | 'custom';
+type SortKey = 'name' | 'productCount' | 'trendingScore';
 
-type SortKey = 'name' | 'productCount' | 'firstProductDate' | 'lastProductDate' | 'trendingScore';
-type SortDirection = 'asc' | 'desc';
-type ActiveTab = 'stores' | 'languages' | 'trending';
-
-interface StatisticsPageProps {
-  allProducts: Product[];
-  locale: Locale;
-  onNavigateWithFilter: (filter: { store?: string; language?: string }) => void;
-}
-
-const StatisticsPage: React.FC<StatisticsPageProps> = ({ allProducts, locale, onNavigateWithFilter }) => {
+const StatisticsPage: React.FC<{ allProducts: Product[]; locale: Locale; onNavigateWithFilter: (filter: { store?: string; }) => void; }> = ({ allProducts, locale, onNavigateWithFilter }) => {
   const t = translations[locale];
-  const [activeTab, setActiveTab] = useState<ActiveTab>('trending');
-  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: SortDirection }>({ key: 'trendingScore', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'asc' | 'desc' }>({ key: 'trendingScore', direction: 'desc' });
+  const [date, setDate] = useState<DateRange | undefined>({ from: sub(new Date(), { days: 29 }), to: new Date() });
+  const [activePreset, setActivePreset] = useState<Preset>('30d');
 
-  const { languages, stores } = useMemo(() => {
-    const storeData: { [key: string]: { products: Product[] } } = {};
-    const languageCounts: { [key: string]: number } = {};
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    for (const product of allProducts) {
-      languageCounts[product.language || 'unknown'] = (languageCounts[product.language || 'unknown'] || 0) + 1;
-      if (product.store?.name) {
-        if (!storeData[product.store.name]) storeData[product.store.name] = { products: [] };
-        storeData[product.store.name].products.push(product);
-      }
+  const handlePresetChange = (preset: Preset) => {
+    setActivePreset(preset);
+    const now = new Date();
+    switch (preset) {
+      case '7d': setDate({ from: sub(now, { days: 6 }), to: now }); break;
+      case '30d': setDate({ from: sub(now, { days: 29 }), to: now }); break;
+      case '3m': setDate({ from: sub(now, { months: 3 }), to: now }); break;
+      case '6m': setDate({ from: sub(now, { months: 6 }), to: now }); break;
+      case '1y': setDate({ from: sub(now, { years: 1 }), to: now }); break;
+      default: break;
     }
+  };
 
-    const processedStores = Object.entries(storeData).map(([name, data]) => {
-      const dates = data.products.map(p => new Date(p.created_at).getTime()).filter(d => !isNaN(d));
-      const trendingScore = data.products.filter(p => new Date(p.created_at) > thirtyDaysAgo).length;
-      return {
+  const { stores } = useMemo(() => {
+    const storeData: { [key: string]: { products: Product[], recent: number } } = {};
+    const fromDate = date?.from;
+    const toDate = date?.to;
+
+    allProducts.forEach(product => {
+      if (!storeData[product.store.name]) storeData[product.store.name] = { products: [], recent: 0 };
+      storeData[product.store.name].products.push(product);
+
+      if(fromDate && toDate) {
+        const productDate = new Date(product.created_at);
+        if (productDate >= fromDate && productDate <= toDate) {
+          storeData[product.store.name].recent++;
+        }
+      }
+    });
+
+    return {
+      stores: Object.entries(storeData).map(([name, data]) => ({
         name,
         productCount: data.products.length,
-        firstProductDate: dates.length ? new Date(Math.min(...dates)) : null,
-        lastProductDate: dates.length ? new Date(Math.max(...dates)) : null,
-        trendingScore,
-      };
-    });
-
-    const processedLanguages = Object.entries(languageCounts)
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count);
-        
-    return { languages: processedLanguages, stores: processedStores };
-  }, [allProducts]);
+        trendingScore: data.recent,
+      }))
+    };
+  }, [allProducts, date]);
 
   const sortedStores = useMemo(() => {
-    let sortableItems = [...stores];
-    sortableItems.sort((a, b) => {
+    return [...stores].sort((a, b) => {
       const valA = a[sortConfig.key];
       const valB = b[sortConfig.key];
-      if (valA === null || valB === null) return 0;
       if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
       if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
+      return a.name.localeCompare(b.name);
     });
-    return sortableItems;
   }, [stores, sortConfig]);
+  
+  const requestSort = (key: SortKey) => setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' }));
 
-  const requestSort = (key: SortKey) => {
-    setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' }));
-  };
-
-  const SortableHeader: React.FC<{ sortKey: SortKey, children: React.ReactNode }> = ({ sortKey, children }) => (
-    <th className="p-4 text-start rtl:text-right font-semibold cursor-pointer whitespace-nowrap" onClick={() => requestSort(sortKey)}>
-      <div className="flex items-center gap-2">
-        {children}
-        <ArrowUpDown className={`w-4 h-4 text-gray-400 transition-colors ${sortConfig.key === sortKey ? 'text-brand-primary' : ''}`} />
-      </div>
+  const SortableHeader: React.FC<{ sortKey: SortKey, children: React.ReactNode, className?: string }> = ({ sortKey, children, className }) => (
+    <th className={`p-4 text-start rtl:text-right font-semibold cursor-pointer whitespace-nowrap ${className}`} onClick={() => requestSort(sortKey)}>
+      <div className="flex items-center gap-2">{children}<ArrowUpDown className={`w-4 h-4 text-gray-400 ${sortConfig.key === sortKey ? 'text-brand-primary' : ''}`} /></div>
     </th>
   );
-  
-  const TabButton: React.FC<{ tabName: ActiveTab, children: React.ReactNode }> = ({ tabName, children }) => (
-    <button onClick={() => setActiveTab(tabName)} className={`px-4 py-3 font-semibold transition-all duration-200 border-b-2 flex items-center gap-2 ${activeTab === tabName ? 'border-brand-primary text-brand-primary' : 'border-transparent text-light-text-secondary dark:text-dark-text-secondary hover:border-brand-primary/50 hover:text-brand-primary/80'}`}>
-      {children}
-    </button>
-  );
-  
-  const getAdLibraryUrl = (storeName: string) => {
-    const query = encodeURIComponent(storeName);
-    return `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&q=${query}&search_type=keyword_unordered&media_type=all`;
-  };
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'trending':
-        return (
-          <table className="w-full text-sm">
-            <thead className="bg-light-background dark:bg-dark-background/50">
-              <tr>
-                <SortableHeader sortKey="name">{t.store}</SortableHeader>
-                <SortableHeader sortKey="trendingScore">{t.newProductsLast30Days}</SortableHeader>
-                <SortableHeader sortKey="productCount">{t.productCount}</SortableHeader>
-                <th className="p-4 text-center font-semibold">{t.adLibrary}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedStores.map((store) => (
-                <tr key={store.name} className="border-t border-light-border dark:border-dark-border">
-                  <td className="p-4 font-medium">
-                    <span className="font-bold text-brand-primary cursor-pointer hover:underline" onClick={() => onNavigateWithFilter({ store: store.name })}>{store.name}</span>
-                  </td>
-                  <td className="p-4 font-mono text-center text-lg font-bold text-orange-500">{store.trendingScore}</td>
-                  <td className="p-4 font-mono text-center">{store.productCount}</td>
-                  <td className="p-4 text-center">
-                    <a href={getAdLibraryUrl(store.name)} target="_blank" rel="noopener noreferrer" className="inline-block p-2 rounded-xl hover:bg-light-background dark:hover:bg-dark-background transition-colors">
-                      <Library className="w-5 h-5 text-brand-primary" />
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        );
-      case 'stores':
-        return (
-          <table className="w-full text-sm">
-            <thead className="bg-light-background dark:bg-dark-background/50">
-              <tr>
-                <SortableHeader sortKey="name">{t.store}</SortableHeader>
-                <SortableHeader sortKey="productCount">{t.productCount}</SortableHeader>
-                <SortableHeader sortKey="firstProductDate">{t.firstProductDate}</SortableHeader>
-                <SortableHeader sortKey="lastProductDate">{t.lastProductDate}</SortableHeader>
-                <th className="p-4 text-center font-semibold">{t.adLibrary}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedStores.map((store) => (
-                <tr key={store.name} className="border-t border-light-border dark:border-dark-border">
-                  <td className="p-4 font-medium">
-                    <span className="font-bold text-brand-primary cursor-pointer hover:underline" onClick={() => onNavigateWithFilter({ store: store.name })}>{store.name}</span>
-                  </td>
-                  <td className="p-4 font-mono text-center">{store.productCount}</td>
-                  <td className="p-4 whitespace-nowrap">{store.firstProductDate ? formatDate(store.firstProductDate) : 'N/A'}</td>
-                  <td className="p-4 whitespace-nowrap">{store.lastProductDate ? formatDate(store.lastProductDate) : 'N/A'}</td>
-                  <td className="p-4 text-center">
-                    <a href={getAdLibraryUrl(store.name)} target="_blank" rel="noopener noreferrer" className="inline-block p-2 rounded-xl hover:bg-light-background dark:hover:bg-dark-background transition-colors">
-                      <Library className="w-5 h-5 text-brand-primary" />
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        );
-      case 'languages':
-        return (
-          <table className="w-full text-sm">
-            <thead className="bg-light-background dark:bg-dark-background/50">
-              <tr>
-                <th className="p-4 text-start rtl:text-right font-semibold">{t.language}</th>
-                <th className="p-4 text-end rtl:text-left font-semibold">{t.productCount}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {languages.map((lang) => (
-                <tr key={lang.name} className="border-t border-light-border dark:border-dark-border">
-                  <td className="p-4 font-medium"><span className="cursor-pointer hover:text-brand-primary" onClick={() => onNavigateWithFilter({ language: lang.name })}>{getLanguageName(lang.name)}</span></td>
-                  <td className="p-4 text-end rtl:text-left font-mono">{lang.count}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        );
-    }
-  };
-
+  const presets: { key: Preset, label: string }[] = [
+    { key: '7d', label: t.last7Days }, { key: '30d', label: t.last30Days },
+    { key: '3m', label: t.last3Months }, { key: '6m', label: t.last6Months },
+    { key: '1y', label: t.lastYear }
+  ];
+  
   return (
     <div className="animate-fade-in-up">
-      <h2 className="text-3xl font-bold mb-4">{t.statistics}</h2>
-      
-      <div className="border-b border-light-border dark:border-dark-border mb-6">
-        <TabButton tabName="trending"><Flame className="w-5 h-5 text-orange-500" />{t.trendingStores}</TabButton>
-        <TabButton tabName="stores">{t.storeStatistics}</TabButton>
-        <TabButton tabName="languages">{t.languageStatistics}</TabButton>
+      <div className="bg-light-surface dark:bg-dark-surface p-4 rounded-2xl mb-6 shadow-md">
+        <h3 className="text-lg font-bold mb-4">{t.trendingStores}</h3>
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg p-1">
+            {presets.map(p => (
+              <Button key={p.key} variant={activePreset === p.key ? 'soft' : 'ghost'} onClick={() => handlePresetChange(p.key)} className="h-9">
+                {p.label}
+              </Button>
+            ))}
+          </div>
+          <GripVertical className="h-6 w-6 text-gray-300 dark:text-gray-600 hidden md:block" />
+           <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id="date"
+                variant={"outline"}
+                className={`w-[260px] justify-start text-left font-normal h-11 ${!date && "text-muted-foreground"}`}
+                onClick={() => setActivePreset('custom')}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date?.from ? (
+                  date.to ? (
+                    <>{format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}</>
+                  ) : (
+                    format(date.from, "LLL dd, y")
+                  )
+                ) : (
+                  <span>{t.selectDate}</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={date?.from}
+                selected={date}
+                onSelect={setDate}
+                numberOfMonths={2}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       <div className="bg-light-surface dark:bg-dark-surface rounded-2xl shadow-md overflow-x-auto">
-        {renderContent()}
+         <table className="w-full text-sm">
+            <thead className="bg-light-background dark:bg-dark-background/50">
+              <tr>
+                <SortableHeader sortKey="name">{t.store}</SortableHeader>
+                <SortableHeader sortKey="trendingScore" className="text-center">{t.newProducts}</SortableHeader>
+                <SortableHeader sortKey="productCount" className="text-center">{t.totalProducts}</SortableHeader>
+                <th className="p-4 text-center font-semibold">{t.adLibrary}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedStores.map(store => (
+                <tr key={store.name} className="border-t border-light-border dark:border-dark-border">
+                  <td className="p-4">
+                    <span className="font-bold text-brand-primary cursor-pointer hover:underline" onClick={() => onNavigateWithFilter({ store: store.name })}>{store.name}</span>
+                  </td>
+                  <td className="p-4 font-mono text-center text-lg font-bold text-orange-500">{store.trendingScore}</td>
+                  <td className="p-4 font-mono text-center text-gray-500">{store.productCount}</td>
+                  <td className="p-4 text-center">
+                    <a href={`https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&q=${encodeURIComponent(store.name)}&search_type=keyword_unordered&media_type=all`} target="_blank" rel="noopener noreferrer" className="p-2 rounded-xl hover:bg-light-background dark:hover:bg-dark-background">
+                      <Library className="w-5 h-5 text-brand-primary" />
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
       </div>
     </div>
   );
