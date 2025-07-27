@@ -75,6 +75,15 @@ const ProductView: React.FC<ProductViewProps> = ({
     const normalizeText = (text: string) => text.toLowerCase().replace(/[^a-z0-d\s]/g, '');
     const normalizedFilterName = normalizeText(filters.name);
 
+    // New: Get all stores that have at least one product in the selected language
+    const storesWithSelectedLanguage = filters.language
+      ? new Set(
+          products
+            .filter(p => p.language === filters.language && p.store?.name)
+            .map(p => p.store!.name)
+        )
+      : null;
+
     const filtered = products.filter(product => {
       if (blacklist.length > 0 && product.name && blacklistRegex.test(product.name)) {
         return false;
@@ -83,7 +92,11 @@ const ProductView: React.FC<ProductViewProps> = ({
       const normalizedProductName = product.name ? normalizeText(product.name) : '';
       const nameMatch = filters.name ? normalizedProductName.includes(normalizedFilterName) : true;
       const storeMatch = filters.store ? product.store?.name === filters.store : true;
-      const languageMatch = filters.language ? product.language === filters.language : true;
+      
+      // New: If a language is selected, check if the product's store is in our set
+      const languageMatch = storesWithSelectedLanguage
+        ? product.store?.name && storesWithSelectedLanguage.has(product.store.name)
+        : true;
       
       return nameMatch && storeMatch && languageMatch;
     });
