@@ -9,10 +9,3 @@ export const formatDate = (dateString: string | Date): string => {
       day: 'numeric',
     }).format(date);
 };
-
-export const getMonthYear = (date: Date, locale: string): string => {
-  return date.toLocaleString(locale === 'ar' ? 'ar-EG' : 'en-US', {
-    month: 'short',
-    year: 'numeric',
-  });
-};
