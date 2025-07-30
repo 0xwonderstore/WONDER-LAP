@@ -1,9 +1,8 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Product, Locale } from '../types';
-import { ExternalLink, Calendar, Package, Search, Store, Languages as LanguagesIcon, ChevronDown, ChevronsUpDown, BarChart, Zap, PowerOff, TrendingUp, AlertTriangle, Cloud } from 'lucide-react';
+import { ExternalLink, Calendar, Package, Search, Store, Languages as LanguagesIcon, ChevronDown, ChevronsUpDown, BarChart, Zap, PowerOff, TrendingUp, AlertTriangle } from 'lucide-react';
 import { getLanguageName } from '../utils/languageUtils';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as ChartTooltip } from 'recharts';
-import WordCloud from 'd3-cloud';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as ChartTooltip, BarChart as RechartsBarChart, Bar, XAxis, YAxis } from 'recharts';
 
 // --- Types ---
 type SortDirection = 'asc' | 'desc';
@@ -17,8 +16,8 @@ type ActiveTab = 'stores' | 'languages' | 'insights';
 
 // --- Translations ---
 const translations = {
-    ar: { reports: 'التقارير', stores: 'المتاجر', languages: 'اللغات', insights: 'تحليلات ذكية', totalActiveStores: 'إجمالي المتاجر النشطة', storeActivity: 'نشاط المتاجر', languageActivity: 'نشاط اللغات', timePeriod: 'الفترة الزمنية', storeName: 'اسم المتجر', productsInPeriod: 'المنتجات بالفترة', totalProducts: 'إجمالي المنتجات', adLibrary: 'مكتبة الإعلانات', storesWithLanguage: 'المتاجر الداعمة للغة', last7days: 'آخر 7 أيام', last30days: 'آخر 30 يومًا', last3months: 'آخر 3 أشهر', last6months: 'آخر 6 أشهر', lastYear: 'آخر سنة', noData: 'لا توجد بيانات للعرض.', searchInMeta: 'البحث في مكتبة ميتا', supportingStores: 'المتاجر الداعمة:', topKeywords: 'سحابة الكلمات المفتاحية', storeHealth: 'توزيع صحة المتاجر', healthActive: 'نشط', healthSlowing: 'بطيء', healthStale: 'راكد', keyword: 'الكلمة', frequency: 'التكرار', lastActivity: 'آخر نشاط' },
-    en: { reports: 'Reports', stores: 'Stores', languages: 'Languages', insights: 'Smart Insights', totalActiveStores: 'Total Active Stores', storeActivity: 'Store Activity', languageActivity: 'Language Activity', timePeriod: 'Time Period', storeName: 'Store Name', productsInPeriod: 'Products in Period', totalProducts: 'Total Products', adLibrary: 'Ad Library', storesWithLanguage: 'Stores with Language', last7days: 'Last 7 Days', last30days: 'Last 30 Days', last3months: 'Last 3 Months', last6months: 'Last 6 Months', lastYear: 'Last Year', noData: 'No data to display.', searchInMeta: 'Search in Meta Library', supportingStores: 'Supporting Stores:', topKeywords: 'Top Keywords Cloud', storeHealth: 'Store Health Distribution', healthActive: 'Active', healthSlowing: 'Slowing', healthStale: 'Stale', keyword: 'Keyword', frequency: 'Frequency', lastActivity: 'Last Activity' },
+    ar: { reports: 'التقارير', stores: 'المتاجر', languages: 'اللغات', insights: 'تحليلات ذكية', totalActiveStores: 'إجمالي المتاجر النشطة', storeActivity: 'نشاط المتاجر', languageActivity: 'نشاط اللغات', timePeriod: 'الفترة الزمنية', storeName: 'اسم المتجر', productsInPeriod: 'المنتجات بالفترة', totalProducts: 'إجمالي المنتجات', adLibrary: 'مكتبة الإعلانات', storesWithLanguage: 'المتاجر الداعمة للغة', last7days: 'آخر 7 أيام', last30days: 'آخر 30 يومًا', last3months: 'آخر 3 أشهر', last6months: 'آخر 6 أشهر', lastYear: 'آخر سنة', noData: 'لا توجد بيانات للعرض.', searchInMeta: 'البحث في مكتبة ميتا', supportingStores: 'المتاجر الداعمة:', topKeywords: 'تحليل أهم الكلمات', storeHealth: 'توزيع صحة المتاجر', healthActive: 'نشط', healthSlowing: 'بطيء', healthStale: 'راكد', keyword: 'الكلمة', frequency: 'التكرار', lastActivity: 'آخر نشاط' },
+    en: { reports: 'Reports', stores: 'Stores', languages: 'Languages', insights: 'Smart Insights', totalActiveStores: 'Total Active Stores', storeActivity: 'Store Activity', languageActivity: 'Language Activity', timePeriod: 'Time Period', storeName: 'Store Name', productsInPeriod: 'Products in Period', totalProducts: 'Total Products', adLibrary: 'Ad Library', storesWithLanguage: 'Stores with Language', last7days: 'Last 7 Days', last30days: 'Last 30 Days', last3months: 'Last 3 Months', last6months: 'Last 6 Months', lastYear: 'Last Year', noData: 'No data to display.', searchInMeta: 'Search in Meta Library', supportingStores: 'Supporting Stores:', topKeywords: 'Top Keywords Analysis', storeHealth: 'Store Health Distribution', healthActive: 'Active', healthSlowing: 'Slowing', healthStale: 'Stale', keyword: 'Keyword', frequency: 'Frequency', lastActivity: 'Last Activity' },
 };
 
 // --- Helper Functions ---
@@ -28,7 +27,7 @@ const commonStopWords = new Set(['و', 'في', 'من', 'إلى', 'على', 'عن
 // --- Main Component ---
 const ReportsPage: React.FC<ReportsPageProps> = ({ products, locale }) => {
   const [timeFilter, setTimeFilter] = useState<number>(30);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('stores');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('insights');
   const t = translations[locale];
 
   const { storeStats, languageStats, totalActiveStores, keywordAnalysis, storeHealthAnalysis } = useMemo(() => {
@@ -81,7 +80,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ products, locale }) => {
         storeStats: finalStoreStats,
         languageStats: Array.from(langMap.entries()).map(([name, data]) => ({ name, ...data })),
         totalActiveStores: vendors.size,
-        keywordAnalysis: Array.from(keywordCounts.entries()).map(([text, value]) => ({ text, value })).sort((a, b) => b.value - a.value).slice(0, 70),
+        keywordAnalysis: Array.from(keywordCounts.entries()).map(([text, value]) => ({ text, value })).sort((a, b) => b.value - a.value).slice(0, 15),
         storeHealthAnalysis: healthReport,
     };
   }, [products, timeFilter]);
@@ -111,48 +110,27 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ products, locale }) => {
   );
 };
 
-// --- Word Cloud Component ---
-const KeywordCloud: React.FC<{words: {text: string, value: number}[]}> = ({ words }) => {
-    const [layoutWords, setLayoutWords] = useState<{text: string; size: number; x: number; y: number; rotate: number}[]>([]);
-    
-    useEffect(() => {
-        if (words.length > 0) {
-            const maxFreq = Math.max(...words.map(w => w.value));
-            WordCloud()
-                .size([500, 300])
-                .words(words.map(d => ({ text: d.text, size: 12 + (d.value / maxFreq) * 50 })))
-                .padding(5)
-                .rotate(() => (Math.random() > 0.5 ? 90 : 0))
-                .font("sans-serif")
-                .fontSize(d => d.size!)
-                .on("end", words => setLayoutWords(words))
-                .start();
-        }
-    }, [words]);
 
-    if (!layoutWords.length) return <div className="flex justify-center items-center h-full"><Package size={48} className="text-gray-400"/></div>
-
+// --- Insights Tab Components ---
+const TopKeywordsChart: React.FC<{data: {text: string, value: number}[]}> = ({ data }) => {
     return (
-      <div className="flex justify-center items-center">
-        <svg width="500" height="300" viewBox={`-250 -150 500 300`}>
-            <g>
-                {layoutWords.map((word, i) => (
-                    <text key={word.text + i}
-                          textAnchor="middle"
-                          transform={`translate(${word.x}, ${word.y}) rotate(${word.rotate})`}
-                          style={{ fontSize: word.size, fill: `hsl(${i * 360 / layoutWords.length}, 70%, 50%)` }}
-                          className="font-bold cursor-pointer hover:opacity-75 transition-opacity"
-                    >
-                        {word.text}
-                    </text>
-                ))}
-            </g>
-        </svg>
-      </div>
+        <div style={{ width: '100%', height: 500 }}>
+            <ResponsiveContainer>
+                <RechartsBarChart layout="vertical" data={data.slice().reverse()} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                    <XAxis type="number" stroke="var(--color-text-secondary)" />
+                    <YAxis dataKey="text" type="category" width={180} stroke="var(--color-text-secondary)" tick={{fontSize: 12}} interval={0} />
+                    <ChartTooltip cursor={{fill: 'var(--color-background-hover)'}} contentStyle={{ backgroundColor: 'var(--color-bg-surface-strong)', border: '1px solid var(--color-border)' }}/>
+                    <Bar dataKey="value" name="Frequency" radius={[0, 4, 4, 0]}>
+                        {data.map((entry, index) => (
+                           <Cell key={`cell-${index}`} fill={`hsl(195, ${90 - index*4}%, 50%)`} />
+                        ))}
+                    </Bar>
+                </RechartsBarChart>
+            </ResponsiveContainer>
+        </div>
     );
 };
 
-// --- Insights Tab Component ---
 const InsightsReport: React.FC<{keywords: {text: string, value: number}[], health: {active: StoreStats[], slowing: StoreStats[], stale: StoreStats[]}, t: any, locale: Locale}> = ({keywords, health, t, locale}) => {
     const healthData = [
         { name: t.healthActive, value: health.active.length, color: '#22c55e' },
@@ -163,8 +141,8 @@ const InsightsReport: React.FC<{keywords: {text: string, value: number}[], healt
     return (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
             <div className="lg:col-span-3 bg-light-surface dark:bg-dark-surface rounded-2xl shadow p-6">
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Cloud size={20} className="text-brand-primary"/>{t.topKeywords}</h3>
-                <KeywordCloud words={keywords} />
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-brand-primary"/>{t.topKeywords}</h3>
+                <TopKeywordsChart data={keywords} />
             </div>
             <div className="lg:col-span-2 bg-light-surface dark:bg-dark-surface rounded-2xl shadow p-6">
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Zap size={20} className="text-brand-primary"/>{t.storeHealth}</h3>
@@ -211,6 +189,22 @@ const HealthCategory: React.FC<{title:string, stores:StoreStats[], icon:React.Re
 }
 
 // --- The rest of the components remain the same ---
+const TableWrapper: React.FC<{children: React.ReactNode}> = ({ children }) => (
+    <div className="overflow-x-auto"><table className="w-full text-left">{children}</table></div>
+);
+const SortableHeader = <T extends string>({ id, label, isNumeric, sortKey, sortDir, onSort }: { id: T; label: string; isNumeric?: boolean; sortKey: T; sortDir: SortDirection; onSort: (key: T) => void; }) => (
+    <th className={`p-4 font-semibold cursor-pointer select-none group ${isNumeric ? 'text-center' : ''}`} onClick={() => onSort(id)}>
+        <div className={`flex items-center gap-2 ${isNumeric ? 'justify-center' : ''}`}>
+            {label}
+            {sortKey === id ? (sortDir === 'desc' ? <ChevronDown size={16} /> : <ChevronDown size={16} className="rotate-180" />) : <ChevronsUpDown size={16} className="text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200" />}
+        </div>
+    </th>
+);
+const StatCard: React.FC<{title:string; value: number | string}> = ({title, value}) => ( <div className="bg-light-surface dark:bg-dark-surface p-6 rounded-2xl shadow"> <h3 className="text-lg font-semibold text-light-text-secondary dark:text-dark-text-secondary">{title}</h3> <p className="text-4xl font-bold text-brand-primary mt-2">{value}</p> </div> );
+const TabButton: React.FC<{id: ActiveTab; icon: React.ReactNode; label: string; activeTab: ActiveTab; setActiveTab: (tab:ActiveTab)=>void}> = ({ id, icon, label, activeTab, setActiveTab }) => ( <button onClick={() => setActiveTab(id)} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg transition-colors ${activeTab === id ? 'bg-brand-primary text-white shadow' : 'text-light-text-secondary dark:text-dark-text-secondary hover:bg-light-background-hover dark:hover:bg-dark-background-hover'}`}> {icon} {label} </button> );
+const TimeFilterSelector: React.FC<{value: number; onChange: (value: number) => void; t: any}> = ({ value, onChange, t }) => ( <div className="relative"><select value={value} onChange={(e) => onChange(Number(e.target.value))} className="appearance-none cursor-pointer p-2.5 pl-4 pr-10 border rounded-xl bg-light-background dark:bg-dark-background focus:ring-2 focus:ring-brand-primary"><option value={7}>{t.last7days}</option><option value={30}>{t.last30days}</option><option value={90}>{t.last3months}</option><option value={180}>{t.last6months}</option><option value={365}>{t.lastYear}</option></select><Calendar className="w-5 h-5 absolute top-1/2 -translate-y-1/2 right-3 text-gray-400 pointer-events-none" /></div> );
+const MetaAdLibraryLink: React.FC<{ vendor: string; pageId?: string; t: any}> = ({ vendor, pageId, t }) => { const url = (pageId && pageId !== '0') ? `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&view_all_page_id=${pageId}&search_type=page` : `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&q=${encodeURIComponent(vendor)}&search_type=keyword_unordered`; return <a href={url} target="_blank" rel="noopener noreferrer" title={t.searchInMeta} className="inline-flex items-center justify-center p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-800/50 dark:text-blue-300 dark:hover:bg-blue-800/80"><Search size={16} /></a> };
+
 const StoresReportTable: React.FC<{stats: StoreStats[]; t: any}> = ({stats, t}) => {
   const [sortKey, setSortKey] = useState<StoreSortKey>('countInPeriod');
   const [sortDir, setSortDir] = useState<SortDirection>('desc');
@@ -305,21 +299,4 @@ const LanguagesReportTable: React.FC<{stats: LanguageStats[]; t: any; locale: Lo
         </TableWrapper>
     );
 };
-
-const TableWrapper: React.FC<{children: React.ReactNode}> = ({ children }) => (
-    <div className="overflow-x-auto"><table className="w-full text-left">{children}</table></div>
-);
-const SortableHeader = <T extends string>({ id, label, isNumeric, sortKey, sortDir, onSort }: { id: T; label: string; isNumeric?: boolean; sortKey: T; sortDir: SortDirection; onSort: (key: T) => void; }) => (
-    <th className={`p-4 font-semibold cursor-pointer select-none group ${isNumeric ? 'text-center' : ''}`} onClick={() => onSort(id)}>
-        <div className={`flex items-center gap-2 ${isNumeric ? 'justify-center' : ''}`}>
-            {label}
-            {sortKey === id ? (sortDir === 'desc' ? <ChevronDown size={16} /> : <ChevronDown size={16} className="rotate-180" />) : <ChevronsUpDown size={16} className="text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200" />}
-        </div>
-    </th>
-);
-const StatCard: React.FC<{title:string; value: number | string}> = ({title, value}) => ( <div className="bg-light-surface dark:bg-dark-surface p-6 rounded-2xl shadow"> <h3 className="text-lg font-semibold text-light-text-secondary dark:text-dark-text-secondary">{title}</h3> <p className="text-4xl font-bold text-brand-primary mt-2">{value}</p> </div> );
-const TabButton: React.FC<{id: ActiveTab; icon: React.ReactNode; label: string; activeTab: ActiveTab; setActiveTab: (tab:ActiveTab)=>void}> = ({ id, icon, label, activeTab, setActiveTab }) => ( <button onClick={() => setActiveTab(id)} className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg transition-colors ${activeTab === id ? 'bg-brand-primary text-white shadow' : 'text-light-text-secondary dark:text-dark-text-secondary hover:bg-light-background-hover dark:hover:bg-dark-background-hover'}`}> {icon} {label} </button> );
-const TimeFilterSelector: React.FC<{value: number; onChange: (value: number) => void; t: any}> = ({ value, onChange, t }) => ( <div className="relative"><select value={value} onChange={(e) => onChange(Number(e.target.value))} className="appearance-none cursor-pointer p-2.5 pl-4 pr-10 border rounded-xl bg-light-background dark:bg-dark-background focus:ring-2 focus:ring-brand-primary"><option value={7}>{t.last7days}</option><option value={30}>{t.last30days}</option><option value={90}>{t.last3months}</option><option value={180}>{t.last6months}</option><option value={365}>{t.lastYear}</option></select><Calendar className="w-5 h-5 absolute top-1/2 -translate-y-1/2 right-3 text-gray-400 pointer-events-none" /></div> );
-const MetaAdLibraryLink: React.FC<{ vendor: string; pageId?: string; t: any}> = ({ vendor, pageId, t }) => { const url = (pageId && pageId !== '0') ? `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&view_all_page_id=${pageId}&search_type=page` : `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&q=${encodeURIComponent(vendor)}&search_type=keyword_unordered`; return <a href={url} target="_blank" rel="noopener noreferrer" title={t.searchInMeta} className="inline-flex items-center justify-center p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-800/50 dark:text-blue-300 dark:hover:bg-blue-800/80"><Search size={16} /></a> };
-
 export default ReportsPage;

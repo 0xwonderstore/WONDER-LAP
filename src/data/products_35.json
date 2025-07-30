@@ -1,13 +1,1 @@
-{
-  "products": [
-    {
-      "url": "https://example.com/product-51",
-      "title": "Yoga Mat",
-      "avg_price": 25,
-      "vendor": "Vendor E",
-      "created_at": "2024-06-09T10:00:00Z",
-      "variants": [],
-      "images": []
-    }
-  ]
-}
+[]
