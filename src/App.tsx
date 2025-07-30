@@ -1,6 +1,6 @@
 import React, { useState, useMemo, Suspense, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Moon, Sun, Sparkles, Languages, Heart, EyeOff, BarChart2 } from 'lucide-react';
+import { Moon, Sun, Sparkles, Languages, Heart, EyeOff } from 'lucide-react';
 import { Product, Locale } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { loadProducts } from './utils/productLoader';
@@ -11,11 +11,10 @@ import { translations } from './translations';
 const ProductView = React.lazy(() => import('./components/ProductView'));
 const FavoritesPage = React.lazy(() => import('./components/FavoritesPage'));
 const BlacklistPage = React.lazy(() => import('./components/BlacklistPage'));
-const ReportsPage = React.lazy(() => import('./components/ReportsPage'));
 const ScrollButtons = React.lazy(() => import('./components/ScrollButtons'));
 
 // --- Type Definitions ---
-type Page = 'home' | 'favorites' | 'blacklist' | 'reports';
+type Page = 'home' | 'favorites' | 'blacklist';
 type InitialFilter = { name?: string; store?: string; language?: string };
 
 const LoadingFallback: React.FC = () => (
@@ -87,14 +86,12 @@ const App: React.FC = () => {
     switch (currentPage) {
       case 'favorites': return <FavoritesPage allProducts={allProducts} locale={locale} onNavigateWithFilter={navigateToHomeWithFilter} />;
       case 'blacklist': return <BlacklistPage locale={locale} blacklist={blacklist} onAddWord={addWordToBlacklist} onRemoveWord={removeWordFromBlacklist} />;
-      case 'reports': return <ReportsPage products={allProducts} locale={locale} onNavigateWithFilter={navigateToHomeWithFilter} />;
       default: return <ProductView products={allProducts} isLoading={isLoading} stores={uniqueStores} languages={uniqueLanguages} locale={locale} blacklist={blacklist} onClearInitialFilters={clearInitialFilters} initialFilters={initialFilters} onNavigateWithFilter={navigateToHomeWithFilter} />;
     }
   };
 
   const isFavoritesActive = currentPage === 'favorites';
   const isBlacklistActive = currentPage === 'blacklist';
-  const isReportsActive = currentPage === 'reports';
   const favoritesCount = favorites.my_main_favorites?.products?.length || 0;
 
   return (
@@ -104,7 +101,6 @@ const App: React.FC = () => {
           <div className="flex items-center gap-3"><Sparkles className="w-8 h-8 text-yellow-500" /><h1 dir="ltr" className="text-3xl font-bold bg-gradient-to-r from-brand-primary to-purple-600 bg-clip-text text-transparent" onClick={() => setCurrentPage('home')} style={{cursor: 'pointer'}}>WONDER LAB</h1></div>
           <div className="flex items-center gap-2 sm:gap-4">
             <HeaderButton onClick={() => navigateTo('blacklist')} className={isBlacklistActive ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-600 dark:text-yellow-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.blacklist} aria-label="Blacklist"><EyeOff className={`w-5 h-5 transition-transform duration-200 ${isBlacklistActive ? 'rotate-6' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isBlacklistActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.blacklist}</span></HeaderButton>
-            <HeaderButton onClick={() => navigateTo('reports')} className={isReportsActive ? 'bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.reports} aria-label="Reports"><BarChart2 className={`w-5 h-5 transition-transform duration-200 ${isReportsActive ? 'rotate-6' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isReportsActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.reports}</span></HeaderButton>
             <HeaderButton onClick={() => navigateTo('favorites')} className={isFavoritesActive ? 'bg-red-100 dark:bg-red-900/50 text-red-500 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.favorites} aria-label="Favorites">
               <Heart className={`w-5 h-5 transition-all duration-200 ${isFavoritesActive ? 'fill-red-500 text-red-500 rotate-0' : 'text-current -rotate-12'}`} />
               <span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isFavoritesActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.favorites}</span>
