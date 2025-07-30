@@ -46,6 +46,13 @@ export const translations = {
     frequency: 'التكرار',
     lastActivity: 'آخر نشاط',
     searchFor: 'ابحث عن',
+
+    // DashboardPage.tsx
+    dashboard_totalProducts: 'إجمالي المنتجات',
+    dashboard_totalStores: 'إجمالي المتاجر',
+    dashboard_newProducts30d: 'منتجات جديدة (30 يومًا)',
+    dashboard_newStores30d: 'متاجر جديدة (30 يومًا)',
+    dashboard_productTrends: 'اتجاه المنتجات الجديدة (30 يومًا)',
   },
   en: {
     // App.tsx
@@ -94,5 +101,12 @@ export const translations = {
     frequency: 'Frequency',
     lastActivity: 'Last Activity',
     searchFor: 'Search for',
+
+    // DashboardPage.tsx
+    dashboard_totalProducts: 'Total Products',
+    dashboard_totalStores: 'Total Stores',
+    dashboard_newProducts30d: 'New Products (30d)',
+    dashboard_newStores30d: 'New Stores (30d)',
+    dashboard_productTrends: 'New Product Trend (30d)',
   },
 };
