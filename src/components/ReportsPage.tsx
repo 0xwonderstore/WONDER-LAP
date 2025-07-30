@@ -22,7 +22,7 @@ const commonStopWords = new Set(['و', 'في', 'من', 'إلى', 'على', 'عن
 // --- Main Component ---
 const ReportsPage: React.FC<ReportsPageProps> = ({ products, locale, onNavigateWithFilter }) => {
   const [timeFilter, setTimeFilter] = useState<number>(30);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('insights');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('stores');
   const t = translations[locale];
 
   const { storeStats, languageStats, totalActiveStores, keywordAnalysis, storeHealthAnalysis } = useMemo(() => {
@@ -79,9 +79,15 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ products, locale, onNavigateW
         storeHealthAnalysis: healthReport,
     };
   }, [products, timeFilter]);
+  
+  const tabTitles = {
+    stores: t.storeActivity,
+    languages: t.languageActivity,
+    insights: t.insights,
+  };
 
   return (
-    <div className="animate-fade-in-up space-y-8">
+    <div className="animate-fade-in-up space-y-6">
       <h1 className="text-3xl font-bold">{t.reports}</h1>
       
       <div className="border-b border-light-border dark:border-dark-border flex space-x-4">
@@ -90,9 +96,16 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ products, locale, onNavigateW
         <Tab id="insights" icon={<BarChart size={18}/>} label={t.insights} activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
 
-      <div className="mt-6">
+      <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary">
+              {tabTitles[activeTab]}
+          </h2>
+          {activeTab === 'stores' && <TimeFilterSelector value={timeFilter} onChange={setTimeFilter} t={t} />}
+      </div>
+
+      <div>
         {activeTab === 'insights' && <InsightsReport keywords={keywordAnalysis} health={storeHealthAnalysis} t={t} locale={locale} onNavigateWithFilter={onNavigateWithFilter} />}
-        {activeTab === 'stores' && <StoresTabContent stats={storeStats} timeFilter={timeFilter} setTimeFilter={setTimeFilter} t={t} />}
+        {activeTab === 'stores' && <StoresTabContent stats={storeStats} t={t} />}
         {activeTab === 'languages' && <LanguagesTabContent stats={languageStats} t={t} locale={locale} />}
       </div>
     </div>
@@ -112,21 +125,14 @@ const Tab: React.FC<{id: ActiveTab; icon: React.ReactNode; label: string; count?
     </button> 
 );
 
-const StoresTabContent: React.FC<{stats: StoreStats[], timeFilter: number, setTimeFilter: (n: number) => void, t: any}> = ({ stats, timeFilter, setTimeFilter, t }) => (
+const StoresTabContent: React.FC<{stats: StoreStats[], t: any}> = ({ stats, t }) => (
     <div className="bg-light-surface dark:bg-dark-surface rounded-2xl shadow overflow-hidden">
-        <div className="p-6 flex flex-wrap justify-between items-center gap-4 border-b border-light-border dark:border-dark-border">
-            <h2 className="text-xl font-bold">{t.storeActivity}</h2>
-            <TimeFilterSelector value={timeFilter} onChange={setTimeFilter} t={t} />
-        </div>
         <StoresReportTable stats={stats} t={t} />
     </div>
 );
 
 const LanguagesTabContent: React.FC<{stats: LanguageStats[], t: any, locale: Locale}> = ({ stats, t, locale }) => (
     <div className="bg-light-surface dark:bg-dark-surface rounded-2xl shadow overflow-hidden">
-        <div className="p-6 border-b border-light-border dark:border-dark-border">
-            <h2 className="text-xl font-bold">{t.languageActivity}</h2>
-        </div>
         <LanguagesReportTable stats={stats} t={t} locale={locale} />
     </div>
 );
@@ -140,30 +146,27 @@ const InsightsReport: React.FC<{keywords: {text: string, value: number}[], healt
     ];
     
     return (
-        <div className="space-y-8">
-            <h2 className="text-2xl font-bold text-light-text-primary dark:text-dark-text-primary">{t.insights}</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                <div className="lg:col-span-3 bg-light-surface dark:bg-dark-surface rounded-2xl shadow p-6">
-                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-brand-primary"/>{t.topKeywords}</h3>
-                    <KeywordTags data={keywords} t={t} onNavigate={onNavigateWithFilter} />
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <div className="lg:col-span-3 bg-light-surface dark:bg-dark-surface rounded-2xl shadow p-6">
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-brand-primary"/>{t.topKeywords}</h3>
+                <KeywordTags data={keywords} t={t} onNavigate={onNavigateWithFilter} />
+            </div>
+            <div className="lg:col-span-2 bg-light-surface dark:bg-dark-surface rounded-2xl shadow p-6">
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Zap size={20} className="text-brand-primary"/>{t.storeHealth}</h3>
+                <div style={{ width: '100%', height: 150 }}>
+                    <ResponsiveContainer>
+                        <PieChart>
+                            <Pie data={healthData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={5}>
+                                {healthData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                            </Pie>
+                            <ChartTooltip contentStyle={{ backgroundColor: 'var(--color-bg-surface-strong)', border: '1px solid var(--color-border)' }}/>
+                        </PieChart>
+                    </ResponsiveContainer>
                 </div>
-                <div className="lg:col-span-2 bg-light-surface dark:bg-dark-surface rounded-2xl shadow p-6">
-                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Zap size={20} className="text-brand-primary"/>{t.storeHealth}</h3>
-                    <div style={{ width: '100%', height: 150 }}>
-                        <ResponsiveContainer>
-                            <PieChart>
-                                <Pie data={healthData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={60} paddingAngle={5}>
-                                    {healthData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                                </Pie>
-                                <ChartTooltip contentStyle={{ backgroundColor: 'var(--color-bg-surface-strong)', border: '1px solid var(--color-border)' }}/>
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                    <div className="mt-4 space-y-2">
-                        <HealthCategory title={t.healthActive} stores={health.active} icon={<Zap size={16} className="text-green-500" />} locale={locale} />
-                        <HealthCategory title={t.healthSlowing} stores={health.slowing} icon={<AlertTriangle size={16} className="text-yellow-500" />} locale={locale} />
-                        <HealthCategory title={t.healthStale} stores={health.stale} icon={<PowerOff size={16} className="text-red-500" />} locale={locale} />
-                    </div>
+                <div className="mt-4 space-y-2">
+                    <HealthCategory title={t.healthActive} stores={health.active} icon={<Zap size={16} className="text-green-500" />} locale={locale} />
+                    <HealthCategory title={t.healthSlowing} stores={health.slowing} icon={<AlertTriangle size={16} className="text-yellow-500" />} locale={locale} />
+                    <HealthCategory title={t.healthStale} stores={health.stale} icon={<PowerOff size={16} className="text-red-500" />} locale={locale} />
                 </div>
             </div>
         </div>
