@@ -1,53 +1,47 @@
 import { Product } from '../types';
 
-async function fetchProductFile(fileName: string): Promise<any[]> {
-    try {
-        const response = await fetch(`/src/data/${fileName}`);
-        if (!response.ok) {
-            if (response.status === 404) return []; // File not found, expected for some names
-            throw new Error(`Failed to fetch ${fileName}: ${response.statusText}`);
-        }
-        const data = await response.json();
-        // The data is an object with a "products" key
-        return data.products;
-    } catch (error) {
-        if (error instanceof SyntaxError) {
-            console.warn(`Syntax error in ${fileName}, skipping.`);
-            return [];
-        }
-        console.error(`Error loading ${fileName}:`, error);
-        return [];
-    }
-}
-
+/**
+ * Modern product loader using Vite's dynamic import.
+ * This is more robust than fetch() for local project files.
+ */
 export async function loadProducts(): Promise<Product[]> {
     const allProducts: Product[] = [];
-    
-    // There are 40 product files, from products_1.json to products_40.json
-    for (let i = 1; i <= 40; i++) {
-        const productsPage = await fetchProductFile(`products_${i}.json`);
-        
-        if (productsPage && productsPage.length > 0) {
-            const mappedProducts = productsPage.map((p: any) => ({
-                id: p.id,
-                name: p.title, 
-                url: p.url,
-                store: {
-                    name: p.vendor,
-                    url: p.vendor_url, 
-                },
-                images: p.images,
-                price: p.price,
-                currency: p.currency,
-                language: p.language || 'en',
-                country: p.country,
-                created_at: p.created_at,
-                description: p.description
-            }));
-            allProducts.push(...mappedProducts);
+
+    // Use Vite's glob import to find all product files automatically.
+    const modules = import.meta.glob('/src/data/products_*.json');
+
+    for (const path in modules) {
+        try {
+            const module: any = await modules[path]();
+            // Vite wraps JSON modules in a `default` export.
+            const productsPage = module.default?.products;
+
+            if (productsPage && Array.isArray(productsPage)) {
+                const mappedProducts = productsPage.map((p: any) => ({
+                    id: p.id,
+                    name: p.title,
+                    url: p.url,
+                    vendor: p.vendor,
+                    store: {
+                        name: p.vendor,
+                        url: p.vendor_url,
+                        facebook_page_id: p.facebook_page_id,
+                    },
+                    images: p.images,
+                    price: p.price,
+                    currency: p.currency,
+                    language: p.language || 'en',
+                    country: p.country,
+                    created_at: p.created_at,
+                    description: p.description,
+                }));
+                allProducts.push(...mappedProducts);
+            }
+        } catch (error) {
+            console.error(`Error loading or processing ${path}:`, error);
         }
     }
-    
+
     // Ensure all products are unique by their URL
     const uniqueProducts = Array.from(new Map(allProducts.map(p => [p.url, p])).values());
     

@@ -1,117 +1,21 @@
 // src/utils/languageUtils.ts
 
-const languageNames: { [key: string]: string } = {
-  af: 'Afrikaans',
-  am: 'አማርኛ',
-  ar: 'العربية',
-  as: 'অসমীয়া',
-  az: 'Azərbaycan dili',
-  be: 'Беларуская',
-  bg: 'Български',
-  bs: 'Bosanski',
-  ca: 'Català',
-  ceb: 'Cebuano',
-  co: 'Corsu',
-  cs: 'Čeština',
-  cy: 'Cymraeg',
-  da: 'Dansk',
-  de: 'Deutsch',
-  dv: 'ދިވެހި',
-  el: 'Ελληνικά',
-  en: 'English',
-  eo: 'Esperanto',
-  es: 'Español',
-  et: 'Eesti',
-  eu: 'Euskara',
-  fa: 'فارسی',
-  fi: 'Suomi',
-  fil: 'Filipino',
-  fr: 'Français',
-  fy: 'Frysk',
-  ga: 'Gaeilge',
-  gd: 'Gàidhlig',
-  gl: 'Galego',
-  gu: 'ગુજરાતી',
-  ha: 'Hausa',
-  haw: 'ʻŌlelo Hawaiʻi',
-  he: 'עברית',
-  hi: 'हिन्दी',
-  hmn: 'Hmong',
-  hr: 'Hrvatski',
-  ht: 'Kreyòl ayisyen',
-  hu: 'Magyar',
-  hy: 'Հայերեն',
-  id: 'Bahasa Indonesia',
-  ig: 'Igbo',
-  is: 'Íslenska',
-  it: 'Italiano',
-  ja: '日本語',
-  jv: 'Basa Jawa',
-  ka: 'ქართული',
-  kk: 'Қазақ тілі',
-  km: 'ខ្មែរ',
-  kn: 'ಕನ್ನಡ',
-  ko: '한국어',
-  kri: 'Krio',
-  ku: 'Kurdî',
-  ky: 'Кыргызча',
-  la: 'Latina',
-  lb: 'Lëtzebuergesch',
-  lo: 'ລາວ',
-  lt: 'Lietuvių',
-  lv: 'Latviešu',
-  mg: 'Malagasy',
-  mi: 'Māori',
-  mk: 'Македонски',
-  ml: 'മലയാളം',
-  mn: 'Монгол',
-  'mni-Mtei': 'ꯃꯤꯇꯩ ꯂꯣꯟ',
-  mr: 'मराठी',
-  ms: 'Bahasa Melayu',
-  mt: 'Malti',
-  my: 'မြန်မာ',
-  ne: 'नेपाली',
-  nl: 'Nederlands',
-  no: 'Norsk',
-  ny: 'Chichewa',
-  or: 'ଓଡ଼ିଆ',
-  pa: 'ਪੰਜਾਬੀ',
-  pl: 'Polski',
-  ps: 'پښتو',
-  pt: 'Português',
-  ro: 'Română',
-  ru: 'Русский',
-  sd: 'سنڌي',
-  si: 'සිංහල',
-  sk: 'Slovenčina',
-  sl: 'Slovenščina',
-  sm: 'Gagana Samoa',
-  sn: 'chiShona',
-  so: 'Soomaali',
-  sq: 'Shqip',
-  sr: 'Српски',
-  st: 'Sesotho',
-  su: 'Basa Sunda',
-  sv: 'Svenska',
-  sw: 'Kiswahili',
-  ta: 'தமிழ்',
-  te: 'తెలుగు',
-  tg: 'Тоҷикӣ',
-  th: 'ไทย',
-  tr: 'Türkçe',
-  ug: 'ئۇيغۇرچە',
-  uk: 'Українська',
-  ur: 'اردو',
-  uz: 'Oʻzbekcha',
-  vi: 'Tiếng Việt',
-  xh: 'isiXhosa',
-  yi: 'ייִדיש',
-  yo: 'Yorùbá',
-  zh: '中文',
-  'zh-TW': '中文 (繁體)',
-  zu: 'isiZulu'
-};
-
-export const getLanguageName = (code: string): string => {
-  return languageNames[code] || code.charAt(0).toUpperCase() + code.slice(1);
+/**
+ * Gets the display name of a language from its code.
+ * Uses the browser's built-in Intl.DisplayNames for accurate, dynamic translation.
+ * @param code - The language code (e.g., 'en', 'ar').
+ * @param displayLocale - The locale to display the name in (e.g., 'en' for "Arabic", 'ar' for "العربية").
+ * @returns The full language name.
+ */
+export const getLanguageName = (code: string, displayLocale: 'en' | 'ar' = 'en'): string => {
+  try {
+    // Create a new DisplayNames object for the target display locale.
+    const displayName = new Intl.DisplayNames([displayLocale], { type: 'language' });
+    // Get the name of the language. If the code is invalid, it returns the code itself.
+    return displayName.of(code) || code;
+  } catch (error) {
+    console.error(`Could not get display name for code "${code}" in locale "${displayLocale}":`, error);
+    // Fallback to the code if Intl.DisplayNames fails for any reason
+    return code;
+  }
 };
