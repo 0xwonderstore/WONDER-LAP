@@ -18,7 +18,7 @@ export const translations = {
     product: 'منتج',
     resetFilters: 'إلغاء الفلاتر',
 
-    // ReportsPage.tsx
+    // ReportsPage.tsx (Legacy, can be cleaned if ReportsPage is deleted)
     insights: 'تحليلات ذكية',
     totalActiveStores: 'إجمالي المتاجر النشطة',
     storeActivity: 'نشاط المتاجر',
@@ -51,8 +51,9 @@ export const translations = {
     dashboard_totalProducts: 'إجمالي المنتجات',
     dashboard_totalStores: 'إجمالي المتاجر',
     dashboard_newProducts30d: 'منتجات جديدة (30 يومًا)',
-    dashboard_newStores30d: 'متاجر جديدة (30 يومًا)',
+    dashboard_newStores30d: 'متاجر جديدة (7 أيام)',
     dashboard_productTrends: 'اتجاه المنتجات الجديدة (30 يومًا)',
+    dashboard_topStores: 'أبرز المتاجر',
   },
   en: {
     // App.tsx
@@ -73,7 +74,7 @@ export const translations = {
     product: 'Product',
     resetFilters: 'Reset Filters',
 
-    // ReportsPage.tsx
+    // ReportsPage.tsx (Legacy, can be cleaned if ReportsPage is deleted)
     insights: 'Smart Insights',
     totalActiveStores: 'Total Active Stores',
     storeActivity: 'Store Activity',
@@ -106,7 +107,8 @@ export const translations = {
     dashboard_totalProducts: 'Total Products',
     dashboard_totalStores: 'Total Stores',
     dashboard_newProducts30d: 'New Products (30d)',
-    dashboard_newStores30d: 'New Stores (30d)',
+    dashboard_newStores30d: 'New Stores (7d)',
     dashboard_productTrends: 'New Product Trend (30d)',
+    dashboard_topStores: 'Top Stores',
   },
 };
