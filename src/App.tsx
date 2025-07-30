@@ -5,6 +5,7 @@ import { Product, Locale } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { loadProducts } from './utils/productLoader';
 import { useFavoritesStore } from './stores/favoritesStore';
+import { translations } from './translations';
 
 // --- Lazy Imports ---
 const ProductView = React.lazy(() => import('./components/ProductView'));
@@ -15,7 +16,7 @@ const ScrollButtons = React.lazy(() => import('./components/ScrollButtons'));
 
 // --- Type Definitions ---
 type Page = 'home' | 'favorites' | 'blacklist' | 'reports';
-type InitialFilter = { store?: string; language?: string };
+type InitialFilter = { name?: string; store?: string; language?: string };
 
 const LoadingFallback: React.FC = () => (
   <div className="flex justify-center items-center h-96">
@@ -30,7 +31,6 @@ const App: React.FC = () => {
   const { favorites } = useFavoritesStore();
   
   const { data: allProducts = [], isLoading } = useQuery({
-    // Using a simple queryKey now that the loader is robust.
     queryKey: ['products'],
     queryFn: loadProducts,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -40,10 +40,7 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [initialFilters, setInitialFilters] = useState<InitialFilter | null>(null);
 
-  const t = {
-    ar: { favorites: 'المفضلة', language: 'تغيير اللغة', theme: 'تغيير المظهر', blacklist: 'القائمة السوداء', reports: 'التقارير' },
-    en: { favorites: 'Favorites', language: 'Change Language', theme: 'Change Theme', blacklist: 'Blacklist', reports: 'Reports' }
-  }[locale];
+  const t = translations[locale];
 
   // --- Effects ---
   React.useEffect(() => {
@@ -90,7 +87,7 @@ const App: React.FC = () => {
     switch (currentPage) {
       case 'favorites': return <FavoritesPage allProducts={allProducts} locale={locale} onNavigateWithFilter={navigateToHomeWithFilter} />;
       case 'blacklist': return <BlacklistPage locale={locale} blacklist={blacklist} onAddWord={addWordToBlacklist} onRemoveWord={removeWordFromBlacklist} />;
-      case 'reports': return <ReportsPage products={allProducts} locale={locale} />;
+      case 'reports': return <ReportsPage products={allProducts} locale={locale} onNavigateWithFilter={navigateToHomeWithFilter} />;
       default: return <ProductView products={allProducts} isLoading={isLoading} stores={uniqueStores} languages={uniqueLanguages} locale={locale} blacklist={blacklist} onClearInitialFilters={clearInitialFilters} initialFilters={initialFilters} onNavigateWithFilter={navigateToHomeWithFilter} />;
     }
   };

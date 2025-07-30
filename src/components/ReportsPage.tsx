@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Product, Locale } from '../types';
-import { ExternalLink, Calendar, Package, Search, Store, Languages as LanguagesIcon, ChevronDown, ChevronsUpDown, BarChart, Zap, PowerOff, TrendingUp, AlertTriangle } from 'lucide-react';
+import { ExternalLink, Calendar, Package, Search, Store, Languages as LanguagesIcon, ChevronDown, ChevronsUpDown, BarChart, Zap, PowerOff, TrendingUp, AlertTriangle, Tag } from 'lucide-react';
 import { getLanguageName } from '../utils/languageUtils';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as ChartTooltip, BarChart as RechartsBarChart, Bar, XAxis, YAxis } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as ChartTooltip } from 'recharts';
+import { translations } from '../translations';
 
 // --- Types ---
 type SortDirection = 'asc' | 'desc';
@@ -11,21 +12,15 @@ type LanguageSortKey = 'name' | 'storeCount';
 
 interface StoreStats { name: string; totalCount: number; countInPeriod: number; lastActivity: Date; facebook_page_id?: string; }
 interface LanguageStats { name: string; storeCount: number; vendors: Set<string>; }
-interface ReportsPageProps { products: Product[]; locale: Locale; }
+interface ReportsPageProps { products: Product[]; locale: Locale; onNavigateWithFilter: (filter: { name: string }) => void; }
 type ActiveTab = 'stores' | 'languages' | 'insights';
-
-// --- Translations ---
-const translations = {
-    ar: { reports: 'التقارير', stores: 'المتاجر', languages: 'اللغات', insights: 'تحليلات ذكية', totalActiveStores: 'إجمالي المتاجر النشطة', storeActivity: 'نشاط المتاجر', languageActivity: 'نشاط اللغات', timePeriod: 'الفترة الزمنية', storeName: 'اسم المتجر', productsInPeriod: 'المنتجات بالفترة', totalProducts: 'إجمالي المنتجات', adLibrary: 'مكتبة الإعلانات', storesWithLanguage: 'المتاجر الداعمة للغة', last7days: 'آخر 7 أيام', last30days: 'آخر 30 يومًا', last3months: 'آخر 3 أشهر', last6months: 'آخر 6 أشهر', lastYear: 'آخر سنة', noData: 'لا توجد بيانات للعرض.', searchInMeta: 'البحث في مكتبة ميتا', supportingStores: 'المتاجر الداعمة:', topKeywords: 'تحليل أهم الكلمات', storeHealth: 'توزيع صحة المتاجر', healthActive: 'نشط', healthSlowing: 'بطيء', healthStale: 'راكد', keyword: 'الكلمة', frequency: 'التكرار', lastActivity: 'آخر نشاط' },
-    en: { reports: 'Reports', stores: 'Stores', languages: 'Languages', insights: 'Smart Insights', totalActiveStores: 'Total Active Stores', storeActivity: 'Store Activity', languageActivity: 'Language Activity', timePeriod: 'Time Period', storeName: 'Store Name', productsInPeriod: 'Products in Period', totalProducts: 'Total Products', adLibrary: 'Ad Library', storesWithLanguage: 'Stores with Language', last7days: 'Last 7 Days', last30days: 'Last 30 Days', last3months: 'Last 3 Months', last6months: 'Last 6 Months', lastYear: 'Last Year', noData: 'No data to display.', searchInMeta: 'Search in Meta Library', supportingStores: 'Supporting Stores:', topKeywords: 'Top Keywords Analysis', storeHealth: 'Store Health Distribution', healthActive: 'Active', healthSlowing: 'Slowing', healthStale: 'Stale', keyword: 'Keyword', frequency: 'Frequency', lastActivity: 'Last Activity' },
-};
 
 // --- Helper Functions ---
 const getDateDaysAgo = (days: number) => { const d = new Date(); d.setDate(d.getDate() - days); return d; };
 const commonStopWords = new Set(['و', 'في', 'من', 'إلى', 'على', 'عن', 'هو', 'هي', 'مع', 'أو', 'the', 'a', 'an', 'in', 'on', 'for', 'with', 'and', 'or', 'is', 'are', 'to']);
 
 // --- Main Component ---
-const ReportsPage: React.FC<ReportsPageProps> = ({ products, locale }) => {
+const ReportsPage: React.FC<ReportsPageProps> = ({ products, locale, onNavigateWithFilter }) => {
   const [timeFilter, setTimeFilter] = useState<number>(30);
   const [activeTab, setActiveTab] = useState<ActiveTab>('insights');
   const t = translations[locale];
@@ -80,7 +75,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ products, locale }) => {
         storeStats: finalStoreStats,
         languageStats: Array.from(langMap.entries()).map(([name, data]) => ({ name, ...data })),
         totalActiveStores: vendors.size,
-        keywordAnalysis: Array.from(keywordCounts.entries()).map(([text, value]) => ({ text, value })).sort((a, b) => b.value - a.value).slice(0, 15),
+        keywordAnalysis: Array.from(keywordCounts.entries()).map(([text, value]) => ({ text, value })).sort((a, b) => b.value - a.value).slice(0, 50),
         storeHealthAnalysis: healthReport,
     };
   }, [products, timeFilter]);
@@ -104,7 +99,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ products, locale }) => {
             {activeTab === 'stores' ? <StoresReportTable stats={storeStats} t={t} /> : <LanguagesReportTable stats={languageStats} t={t} locale={locale} />}
         </div>
       ) : (
-        <InsightsReport keywords={keywordAnalysis} health={storeHealthAnalysis} t={t} locale={locale}/>
+        <InsightsReport keywords={keywordAnalysis} health={storeHealthAnalysis} t={t} locale={locale} onNavigateWithFilter={onNavigateWithFilter} />
       )}
     </div>
   );
@@ -112,26 +107,26 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ products, locale }) => {
 
 
 // --- Insights Tab Components ---
-const TopKeywordsChart: React.FC<{data: {text: string, value: number}[]}> = ({ data }) => {
+const KeywordTags: React.FC<{data: {text: string, value: number}[]; t: any; onNavigate: (filter: {name: string}) => void}> = ({ data, t, onNavigate }) => {
     return (
-        <div style={{ width: '100%', height: 500 }}>
-            <ResponsiveContainer>
-                <RechartsBarChart layout="vertical" data={data.slice().reverse()} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                    <XAxis type="number" stroke="var(--color-text-secondary)" />
-                    <YAxis dataKey="text" type="category" width={180} stroke="var(--color-text-secondary)" tick={{fontSize: 12}} interval={0} />
-                    <ChartTooltip cursor={{fill: 'var(--color-background-hover)'}} contentStyle={{ backgroundColor: 'var(--color-bg-surface-strong)', border: '1px solid var(--color-border)' }}/>
-                    <Bar dataKey="value" name="Frequency" radius={[0, 4, 4, 0]}>
-                        {data.map((entry, index) => (
-                           <Cell key={`cell-${index}`} fill={`hsl(195, ${90 - index*4}%, 50%)`} />
-                        ))}
-                    </Bar>
-                </RechartsBarChart>
-            </ResponsiveContainer>
+        <div className="flex flex-wrap gap-3">
+            {data.map(({ text, value }) => (
+                <button 
+                    key={text} 
+                    onClick={() => onNavigate({ name: text })}
+                    className="group flex items-center gap-2 bg-light-background-hover dark:bg-dark-background-hover px-3 py-1.5 rounded-full hover:bg-brand-primary hover:text-white transition-colors"
+                    title={`${t.searchFor} "${text}"`}
+                >
+                    <Tag size={14} className="text-gray-500 group-hover:text-white" />
+                    <span className="font-semibold">{text}</span>
+                    <span className="text-sm bg-gray-300 dark:bg-gray-600 group-hover:bg-white/20 text-gray-700 dark:text-gray-200 group-hover:text-white px-2 rounded-full">{value}</span>
+                </button>
+            ))}
         </div>
     );
 };
 
-const InsightsReport: React.FC<{keywords: {text: string, value: number}[], health: {active: StoreStats[], slowing: StoreStats[], stale: StoreStats[]}, t: any, locale: Locale}> = ({keywords, health, t, locale}) => {
+const InsightsReport: React.FC<{keywords: {text: string, value: number}[], health: {active: StoreStats[], slowing: StoreStats[], stale: StoreStats[]}, t: any, locale: Locale, onNavigateWithFilter: (filter: { name: string }) => void;}> = ({keywords, health, t, locale, onNavigateWithFilter}) => {
     const healthData = [
         { name: t.healthActive, value: health.active.length, color: '#22c55e' },
         { name: t.healthSlowing, value: health.slowing.length, color: '#f59e0b' },
@@ -142,7 +137,7 @@ const InsightsReport: React.FC<{keywords: {text: string, value: number}[], healt
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
             <div className="lg:col-span-3 bg-light-surface dark:bg-dark-surface rounded-2xl shadow p-6">
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-brand-primary"/>{t.topKeywords}</h3>
-                <TopKeywordsChart data={keywords} />
+                <KeywordTags data={keywords} t={t} onNavigate={onNavigateWithFilter} />
             </div>
             <div className="lg:col-span-2 bg-light-surface dark:bg-dark-surface rounded-2xl shadow p-6">
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Zap size={20} className="text-brand-primary"/>{t.storeHealth}</h3>

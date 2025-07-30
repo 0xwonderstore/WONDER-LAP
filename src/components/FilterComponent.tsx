@@ -2,11 +2,7 @@ import React from 'react';
 import { LayoutGrid, List, ChevronDown, X } from 'lucide-react';
 import { Locale } from '../types';
 import { getLanguageName } from '../utils/languageUtils';
-
-const translations = {
-  ar: { searchByName: 'ابحث بالاسم', searchPlaceholder: 'مثال: T-shirt', selectStore: 'اختر المتجر', allStores: 'كل المتاجر', selectLanguage: 'اختر اللغة', allLanguages: 'كل اللغات', show: 'عرض', product: 'منتج', resetFilters: 'إلغاء الفلاتر' },
-  en: { searchByName: 'Search by Name', searchPlaceholder: 'e.g., T-shirt', selectStore: 'Select Store', allStores: 'All Stores', selectLanguage: 'Select Language', allLanguages: 'All Languages', show: 'Show', product: 'Product', resetFilters: 'Reset Filters' }
-};
+import { translations } from '../translations';
 
 interface FilterComponentProps {
   locale: Locale;
