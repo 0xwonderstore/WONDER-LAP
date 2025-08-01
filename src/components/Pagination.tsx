@@ -1,7 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Locale } from '../types';
-import { translations } from '../translations';
+
+const translations = {
+  ar: {
+    showing: 'عرض',
+    of: 'من إجمالي',
+    product: 'منتج',
+    products: 'منتجات',
+    previous: 'السابق',
+    next: 'التالي',
+    goTo: 'الذهاب إلى',
+  },
+  en: {
+    showing: 'Showing',
+    of: 'of',
+    product: 'product',
+    products: 'products',
+    previous: 'Previous',
+    next: 'Next',
+    goTo: 'Go to',
+  }
+};
 
 interface PaginationProps {
   currentPage: number;
@@ -90,10 +110,7 @@ export default function Pagination({
     <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-light-text-secondary dark:text-dark-text-secondary">
       
       <div className="font-semibold">
-        {t.pagination_resultsInfo
-          .replace('{start}', String(displayStart))
-          .replace('{end}', String(displayEnd))
-          .replace('{total}', String(totalItems))}
+        {t.showing} <span className="font-bold text-light-text-primary dark:text-dark-text-primary">{displayStart}-{displayEnd}</span> {t.of} <span className="font-bold text-light-text-primary dark:text-dark-text-primary">{totalItems}</span> {totalItems === 1 ? t.product : t.products}
       </div>
 
       {totalPages > 1 && (
@@ -141,11 +158,17 @@ export default function Pagination({
           </div>
           
           <div className="flex items-center gap-2">
-            <span className="font-semibold">
-              {t.pagination_pageInfo
-                .replace('{currentPage}', String(currentPage))
-                .replace('{totalPages}', String(totalPages))}
-            </span>
+            <form onSubmit={handleGoToPage} className="flex items-center gap-2">
+              <span>{t.goTo}</span>
+              <input
+                type="number"
+                min="1"
+                max={totalPages}
+                value={inputPage}
+                onChange={handleInputChange}
+                className="w-16 text-center p-2 rounded-xl border border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface focus:ring-2 focus:ring-brand-primary"
+              />
+            </form>
           </div>
         </>
       )}

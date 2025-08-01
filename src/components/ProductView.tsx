@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { DateRange } from 'react-day-picker';
 import { Product, Locale } from '../types';
 import ProductTable from './ProductTable';
 import EmptyState from './EmptyState';
@@ -35,26 +34,23 @@ const ProductView: React.FC<ProductViewProps> = ({
   const [filters, setFilters] = useState<{
     name: string;
     store: string;
-    dateRange: DateRange | undefined;
   }>(() => ({
     name: initialFilters?.name || '',
     store: initialFilters?.store || '',
-    dateRange: undefined,
   }));
 
   useEffect(() => {
     if (initialFilters) {
-      setFilters(prev => ({
-        ...prev,
+      setFilters({
         name: initialFilters.name || '',
         store: initialFilters.store || '',
-      }));
+      });
       setCurrentPage(1);
       onClearInitialFilters();
     }
   }, [initialFilters, onClearInitialFilters]);
 
-  const handleFilterChange = (filterName: string, value: any) => {
+  const handleFilterChange = (filterName: string, value: string) => {
     setFilters(prev => ({ ...prev, [filterName]: value }));
     setCurrentPage(1);
   };
@@ -65,7 +61,7 @@ const ProductView: React.FC<ProductViewProps> = ({
   };
 
   const handleResetFilters = () => {
-    setFilters({ name: '', store: '', dateRange: undefined });
+    setFilters({ name: '', store: '' });
     setCurrentPage(1);
   };
 
@@ -85,21 +81,8 @@ const ProductView: React.FC<ProductViewProps> = ({
       
       // Store filter
       const storeMatch = filters.store ? product.vendor === filters.store : true;
-
-      // Date range filter
-      const dateMatch = (() => {
-        if (!filters.dateRange || !filters.dateRange.from) return true;
-        const productDate = new Date(product.created_at);
-        const fromDate = filters.dateRange.from;
-        const toDate = filters.dateRange.to;
-        
-        if (toDate) {
-         return productDate >= fromDate && productDate <= toDate;
-        }
-        return productDate >= fromDate;
-      })();
       
-      return nameMatch && storeMatch && dateMatch;
+      return nameMatch && storeMatch;
     });
 
     return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
