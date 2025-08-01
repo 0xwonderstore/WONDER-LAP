@@ -4,6 +4,7 @@ import { Product } from '../types';
 import { formatDate } from '../utils/productUtils';
 import MetaIcon from './MetaIcon';
 import { useFavoritesStore } from '../stores/favoritesStore';
+import { normalizeUrl } from '../utils/urlUtils';
 
 interface ProductCardProps {
   product: Product;
@@ -14,7 +15,8 @@ function ProductCard({ product, onNavigateWithFilter }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const { favorites, toggleFavorite } = useFavoritesStore();
 
-  const isFavorite = favorites.my_main_favorites?.products.includes(product.url) ?? false;
+  const normalizedProductUrl = normalizeUrl(product.url);
+  const isFavorite = favorites.my_main_favorites?.products.includes(normalizedProductUrl) ?? false;
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();

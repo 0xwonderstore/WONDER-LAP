@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { normalizeUrl } from '../utils/urlUtils';
 
 // Define the shape of a single favorite list
-interface FavoriteList {
+export interface FavoriteList {
   name: string;
   products: string[];
 }
@@ -17,7 +18,9 @@ interface FavoritesState {
   favorites: FavoritesData;
   // --- Actions ---
   toggleFavorite: (productUrl: string) => void;
-  addList: (id: string, name: string, products: string[]) => void;
+  importLists: (data: FavoritesData) => void;
+  exportLists: () => FavoritesData;
+  addList: (name: string) => void;
   removeList: (listId: string) => void;
   renameList: (listId: string, newName: string) => void;
 }
@@ -33,16 +36,15 @@ export const useFavoritesStore = create<FavoritesState>()(
 
       // --- Action Implementations ---
       toggleFavorite: (productUrl) => {
+        const normalized = normalizeUrl(productUrl);
         const { favorites } = get();
         const mainList = favorites.my_main_favorites;
-        const isFavorite = mainList.products.includes(productUrl);
+        const isFavorite = mainList.products.includes(normalized);
 
-        // Create a new array for the updated list
         const updatedProducts = isFavorite
-          ? mainList.products.filter((p) => p !== productUrl)
-          : [...mainList.products, productUrl];
+          ? mainList.products.filter((p) => p !== normalized)
+          : [...mainList.products, normalized];
         
-        // Update the state immutably
         set({
           favorites: {
             ...favorites,
@@ -54,44 +56,75 @@ export const useFavoritesStore = create<FavoritesState>()(
         });
       },
 
-      addList: (id, name, products) => {
+      importLists: (data) => {
+        const existingFavorites = get().favorites;
+        const mergedFavorites = { ...existingFavorites };
+
+        for (const listId in data) {
+            const list = data[listId];
+            const normalizedList = {
+                ...list,
+                products: list.products.map(normalizeUrl),
+            };
+            // Avoid overwriting existing lists with the same ID, or create a new unique ID
+            const newId = mergedFavorites[listId] ? `imported_${listId}_${Date.now()}` : listId;
+            mergedFavorites[newId] = normalizedList;
+        }
+        set({ favorites: mergedFavorites });
+      },
+
+      exportLists: () => {
+        return get().favorites;
+      },
+      
+      addList: (name) => {
+        const newListId = `list_${Date.now()}`;
         set((state) => ({
-          favorites: {
-            ...state.favorites,
-            [id]: { name, products },
-          },
+            favorites: {
+                ...state.favorites,
+                [newListId]: { name, products: [] },
+            },
         }));
       },
 
       removeList: (listId) => {
-        if (listId === 'my_main_favorites') return; // Safety check
-        const { favorites } = get();
-        // Create a new object without the deleted list
-        const newFavorites = { ...favorites };
-        delete newFavorites[listId];
-        set({ favorites: newFavorites });
+        if (listId === 'my_main_favorites') return;
+        set((state) => {
+            const newFavorites = { ...state.favorites };
+            delete newFavorites[listId];
+            return { favorites: newFavorites };
+        });
       },
 
       renameList: (listId, newName) => {
-        const { favorites } = get();
-        if (!favorites[listId]) return; // Safety check
-        
-        // Update the list name immutably
-        set({
-          favorites: {
-            ...favorites,
-            [listId]: {
-              ...favorites[listId],
-              name: newName,
-            },
-          },
+        set((state) => {
+            if (!state.favorites[listId]) return state;
+            return {
+                favorites: {
+                    ...state.favorites,
+                    [listId]: { ...state.favorites[listId], name: newName },
+                },
+            };
         });
       },
     }),
     {
-      // --- Persistence Configuration ---
-      name: 'favorites-storage', // name of the item in the storage (must be unique)
-      storage: createJSONStorage(() => localStorage), // (optional) by default, 'localStorage' is used
+      name: 'favorites-storage',
+      storage: createJSONStorage(() => localStorage),
+      version: 2, // Version bump for the new structure
+      migrate: (persistedState: any, version) => {
+        if (version < 2 && persistedState) {
+          // If old state is just an array of URLs, wrap it in the new structure.
+          if (Array.isArray(persistedState.favorites?.my_main_favorites?.products)) {
+            return persistedState; // Already in a good enough format
+          }
+          // Handle very old formats if necessary, otherwise, return a default state
+          return {
+            favorites: { my_main_favorites: { name: 'My Favorites', products: [] } }
+          };
+        }
+        return persistedState;
+      },
     }
   )
 );

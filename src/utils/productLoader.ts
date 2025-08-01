@@ -1,4 +1,5 @@
 import { Product } from '../types';
+import { normalizeUrl } from './urlUtils';
 
 /**
  * Modern product loader using Vite's dynamic import.
@@ -20,11 +21,11 @@ export async function loadProducts(): Promise<Product[]> {
                 const mappedProducts = productsPage.map((p: any) => ({
                     id: p.id,
                     name: p.title,
-                    url: p.url,
+                    url: normalizeUrl(p.url), // <-- Normalize URL here
                     vendor: p.vendor,
                     store: {
                         name: p.vendor,
-                        url: p.vendor_url,
+                        url: normalizeUrl(p.vendor_url), // <-- Normalize store URL
                         facebook_page_id: p.facebook_page_id,
                     },
                     images: p.images,
