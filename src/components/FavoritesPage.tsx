@@ -1,174 +1,153 @@
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Product, Locale } from '../types';
 import { useFavoritesStore, FavoritesData } from '../stores/favoritesStore';
 import ProductCard from './ProductCard';
-import EmptyState from './EmptyState';
+import { EmptyState } from './EmptyState';
 import { translations } from '../translations';
 import { normalizeUrl } from '../utils/urlUtils';
-import { Upload, Download, Edit, Trash2, Check, X, PlusCircle } from 'lucide-react';
+import { useDropzone } from 'react-dropzone';
+import Modal from './Modal';
+import { Upload, Download, Edit, Trash2, Check, X, PlusCircle, Heart } from 'lucide-react';
 
-interface FavoritesPageProps {
-  allProducts: Product[];
-  locale: Locale;
-  onNavigateWithFilter: (filter: { store?: string; name?: string }) => void;
-}
+// --- Sidebar Item ---
+const SidebarListItem: React.FC<{ listId: string; name: string; isActive: boolean; isMain?: boolean; onSelect: () => void; onRename: () => void;}> = 
+({ listId, name, isActive, isMain, onSelect, onRename }) => {
+    const { removeList } = useFavoritesStore(s => s.actions);
+    const t = translations['en'];
 
-const FavoriteListSection: React.FC<{
-    listId: string;
-    listName: string;
-    productUrls: string[];
-    allProducts: Product[];
-    isMainList?: boolean;
-    onNavigateWithFilter: (filter: { store?: string; name?: string }) => void;
-}> = ({ listId, listName, productUrls, allProducts, isMainList = false, onNavigateWithFilter }) => {
-    
-    const { renameList, removeList } = useFavoritesStore();
-    const [isEditing, setIsEditing] = useState(false);
-    const [editedName, setEditedName] = useState(listName);
-    const t = translations['en']; // Assuming locale is available or defaulting
-
-    const products = useMemo(() => {
-        const urlSet = new Set(productUrls.map(normalizeUrl));
-        return allProducts.filter(p => urlSet.has(normalizeUrl(p.url)));
-    }, [productUrls, allProducts]);
-
-    const handleRename = () => {
-        if (editedName.trim() && editedName !== listName) {
-            renameList(listId, editedName.trim());
-        }
-        setIsEditing(false);
-    };
-
-    const handleDelete = () => {
-        if (window.confirm(t.deleteConfirmation)) {
-            removeList(listId);
-        }
+    const handleDelete = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (window.confirm(t.deleteConfirmation)) removeList(listId);
     };
 
     return (
-        <div className="mb-12">
-            <div className="flex justify-between items-center mb-4 pb-2 border-b-2 border-light-border dark:border-dark-border">
-                {isEditing ? (
-                    <div className="flex gap-2">
-                        <input type="text" value={editedName} onChange={e => setEditedName(e.target.value)} className="p-2 border rounded-md bg-light-background dark:bg-dark-background" autoFocus />
-                        <button onClick={handleRename} className="p-2 bg-green-500 text-white rounded-md"><Check size={18} /></button>
-                        <button onClick={() => setIsEditing(false)} className="p-2 bg-gray-500 text-white rounded-md"><X size={18} /></button>
-                    </div>
-                ) : (
-                    <h2 className="text-2xl font-bold">{listName}</h2>
-                )}
-                {!isMainList && !isEditing && (
-                    <div className="flex gap-2">
-                        <button onClick={() => setIsEditing(true)} title={t.renameList} className="p-2 hover:bg-light-hover dark:hover:bg-dark-hover rounded-full"><Edit size={18} /></button>
-                        <button onClick={handleDelete} title={t.deleteList} className="p-2 hover:bg-light-hover dark:hover:bg-dark-hover rounded-full text-red-500"><Trash2 size={18} /></button>
-                    </div>
-                )}
-            </div>
-            {products.length > 0 ? (
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {products.map(p => (
-                        <ProductCard key={`${listId}-${p.url}`} product={p} onNavigateWithFilter={onNavigateWithFilter} />
-                    ))}
+        <div className={`group flex justify-between items-center w-full text-left p-2 rounded-lg cursor-pointer ${isActive ? 'bg-brand-primary/10 text-brand-primary font-bold' : 'hover:bg-light-hover dark:hover:bg-dark-hover'}`} onClick={onSelect}>
+            <span className="flex items-center gap-2 text-sm truncate">
+                {isMain && <Heart size={14} className="text-red-500 flex-shrink-0"/>}
+                <span>{name}</span>
+            </span>
+            {!isMain && (
+                <div className="hidden group-hover:flex items-center flex-shrink-0">
+                    <button onClick={(e)=>{e.stopPropagation(); onRename();}} className="p-1 hover:text-blue-600"><Edit size={14} /></button>
+                    <button onClick={handleDelete} className="p-1 hover:text-red-600"><Trash2 size={14} /></button>
                 </div>
-            ) : (
-                <div className="text-center py-8 text-gray-500">{ isMainList ? <EmptyState /> : 'This list is empty.' }</div>
             )}
         </div>
     );
 };
 
+// --- Main Page ---
+const FavoritesPage: React.FC<{ allProducts: Product[]; locale: Locale; onNavigateWithFilter: (f: any) => void; }> = ({ allProducts, locale, onNavigateWithFilter }) => {
+    const { favorites } = useFavoritesStore();
+    const { addList, renameList, importLists } = useFavoritesStore(s => s.actions);
+    const t = translations[locale];
+    
+    const [selectedListId, setSelectedListId] = useState('my_main_favorites');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState<'add' | 'rename'>('add');
+    const [listNameInput, setListNameInput] = useState('');
+    const [listToRename, setListToRename] = useState<string | null>(null);
 
-const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, locale, onNavigateWithFilter }) => {
-  const { favorites, importLists, exportLists, addList } = useFavoritesStore();
-  const t = translations[locale];
-  const fileInputRef = useRef<HTMLInputElement>(null);
+    const onDrop = useCallback((acceptedFiles: File[]) => {
+        const file = acceptedFiles[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async () => {
+            try {
+                const data = JSON.parse(reader.result as string);
+                // Add validation here if needed
+                importLists(data);
+                alert('Favorites imported successfully!');
+            } catch (e) {
+                alert('Failed to import favorites. Please make sure the file is valid.');
+            }
+        };
+        reader.readAsText(file);
+    }, [importLists]);
 
-  const handleExport = () => {
-    const data = exportLists();
-    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(data, null, 2))}`;
-    const link = document.createElement('a');
-    link.href = jsonString;
-    link.download = 'favorites.json';
-    link.click();
-  };
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'application/json': ['.json'] }, noClick: true, noKeyboard: true });
 
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-  
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const text = e.target?.result;
-          if (typeof text === 'string') {
-            const data: FavoritesData = JSON.parse(text);
-            importLists(data);
-          }
-        } catch (error) {
-          console.error("Error parsing JSON file:", error);
-          alert("Error: Could not parse the favorites file.");
+    const productsInSelectedList = useMemo(() => {
+        const list = favorites[selectedListId];
+        if (!list) {
+            setSelectedListId('my_main_favorites');
+            return [];
         }
-      };
-      reader.readAsText(file);
-    }
-    event.target.value = '';
-  };
-  
-  const handleAddNewList = () => {
-    const newListName = prompt("Enter the name for the new list:");
-    if (newListName?.trim()) {
-        addList(newListName.trim());
-    }
-  };
-  
-  const mainList = favorites.my_main_favorites;
-  const otherLists = Object.entries(favorites).filter(([id]) => id !== 'my_main_favorites');
+        const urlSet = new Set(list.products.map(normalizeUrl));
+        return allProducts.filter(p => urlSet.has(normalizeUrl(p.url)));
+    }, [selectedListId, favorites, allProducts]);
 
-  return (
-    <div className="animate-fade-in-up">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-light-text-primary dark:text-dark-text-primary">{t.favorites}</h1>
-        <div className="flex gap-2">
-            <button onClick={handleAddNewList} className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors">
-                <PlusCircle size={18} />
-                <span>{t.addNewList}</span>
-            </button>
-            <button onClick={handleImportClick} className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                <Upload size={18} />
-                <span>{t.importFavorites}</span>
-            </button>
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept=".json" style={{ display: 'none' }} />
-            <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
-                <Download size={18} />
-                <span>{t.exportFavorites}</span>
-            </button>
+    const handleModalSubmit = () => {
+        if (!listNameInput.trim()) return;
+        if (modalMode === 'add') addList(listNameInput);
+        if (modalMode === 'rename' && listToRename) renameList(listToRename, listNameInput);
+        setIsModalOpen(false);
+        setListNameInput('');
+        setListToRename(null);
+    };
+
+    const openModal = (mode: 'add' | 'rename', listId?: string, currentName?: string) => {
+        setModalMode(mode);
+        if (mode === 'rename' && listId && currentName) {
+            setListToRename(listId);
+            setListNameInput(currentName);
+        } else {
+            setListNameInput('');
+        }
+        setIsModalOpen(true);
+    };
+
+    return (
+        <div {...getRootProps({ className: `flex flex-col md:flex-row gap-6 transition-all ${isDragActive ? 'bg-blue-500/10' : ''}` })}>
+            <input {...getInputProps()} />
+            
+            {/* --- Dropzone Overlay --- */}
+            {isDragActive && (
+                <div className="absolute inset-0 bg-blue-500/30 flex items-center justify-center z-20 pointer-events-none">
+                    <div className="text-center p-8 bg-white rounded-lg shadow-2xl">
+                        <Upload size={48} className="mx-auto text-blue-600" />
+                        <p className="mt-4 text-xl font-bold">Drop to import favorites</p>
+                    </div>
+                </div>
+            )}
+
+            {/* --- Sidebar --- */}
+            <aside className="w-full md:w-1/4 md:max-w-xs p-4 bg-light-surface dark:bg-dark-surface rounded-2xl shadow-md flex flex-col self-start">
+                <div className="flex-grow">
+                    <h2 className="text-lg font-bold border-b pb-2 mb-2">{t.favorites}</h2>
+                    <div className="flex flex-col gap-1">
+                        {Object.entries(favorites).map(([id, list]) => (
+                            <SidebarListItem key={id} listId={id} name={list.name} isActive={selectedListId === id} isMain={id === 'my_main_favorites'} onSelect={() => setSelectedListId(id)} onRename={() => openModal('rename', id, list.name)} />
+                        ))}
+                    </div>
+                </div>
+                <div className="mt-4 pt-4 border-t flex flex-col gap-2">
+                    <button onClick={() => openModal('add')} className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 text-sm"><PlusCircle size={16} /><span>{t.addNewList}</span></button>
+                    <label htmlFor="import-button" className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm cursor-pointer"><Upload size={16} /><span>{t.importFavorites}</span></label>
+                </div>
+            </aside>
+
+            {/* --- Content --- */}
+            <main className="flex-grow">
+                {productsInSelectedList.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 animate-fade-in-up">
+                        {productsInSelectedList.map(p => <ProductCard key={`${selectedListId}-${p.url}`} product={p} onNavigateWithFilter={onNavigateWithFilter}/>)}
+                    </div>
+                ) : <EmptyState />}
+            </main>
+
+            {/* --- Modal --- */}
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalMode === 'add' ? t.addNewList : t.renameList}>
+                <div className="flex flex-col gap-4">
+                    <input type="text" value={listNameInput} onChange={e => setListNameInput(e.target.value)} className="p-2 border rounded-md bg-light-background dark:bg-dark-background" placeholder="List name" autoFocus onKeyDown={e => e.key === 'Enter' && handleModalSubmit()} />
+                    <div className="flex justify-end gap-2">
+                        <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg">{t.cancel}</button>
+                        <button onClick={handleModalSubmit} className="px-4 py-2 bg-brand-primary text-white rounded-lg">{t.save}</button>
+                    </div>
+                </div>
+            </Modal>
         </div>
-      </div>
-
-      <FavoriteListSection
-          listId="my_main_favorites"
-          listName={mainList.name}
-          productUrls={mainList.products}
-          allProducts={allProducts}
-          isMainList={true}
-          onNavigateWithFilter={onNavigateWithFilter}
-      />
-
-      {otherLists.map(([id, list]) => (
-          <FavoriteListSection
-              key={id}
-              listId={id}
-              listName={list.name}
-              productUrls={list.products}
-              allProducts={allProducts}
-              onNavigateWithFilter={onNavigateWithFilter}
-          />
-      ))}
-    </div>
-  );
+    );
 };
 
 export default FavoritesPage;

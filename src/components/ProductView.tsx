@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Product, Locale } from '../types';
 import ProductTable from './ProductTable';
-import EmptyState from './EmptyState';
+import { EmptyState } from './EmptyState';
 import Pagination from './Pagination';
 import FilterComponent from './FilterComponent';
 import { useLocalStorage } from '../hooks/useLocalStorage';
