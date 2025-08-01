@@ -1,6 +1,6 @@
 import React, { useState, useMemo, Suspense, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Moon, Sun, Sparkles, Languages, Heart, EyeOff, LayoutDashboard } from 'lucide-react';
+import { Moon, Sun, Sparkles, Heart, EyeOff, LayoutDashboard } from 'lucide-react';
 import { Product, Locale } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { loadProducts } from './utils/productLoader';
@@ -16,7 +16,7 @@ const ScrollButtons = React.lazy(() => import('./components/ScrollButtons'));
 
 // --- Type Definitions ---
 type Page = 'home' | 'favorites' | 'blacklist' | 'dashboard';
-type InitialFilter = { name?: string; store?: string; language?: string };
+type InitialFilter = { name?: string; store?: string; };
 
 const LoadingFallback: React.FC = () => (
   <div className="flex justify-center items-center h-96">
@@ -50,7 +50,6 @@ const App: React.FC = () => {
   }, [darkMode, locale]);
 
   // --- Handlers ---
-  const toggleLocale = () => setLocale(prev => (prev === 'ar' ? 'en' : 'ar'));
   const navigateTo = (page: Page) => setCurrentPage(prev => (prev === page ? 'home' : page));
   
   const navigateToHomeWithFilter = useCallback((filter: InitialFilter) => {
@@ -73,7 +72,6 @@ const App: React.FC = () => {
   }, []);
   
   const uniqueStores = useMemo(() => [...new Set(allProducts.map(p => p.vendor).filter(Boolean))], [allProducts]);
-  const uniqueLanguages = useMemo(() => [...new Set(allProducts.map(p => p.language).filter(Boolean))], [allProducts]);
 
   const HeaderButton: React.FC<{ onClick: () => void; className?: string; tooltip: string; 'aria-label': string; children?: React.ReactNode; }> = 
     ({ onClick, className, tooltip, children, ...props }) => (
@@ -88,7 +86,7 @@ const App: React.FC = () => {
       case 'favorites': return <FavoritesPage allProducts={allProducts} locale={locale} onNavigateWithFilter={navigateToHomeWithFilter} />;
       case 'blacklist': return <BlacklistPage locale={locale} blacklist={blacklist} onAddWord={addWordToBlacklist} onRemoveWord={removeWordFromBlacklist} />;
       case 'dashboard': return <DashboardPage products={allProducts} locale={locale} />;
-      default: return <ProductView products={allProducts} isLoading={isLoading} stores={uniqueStores} languages={uniqueLanguages} locale={locale} blacklist={blacklist} onClearInitialFilters={clearInitialFilters} initialFilters={initialFilters} onNavigateWithFilter={navigateToHomeWithFilter} />;
+      default: return <ProductView products={allProducts} isLoading={isLoading} stores={uniqueStores} locale={locale} blacklist={blacklist} onClearInitialFilters={clearInitialFilters} initialFilters={initialFilters} onNavigateWithFilter={navigateToHomeWithFilter} />;
     }
   };
 
@@ -114,7 +112,6 @@ const App: React.FC = () => {
                 </span>
               }
             </HeaderButton>
-            <HeaderButton onClick={toggleLocale} className="p-2 bg-light-surface dark:bg-dark-surface" tooltip={t.language} aria-label="Toggle Language"><Languages className="w-5 h-5" /></HeaderButton>
             <HeaderButton onClick={() => setDarkMode(d => !d)} className="p-2 bg-light-surface dark:bg-dark-surface" tooltip={t.theme} aria-label="Toggle Dark Mode">{darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5" />}</HeaderButton>
           </div>
         </header>

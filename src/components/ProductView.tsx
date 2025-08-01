@@ -11,11 +11,10 @@ interface ProductViewProps {
   products: Product[];
   isLoading: boolean;
   stores: string[];
-  languages: string[];
   locale: Locale;
   blacklist: string[];
   onClearInitialFilters: () => void;
-  initialFilters: { store?: string; language?: string } | null;
+  initialFilters: { store?: string; name?: string } | null;
   onNavigateWithFilter: (filter: { store?: string; language?: string }) => void;
 }
 
@@ -23,7 +22,6 @@ const ProductView: React.FC<ProductViewProps> = ({
   products,
   isLoading,
   stores,
-  languages,
   locale,
   blacklist,
   initialFilters,
@@ -36,19 +34,16 @@ const ProductView: React.FC<ProductViewProps> = ({
   const [filters, setFilters] = useState<{
     name: string;
     store: string;
-    language: string;
   }>(() => ({
-    name: '',
+    name: initialFilters?.name || '',
     store: initialFilters?.store || '',
-    language: initialFilters?.language || '',
   }));
 
   useEffect(() => {
     if (initialFilters) {
       setFilters({
-        name: '',
+        name: initialFilters.name || '',
         store: initialFilters.store || '',
-        language: initialFilters.language || '',
       });
       setCurrentPage(1);
       onClearInitialFilters();
@@ -66,39 +61,28 @@ const ProductView: React.FC<ProductViewProps> = ({
   };
 
   const handleResetFilters = () => {
-    setFilters({ name: '', store: '', language: '' });
+    setFilters({ name: '', store: '' });
     setCurrentPage(1);
   };
 
   const processedProducts = useMemo(() => {
-    const blacklistRegex = new RegExp(blacklist.join('|'), 'i');
-    const normalizeText = (text: string) => text.toLowerCase().replace(/[^a-z0-d\s]/g, '');
+    const blacklistRegex = blacklist.length > 0 ? new RegExp(blacklist.join('|'), 'i') : null;
+    const normalizeText = (text: string) => text.toLowerCase().replace(/[^a-z0-9\s]/g, '');
     const normalizedFilterName = normalizeText(filters.name);
 
-    // New: Get all stores that have at least one product in the selected language
-    const storesWithSelectedLanguage = filters.language
-      ? new Set(
-          products
-            .filter(p => p.language === filters.language && p.store?.name)
-            .map(p => p.store!.name)
-        )
-      : null;
-
     const filtered = products.filter(product => {
-      if (blacklist.length > 0 && product.name && blacklistRegex.test(product.name)) {
+      // Blacklist filter
+      if (blacklistRegex && product.name && blacklistRegex.test(product.name)) {
         return false;
       }
       
-      const normalizedProductName = product.name ? normalizeText(product.name) : '';
-      const nameMatch = filters.name ? normalizedProductName.includes(normalizedFilterName) : true;
-      const storeMatch = filters.store ? product.store?.name === filters.store : true;
+      // Name filter
+      const nameMatch = filters.name ? normalizeText(product.name).includes(normalizedFilterName) : true;
       
-      // New: If a language is selected, check if the product's store is in our set
-      const languageMatch = storesWithSelectedLanguage
-        ? product.store?.name && storesWithSelectedLanguage.has(product.store.name)
-        : true;
+      // Store filter
+      const storeMatch = filters.store ? product.vendor === filters.store : true;
       
-      return nameMatch && storeMatch && languageMatch;
+      return nameMatch && storeMatch;
     });
 
     return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -113,7 +97,6 @@ const ProductView: React.FC<ProductViewProps> = ({
        <FilterComponent
         locale={locale}
         stores={stores}
-        languages={languages}
         filters={filters}
         onFilterChange={handleFilterChange}
         onResetFilters={handleResetFilters}

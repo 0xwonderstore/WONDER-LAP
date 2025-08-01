@@ -1,17 +1,14 @@
 import React from 'react';
 import { LayoutGrid, List, ChevronDown, X } from 'lucide-react';
 import { Locale } from '../types';
-import { getLanguageName } from '../utils/languageUtils';
 import { translations } from '../translations';
 
 interface FilterComponentProps {
   locale: Locale;
   stores: string[];
-  languages: string[];
   filters: {
     name: string;
     store: string;
-    language: string;
   };
   onFilterChange: (filterName: string, value: string) => void;
   onResetFilters: () => void;
@@ -22,10 +19,10 @@ interface FilterComponentProps {
 }
 
 const FilterComponent: React.FC<FilterComponentProps> = ({
-  locale, stores, languages, filters, onFilterChange, onResetFilters, viewMode, onViewModeChange, productsPerPage, onProductsPerPageChange
+  locale, stores, filters, onFilterChange, onResetFilters, viewMode, onViewModeChange, productsPerPage, onProductsPerPageChange
 }) => {
   const t = translations[locale];
-  const isFilterActive = filters.name !== '' || filters.store !== '' || filters.language !== '';
+  const isFilterActive = filters.name !== '' || filters.store !== '';
 
   return (
     <div className="bg-light-surface dark:bg-dark-surface p-4 rounded-2xl mb-6 shadow-md flex flex-wrap gap-4 items-end">
@@ -39,7 +36,6 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
 
       {[
         { id: 'store-select', label: t.selectStore, value: filters.store, onChange: (e:any) => onFilterChange('store', e.target.value), options: [ { value: '', label: t.allStores }, ...stores.sort().map(s => ({ value: s, label: s })) ] },
-        { id: 'language-select', label: t.selectLanguage, value: filters.language, onChange: (e:any) => onFilterChange('language', e.target.value), options: [ { value: '', label: t.allLanguages }, ...languages.map(l => ({ value: l, label: getLanguageName(l) })) ] },
         { id: 'per-page-select', label: t.show, value: productsPerPage, onChange: (e:any) => onProductsPerPageChange(Number(e.target.value)), options: [24, 48, 100, 160].map(v => ({ value: v, label: `${v} ${t.product}` })) }
       ].map(select => (
         <div key={select.id} className="flex-grow min-w-[140px]">
