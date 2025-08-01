@@ -23,14 +23,14 @@ const BlacklistPage: React.FC<BlacklistPageProps> = ({ locale, blacklist, onAddW
 
   return (
     <div className="animate-fade-in-up max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-light-text-primary dark:text-dark-text-primary">{t.blacklist}</h1>
+      <h1 className="text-3xl font-bold mb-6 text-light-text-primary dark:text-dark-text-primary">{t.blacklistedWords}</h1>
       
       <div className="flex gap-2 mb-6">
         <input
           type="text"
           value={newWord}
           onChange={(e) => setNewWord(e.target.value)}
-          placeholder={"Add a word to the blacklist"}
+          placeholder={t.addWord}
           className="flex-grow p-2.5 border border-light-border dark:border-dark-border rounded-xl bg-light-background dark:bg-dark-background focus:ring-2 focus:ring-brand-primary"
         />
         <button
@@ -38,7 +38,7 @@ const BlacklistPage: React.FC<BlacklistPageProps> = ({ locale, blacklist, onAddW
           className="p-2.5 bg-brand-primary text-white rounded-xl hover:bg-brand-primary/90 transition-colors flex items-center gap-2"
         >
           <PlusCircle size={20} />
-          <span>{"Add"}</span>
+          <span>{t.addToBlacklist}</span>
         </button>
       </div>
 
@@ -54,7 +54,7 @@ const BlacklistPage: React.FC<BlacklistPageProps> = ({ locale, blacklist, onAddW
           ))}
         </div>
         {blacklist.length === 0 && (
-          <p className="text-center text-light-text-secondary dark:text-dark-text-secondary py-4">{"The blacklist is empty."}</p>
+          <p className="text-center text-light-text-secondary dark:text-dark-text-secondary py-4">{t.noBlacklistedWords}</p>
         )}
       </div>
     </div>

@@ -1,18 +1,22 @@
 import React, { useState, memo } from 'react';
-import { Calendar, Camera, Heart } from 'lucide-react';
-import { Product } from '../types';
+import { Calendar, Camera } from 'lucide-react';
+import { Product, Locale } from '../types';
 import { formatDate } from '../utils/productUtils';
 import MetaIcon from './MetaIcon';
 import { useFavoritesStore } from '../stores/favoritesStore';
+import { translations } from '../translations';
+import { Heart } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
   onNavigateWithFilter: (filter: { store?: string }) => void;
+  locale: Locale;
 }
 
-function ProductCard({ product, onNavigateWithFilter }: ProductCardProps) {
+function ProductCard({ product, onNavigateWithFilter, locale }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const { favorites, toggleFavorite } = useFavoritesStore();
+  const t = translations[locale];
 
   const isFavorite = favorites.my_main_favorites?.products.includes(product.url) ?? false;
 
@@ -80,12 +84,12 @@ function ProductCard({ product, onNavigateWithFilter }: ProductCardProps) {
                   rel="noopener noreferrer"
                   onClick={(e) => { if (getImageUrl().startsWith('https://via.placeholder.com')) e.preventDefault(); }}
                   className="p-1.5 bg-white/70 dark:bg-black/50 backdrop-blur-sm rounded-full transition-all duration-200 hover:scale-110 active:scale-95 inline-block"
-                  aria-label="Search image with Google Lens"
+                  aria-label={t.searchInMeta}
               >
                   <Camera className="w-5 h-5 text-gray-700 dark:text-gray-300" />
               </a>
               <div className="absolute top-1/2 -translate-y-1/2 left-full ml-3 w-max bg-gray-800 text-white text-xs rounded-lg py-1 px-3 opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 pointer-events-none z-10 scale-95 group-hover/tooltip:scale-100 whitespace-nowrap">
-                  Search with Google Lens
+                  {t.searchInMeta}
               </div>
           </div>
           {product.store?.name && (
@@ -95,12 +99,12 @@ function ProductCard({ product, onNavigateWithFilter }: ProductCardProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-1.5 bg-white/70 dark:bg-black/50 backdrop-blur-sm rounded-full transition-all duration-200 hover:scale-110 active:scale-95 inline-block"
-                aria-label="Go to Ad Library"
+                aria-label={product.store.name + ' ' + t.dashboard}
               >
                 <MetaIcon className="w-5 h-5" />
               </a>
               <div className="absolute top-1/2 -translate-y-1/2 left-full ml-3 w-max bg-gray-800 text-white text-xs rounded-lg py-1 px-3 opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 pointer-events-none z-10 scale-95 group-hover/tooltip:scale-100 whitespace-nowrap">
-                {product.store.name} Ad Library
+                {product.store.name} {t.dashboard}
               </div>
             </div>
           )}
