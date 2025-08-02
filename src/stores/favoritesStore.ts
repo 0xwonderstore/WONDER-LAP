@@ -46,14 +46,16 @@ export const useFavoritesStore = create<FavoritesState>()(
     {
       name: 'favorites-storage',
       storage: createJSONStorage(() => localStorage),
-      version: 0, // A base version for our simple store
+      version: 0, // A base version for our simple state
       migrate: (persistedState: any, version: number) => {
-        // This function handles any old state from local storage.
-        // If the state doesn't look like our simple object, reset it.
-        if (!persistedState || !persistedState.my_main_favorites) {
-          return { favorites: initialState } as FavoritesState;
+        // This function handles loading old data.
+        // If the data is from a complex version or is broken, we reset it.
+        if (persistedState && persistedState.actions) {
+          console.log("Old state detected, resetting to a simpler format.");
+          return { favorites: initialState, toggleFavorite: (initialState as any).toggleFavorite };
         }
-        return persistedState as FavoritesState;
+        // If the state looks simple enough, we use it.
+        return persistedState;
       },
     }
   )
