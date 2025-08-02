@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Calendar, Heart, Settings2 } from 'lucide-react';
+import React, { useState, memo } from 'react';
+import { Calendar, Heart } from 'lucide-react';
 import { Product } from '../types';
 import { formatDate } from '../utils/productUtils';
 import { useFavoritesStore } from '../stores/favoritesStore';
@@ -8,17 +8,15 @@ import { normalizeUrl } from '../utils/urlUtils';
 interface ProductCardProps {
   product: Product;
   onNavigateWithFilter: (filter: { store?: string }) => void;
-  showManagementButton?: boolean;
-  onManageClick?: () => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigateWithFilter, showManagementButton = false, onManageClick }) => {
-  const { favorites, actions } = useFavoritesStore();
+const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigateWithFilter }) => {
+  const { favorites, toggleFavorite } = useFavoritesStore();
   const isFavorite = favorites.my_main_favorites?.products.includes(normalizeUrl(product.url));
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    actions.toggleFavorite(product.url);
+    toggleFavorite(product.url);
   };
 
   return (
@@ -27,15 +25,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigateWithFilter
         <a href={product.url} target="_blank" rel="noopener noreferrer">
           <img src={product.images?.[0]?.src || 'https://via.placeholder.com/400'} alt={product.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" loading="lazy" />
         </a>
-        <div className="absolute top-3 right-3 flex flex-col gap-2">
+        <div className="absolute top-3 right-3">
             <button onClick={handleFavoriteClick} className="p-1.5 bg-white/70 dark:bg-black/50 backdrop-blur-sm rounded-full" aria-label="Toggle Favorite">
                 <Heart className={`w-5 h-5 transition-all ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-700 dark:text-gray-300'}`} />
             </button>
-            {showManagementButton && (
-                <button onClick={onManageClick} className="p-1.5 bg-white/70 dark:bg-black/50 backdrop-blur-sm rounded-full" aria-label="Manage Lists">
-                    <Settings2 className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                </button>
-            )}
         </div>
       </div>
       <div className="p-4 flex flex-col flex-grow">
@@ -52,4 +45,4 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigateWithFilter
   );
 };
 
-export default ProductCard;
+export default memo(ProductCard);

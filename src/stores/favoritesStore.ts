@@ -2,24 +2,16 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { normalizeUrl } from '../utils/urlUtils';
 
-export interface FavoriteList {
-  name: string;
-  products: string[];
-}
-
 export interface FavoritesData {
-  [listId: string]: FavoriteList;
+  my_main_favorites: {
+    name: string;
+    products: string[];
+  };
 }
 
 interface FavoritesState {
   favorites: FavoritesData;
-  actions: {
-    toggleFavorite: (productUrl: string) => void;
-    assignProductToLists: (productUrl: string, listIds: string[]) => void;
-    addList: (name: string) => void;
-    removeList: (listId: string) => void;
-    renameList: (listId: string, newName: string) => void;
-  }
+  toggleFavorite: (productUrl: string) => void;
 }
 
 const initialState = {
@@ -30,59 +22,39 @@ export const useFavoritesStore = create<FavoritesState>()(
   persist(
     (set) => ({
       favorites: initialState,
-      actions: {
-        toggleFavorite: (productUrl) => set((state) => {
-          const normalized = normalizeUrl(productUrl);
-          const mainList = state.favorites.my_main_favorites;
-          const products = new Set(mainList.products);
-          products.has(normalized) ? products.delete(normalized) : products.add(normalized);
-          return {
-            favorites: { ...state.favorites, my_main_favorites: { ...mainList, products: Array.from(products) } }
-          };
-        }),
-        
-        assignProductToLists: (productUrl, targetListIds) => set((state) => {
-            const normalized = normalizeUrl(productUrl);
-            const newFavorites = JSON.parse(JSON.stringify(state.favorites));
-            
-            Object.keys(newFavorites).forEach(listId => {
-                const productSet = new Set(newFavorites[listId].products);
-                if (targetListIds.includes(listId)) {
-                    productSet.add(normalized); // Add to target lists
-                } else {
-                    if (listId !== 'my_main_favorites') { // Never remove from main list via this action
-                        productSet.delete(normalized);
-                    }
-                }
-                newFavorites[listId].products = Array.from(productSet);
-            });
+      toggleFavorite: (productUrl) => set((state) => {
+        const normalized = normalizeUrl(productUrl);
+        const products = new Set(state.favorites.my_main_favorites.products);
 
-            return { favorites: newFavorites };
-        }),
+        if (products.has(normalized)) {
+          products.delete(normalized);
+        } else {
+          products.add(normalized);
+        }
 
-        addList: (name) => set((state) => ({
-          favorites: { ...state.favorites, [`list_${Date.now()}`]: { name, products: [] } }
-        })),
-
-        removeList: (listId) => set((state) => {
-          if (listId === 'my_main_favorites') return state;
-          const newFavorites = { ...state.favorites };
-          delete newFavorites[listId];
-          return { favorites: newFavorites };
-        }),
-
-        renameList: (listId, newName) => set((state) => {
-          if (!state.favorites[listId] || listId === 'my_main_favorites') return state;
-          const newFavorites = { ...state.favorites };
-          newFavorites[listId] = { ...newFavorites[listId], name: newName };
-          return { favorites: newFavorites };
-        }),
-      }
+        return {
+          favorites: {
+            ...state.favorites,
+            my_main_favorites: {
+              ...state.favorites.my_main_favorites,
+              products: Array.from(products),
+            },
+          },
+        };
+      }),
     }),
     {
       name: 'favorites-storage',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ favorites: state.favorites }),
+      version: 0, // A base version for our simple store
+      migrate: (persistedState: any, version: number) => {
+        // This function handles any old state from local storage.
+        // If the state doesn't look like our simple object, reset it.
+        if (!persistedState || !persistedState.my_main_favorites) {
+          return { favorites: initialState } as FavoritesState;
+        }
+        return persistedState as FavoritesState;
+      },
     }
   )
 );

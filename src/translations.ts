@@ -5,16 +5,6 @@ export const translations = {
     theme: 'تغيير المظهر',
     blacklist: 'القائمة السوداء',
     
-    // FavoritesPage.tsx
-    importFavorites: 'استيراد القوائم',
-    exportFavorites: 'تصدير القوائم',
-    addNewList: 'إضافة قائمة جديدة',
-    renameList: 'إعادة تسمية',
-    deleteList: 'حذف',
-    save: 'حفظ',
-    cancel: 'إلغاء',
-    deleteConfirmation: 'هل أنت متأكد من أنك تريد حذف هذه القائمة؟',
-    
     // FilterComponent.tsx
     searchByName: 'ابحث بالاسم',
     searchPlaceholder: 'مثال: T-shirt',
@@ -36,22 +26,16 @@ export const translations = {
     totalProducts: 'إجمالي المنتجات',
     storeActivity: 'نشاط المتاجر',
     searchInMeta: 'البحث في مكتبة ميتا',
+
+    // EmptyState.tsx
+    noResults: 'لا توجد نتائج',
+    noResultsHint: 'لم يتم العثور على منتجات. حاول تغيير الفلاتر الخاصة بك.'
   },
   en: {
     // App.tsx
     favorites: 'Favorites',
     theme: 'Change Theme',
     blacklist: 'Blacklist',
-
-    // FavoritesPage.tsx
-    importFavorites: 'Import Lists',
-    exportFavorites: 'Export Lists',
-    addNewList: 'Add New List',
-    renameList: 'Rename',
-    deleteList: 'Delete',
-    save: 'Save',
-    cancel: 'Cancel',
-    deleteConfirmation: 'Are you sure you want to delete this list?',
 
     // FilterComponent.tsx
     searchByName: 'Search by Name',
@@ -74,5 +58,9 @@ export const translations = {
     totalProducts: 'Total Products',
     storeActivity: 'Store Activity',
     searchInMeta: 'Search in Meta Library',
+
+    // EmptyState.tsx
+    noResults: 'No results found',
+    noResultsHint: 'No products were found. Try changing your filters.'
   },
 };
