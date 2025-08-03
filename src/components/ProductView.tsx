@@ -8,6 +8,8 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import ProductCard from './ProductCard';
 import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
+import { parseISO, startOfDay, endOfDay } from 'date-fns';
+import { DateRange } from 'react-day-picker';
 
 interface ProductViewProps {
   products: Product[];
@@ -33,6 +35,7 @@ const ProductView: React.FC<ProductViewProps> = ({
   const [viewMode, setViewMode] = useLocalStorage<'grid' | 'table'>('viewMode', 'grid');
   const [currentPage, setCurrentPage] = useLocalStorage('currentPage', 1);
   const [productsPerPage, setProductsPerPage] = useLocalStorage('productsPerPage', 24);
+  const [date, setDate] = useState<DateRange | undefined>(undefined);
   const [filters, setFilters] = useState<{
     name: string;
     store: string;
@@ -43,10 +46,11 @@ const ProductView: React.FC<ProductViewProps> = ({
 
   useEffect(() => {
     if (initialFilters) {
-      setFilters({
+      setFilters(prev => ({
+        ...prev,
         name: initialFilters.name || '',
         store: initialFilters.store || '',
-      });
+      }));
       setCurrentPage(1);
       onClearInitialFilters();
     }
@@ -64,6 +68,7 @@ const ProductView: React.FC<ProductViewProps> = ({
 
   const handleResetFilters = () => {
     setFilters({ name: '', store: '' });
+    setDate(undefined);
     setCurrentPage(1);
   };
 
@@ -71,7 +76,20 @@ const ProductView: React.FC<ProductViewProps> = ({
     const blacklistRegex = blacklist.length > 0 ? new RegExp(`\\b(${blacklist.join('|')})\\b`, 'i') : null;
     const searchTerms = filters.name.toLowerCase().split(' ').filter(term => term.length > 0);
 
-    const filtered = products.filter(product => {
+    let filtered = products;
+
+    // Date range filter
+    if (date?.from) {
+      const from = startOfDay(date.from);
+      const to = date.to ? endOfDay(date.to) : endOfDay(date.from);
+      filtered = filtered.filter(p => {
+        const productDate = parseISO(p.created_at);
+        return productDate >= from && productDate <= to;
+      });
+    }
+
+    // Other filters
+    filtered = filtered.filter(product => {
       if (blacklistRegex && product.name && blacklistRegex.test(product.name)) {
         return false;
       }
@@ -84,7 +102,7 @@ const ProductView: React.FC<ProductViewProps> = ({
     });
 
     return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [products, filters, blacklist]);
+  }, [products, filters, blacklist, date]);
 
   const totalPages = Math.ceil(processedProducts.length / productsPerPage);
   const currentProducts = processedProducts.slice((currentPage - 1) * productsPerPage, currentPage * productsPerPage);
@@ -96,6 +114,8 @@ const ProductView: React.FC<ProductViewProps> = ({
         t={t}
         stores={stores}
         filters={filters}
+        date={date}
+        setDate={setDate}
         onFilterChange={handleFilterChange}
         onResetFilters={handleResetFilters}
         viewMode={viewMode}

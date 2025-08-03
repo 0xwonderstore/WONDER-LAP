@@ -14,6 +14,18 @@ export const translations = {
     show: 'عرض',
     product: 'منتج',
     resetFilters: 'إلغاء الفلاتر',
+    dateAdded: 'تاريخ الإضافة',
+    
+    // DateRangePicker
+    apply: 'تطبيق',
+    suggestions: 'اقتراحات',
+    pickADate: 'اختر تاريخًا',
+    today: 'اليوم',
+    last7days: 'آخر 7 أيام',
+    last15days: 'آخر 15 يومًا',
+    last30days: 'آخر 30 يومًا',
+    last2months: 'آخر شهرين',
+    last3months: 'آخر 3 أشهر',
 
     // DashboardPage.tsx
     dashboard_totalProducts: 'إجمالي المنتجات',
@@ -59,6 +71,18 @@ export const translations = {
     show: 'Show',
     product: 'Product',
     resetFilters: 'Reset Filters',
+    dateAdded: 'Date Added',
+
+    // DateRangePicker
+    apply: 'Apply',
+    suggestions: 'Suggestions',
+    pickADate: 'Pick a date',
+    today: 'Today',
+    last7days: 'Last 7 days',
+    last15days: 'Last 15 days',
+    last30days: 'Last 30 days',
+    last2months: 'Last 2 months',
+    last3months: 'Last 3 months',
 
     // DashboardPage.tsx
     dashboard_totalProducts: 'Total Products',
