@@ -68,16 +68,16 @@ const ProductView: React.FC<ProductViewProps> = ({
   };
 
   const processedProducts = useMemo(() => {
-    const blacklistRegex = blacklist.length > 0 ? new RegExp(blacklist.join('|'), 'i') : null;
-    const normalizeText = (text: string) => text.toLowerCase().replace(/[^a-z0-9\s]/g, '');
-    const normalizedFilterName = normalizeText(filters.name);
+    const blacklistRegex = blacklist.length > 0 ? new RegExp(`\\b(${blacklist.join('|')})\\b`, 'i') : null;
+    const searchTerms = filters.name.toLowerCase().split(' ').filter(term => term.length > 0);
 
     const filtered = products.filter(product => {
       if (blacklistRegex && product.name && blacklistRegex.test(product.name)) {
         return false;
       }
       
-      const nameMatch = filters.name ? normalizeText(product.name).includes(normalizedFilterName) : true;
+      const productNameLower = product.name.toLowerCase();
+      const nameMatch = searchTerms.every(term => productNameLower.includes(term));
       const storeMatch = filters.store ? product.vendor === filters.store : true;
       
       return nameMatch && storeMatch;

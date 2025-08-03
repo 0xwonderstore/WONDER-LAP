@@ -37,7 +37,7 @@ const App: React.FC = () => {
     staleTime: 1000 * 60 * 5,
   });
   
-  const [blacklist, setBlacklist] = useState<string[]>(['t-shirt', 'shorts', 'tshirt']);
+  const [blacklist, setBlacklist] = useState<string[]>(['t-shirt', 'shorts', 'tshirt', 'rakhi']);
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [initialFilters, setInitialFilters] = useState<InitialFilter | null>(null);
 
