@@ -1,6 +1,7 @@
 export const translations = {
   ar: {
     // App.tsx
+    dashboard: 'لوحة التحكم',
     favorites: 'المفضلة',
     theme: 'تغيير المظهر',
     blacklist: 'القائمة السوداء',
@@ -29,10 +30,23 @@ export const translations = {
 
     // EmptyState.tsx
     noResults: 'لا توجد نتائج',
-    noResultsHint: 'لم يتم العثور على منتجات. حاول تغيير الفلاتر الخاصة بك.'
+    noResultsHint: 'لم يتم العثور على منتجات. حاول تغيير الفلاتر الخاصة بك.',
+
+    // ProductCard.tsx
+    searchWithImage: "بحث بصورة المنتج",
+    searchInAdLibrary: "البحت في مكتبة اعلانات المتجر",
+
+    // Pagination.tsx
+    showing: 'عرض',
+    of: 'من إجمالي',
+    products: 'منتجات',
+    previous: 'السابق',
+    next: 'التالي',
+    goTo: 'الذهاب إلى',
   },
   en: {
     // App.tsx
+    dashboard: 'Dashboard',
     favorites: 'Favorites',
     theme: 'Change Theme',
     blacklist: 'Blacklist',
@@ -61,6 +75,18 @@ export const translations = {
 
     // EmptyState.tsx
     noResults: 'No results found',
-    noResultsHint: 'No products were found. Try changing your filters.'
+    noResultsHint: 'No products were found. Try changing your filters.',
+
+    // ProductCard.tsx
+    searchWithImage: "Search with product image",
+    searchInAdLibrary: "Search in store's ad library",
+
+    // Pagination.tsx
+    showing: 'Showing',
+    of: 'of',
+    products: 'products',
+    previous: 'Previous',
+    next: 'Next',
+    goTo: 'Go to',
   },
 };

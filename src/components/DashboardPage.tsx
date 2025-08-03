@@ -1,9 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Product, Locale } from '../types';
+import { Product } from '../types';
 import { TrendingUp, Package, Store, Clock, Search, ChevronsUpDown, ChevronDown, Tag } from 'lucide-react';
 import { ResponsiveLine } from '@nivo/line';
 import { subDays, format, parseISO } from 'date-fns';
-import { translations } from '../translations';
 import { 
   useReactTable, 
   getCoreRowModel, 
@@ -12,16 +11,19 @@ import {
   SortingState,
 } from '@tanstack/react-table';
 import SegmentedControl from './SegmentedControl';
+import { useLanguageStore } from '../stores/languageStore';
+import { translations } from '../translations';
 
 // --- Types ---
-interface DashboardPageProps { products: Product[]; locale: Locale; }
+interface DashboardPageProps { products: Product[]; }
 interface KpiCardProps { title: string; value: string | number; icon: React.ReactNode; }
 interface StoreRow { vendor: string; totalProducts: number; }
 type ActiveView = 'stores' | 'keywords';
 
 // --- Main Component ---
-const DashboardPage: React.FC<DashboardPageProps> = ({ products, locale }) => {
-  const t = translations[locale];
+const DashboardPage: React.FC<DashboardPageProps> = ({ products }) => {
+  const { language } = useLanguageStore();
+  const t = translations[language];
   const [activeView, setActiveView] = useState<ActiveView>('stores');
 
   const { kpiData, trendData, storeTableData, keywordData } = useMemo(() => {
@@ -92,7 +94,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, locale }) => {
   );
 };
 
-// ... KpiCard remains the same ...
 const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon }) => ( <div className="bg-light-surface dark:bg-dark-surface p-6 rounded-2xl shadow flex items-center gap-6"> <div className="bg-light-background dark:bg-dark-background p-4 rounded-full">{React.cloneElement(icon as React.ReactElement, { size: 32 })}</div> <div> <h3 className="text-lg font-semibold text-light-text-secondary dark:text-dark-text-secondary">{title}</h3> <p className="text-4xl font-bold text-light-text-primary dark:text-dark-text-primary mt-1">{value}</p> </div> </div> );
 
 const StoreTable: React.FC<{data: StoreRow[], t: any}> = ({ data, t }) => {

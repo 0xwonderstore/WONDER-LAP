@@ -1,10 +1,10 @@
-import React, { useState, useMemo, Suspense, useCallback } from 'react';
+import React, { useState, useMemo, Suspense, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Moon, Sun, Sparkles, Heart, EyeOff, LayoutDashboard } from 'lucide-react';
 import { Product, Locale } from './types';
-import { useLocalStorage } from './hooks/useLocalStorage';
 import { loadProducts } from './utils/productLoader';
 import { useFavoritesStore } from './stores/favoritesStore';
+import { useLanguageStore } from './stores/languageStore';
 import { translations } from './translations';
 
 // --- Lazy Imports ---
@@ -13,6 +13,7 @@ const FavoritesPage = React.lazy(() => import('./components/FavoritesPage'));
 const BlacklistPage = React.lazy(() => import('./components/BlacklistPage'));
 const DashboardPage = React.lazy(() => import('./components/DashboardPage'));
 const ScrollButtons = React.lazy(() => import('./components/ScrollButtons'));
+const LanguageSwitcher = React.lazy(() => import('./components/LanguageSwitcher'));
 
 // --- Type Definitions ---
 type Page = 'home' | 'favorites' | 'blacklist' | 'dashboard';
@@ -26,8 +27,8 @@ const LoadingFallback: React.FC = () => (
 
 const App: React.FC = () => {
   // --- State Hooks ---
-  const [darkMode, setDarkMode] = useLocalStorage('darkMode', false);
-  const [locale, setLocale] = useLocalStorage<Locale>('locale', 'ar');
+  const [darkMode, setDarkMode] = useState(false);
+  const { language, setLanguage } = useLanguageStore();
   const { favorites } = useFavoritesStore();
   
   const { data: allProducts = [], isLoading } = useQuery({
@@ -36,18 +37,18 @@ const App: React.FC = () => {
     staleTime: 1000 * 60 * 5,
   });
   
-  const [blacklist, setBlacklist] = useLocalStorage<string[]>('blacklist', ['t-shirt', 'shorts', 'tshirt']);
+  const [blacklist, setBlacklist] = useState<string[]>(['t-shirt', 'shorts', 'tshirt']);
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [initialFilters, setInitialFilters] = useState<InitialFilter | null>(null);
 
-  const t = translations[locale];
+  const t = translations[language];
 
   // --- Effects ---
-  React.useEffect(() => {
+  useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
-    document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = locale;
-  }, [darkMode, locale]);
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = language;
+  }, [darkMode, language]);
 
   // --- Handlers ---
   const navigateTo = (page: Page) => setCurrentPage(prev => (prev === page ? 'home' : page));
@@ -65,11 +66,11 @@ const App: React.FC = () => {
     if (word && !blacklist.includes(word.toLowerCase())) {
       setBlacklist(prev => [...prev, word.toLowerCase()]);
     }
-  }, [blacklist]);
+  }, [blacklist, setBlacklist]);
 
   const removeWordFromBlacklist = useCallback((word: string) => {
     setBlacklist(prev => prev.filter(item => item !== word));
-  }, []);
+  }, [setBlacklist]);
   
   const uniqueStores = useMemo(() => [...new Set(allProducts.map(p => p.vendor).filter(Boolean))], [allProducts]);
 
@@ -83,10 +84,10 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (currentPage) {
-      case 'favorites': return <FavoritesPage allProducts={allProducts} locale={locale} onNavigateWithFilter={navigateToHomeWithFilter} />;
-      case 'blacklist': return <BlacklistPage locale={locale} blacklist={blacklist} onAddWord={addWordToBlacklist} onRemoveWord={removeWordFromBlacklist} />;
-      case 'dashboard': return <DashboardPage products={allProducts} locale={locale} />;
-      default: return <ProductView products={allProducts} isLoading={isLoading} stores={uniqueStores} locale={locale} blacklist={blacklist} onClearInitialFilters={clearInitialFilters} initialFilters={initialFilters} onNavigateWithFilter={navigateToHomeWithFilter} />;
+      case 'favorites': return <FavoritesPage allProducts={allProducts} onNavigateWithFilter={navigateToHomeWithFilter} />;
+      case 'blacklist': return <BlacklistPage blacklist={blacklist} onAddWord={addWordToBlacklist} onRemoveWord={removeWordFromBlacklist} />;
+      case 'dashboard': return <DashboardPage products={allProducts} />;
+      default: return <ProductView products={allProducts} isLoading={isLoading} stores={uniqueStores} blacklist={blacklist} onClearInitialFilters={clearInitialFilters} initialFilters={initialFilters} onNavigateWithFilter={navigateToHomeWithFilter} />;
     }
   };
 
@@ -101,7 +102,10 @@ const App: React.FC = () => {
         <header className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3"><Sparkles className="w-8 h-8 text-yellow-500" /><h1 dir="ltr" className="text-3xl font-bold bg-gradient-to-r from-brand-primary to-purple-600 bg-clip-text text-transparent" onClick={() => setCurrentPage('home')} style={{cursor: 'pointer'}}>WONDER LAB</h1></div>
           <div className="flex items-center gap-2 sm:gap-4">
-            <HeaderButton onClick={() => navigateTo('dashboard')} className={isDashboardActive ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={"Dashboard"} aria-label="Dashboard"><LayoutDashboard className={`w-5 h-5 transition-transform duration-200 ${isDashboardActive ? 'rotate-6' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isDashboardActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{"Dashboard"}</span></HeaderButton>
+            <Suspense fallback={<div className="w-24 h-10 rounded-full bg-gray-200 animate-pulse" />}>
+              <LanguageSwitcher />
+            </Suspense>
+            <HeaderButton onClick={() => navigateTo('dashboard')} className={isDashboardActive ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.dashboard} aria-label="Dashboard"><LayoutDashboard className={`w-5 h-5 transition-transform duration-200 ${isDashboardActive ? 'rotate-6' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isDashboardActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.dashboard}</span></HeaderButton>
             <HeaderButton onClick={() => navigateTo('blacklist')} className={isBlacklistActive ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-600 dark:text-yellow-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.blacklist} aria-label="Blacklist"><EyeOff className={`w-5 h-5 transition-transform duration-200 ${isBlacklistActive ? 'rotate-6' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isBlacklistActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.blacklist}</span></HeaderButton>
             <HeaderButton onClick={() => navigateTo('favorites')} className={isFavoritesActive ? 'bg-red-100 dark:bg-red-900/50 text-red-500 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.favorites} aria-label="Favorites">
               <Heart className={`w-5 h-5 transition-all duration-200 ${isFavoritesActive ? 'fill-red-500 text-red-500 rotate-0' : 'text-current -rotate-12'}`} />

@@ -8,10 +8,11 @@ import MetaIcon from './MetaIcon';
 
 interface ProductCardProps {
   product: Product;
+  t: any;
   onNavigateWithFilter: (filter: { store?: string }) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigateWithFilter }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFilter }) => {
   const { favorites, toggleFavorite } = useFavoritesStore();
   const isFavorite = favorites.my_main_favorites?.products.includes(normalizeUrl(product.url));
 
@@ -37,12 +38,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onNavigateWithFilter
                 <Heart className={`w-5 h-5 transition-all ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-700 dark:text-gray-300'}`} />
             </button>
             {product.images?.[0]?.src && (
-                <a href={imageSearchUrl} target="_blank" rel="noopener noreferrer" className={buttonClasses} title="بحث بصورة المنتج">
+                <a href={imageSearchUrl} target="_blank" rel="noopener noreferrer" className={buttonClasses} title={t.searchWithImage}>
                     <Search className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                 </a>
             )}
             {storeUrl && (
-                 <a href={adLibraryUrl} target="_blank" rel="noopener noreferrer" className={buttonClasses} title="البحت في مكتبة اعلانات المتجر">
+                 <a href={adLibraryUrl} target="_blank" rel="noopener noreferrer" className={buttonClasses} title={t.searchInAdLibrary}>
                     <MetaIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                 </a>
             )}

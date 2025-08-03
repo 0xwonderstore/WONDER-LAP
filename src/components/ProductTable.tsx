@@ -4,11 +4,12 @@ import { Product } from '../types';
 import { formatDate } from '../utils/productUtils';
 
 interface ProductTableProps {
-  products: Product;
+  products: Product[];
+  t: any;
   onNavigateWithFilter: (filter: { store?: string }) => void;
 }
 
-function ProductTable({ products, onNavigateWithFilter }: ProductTableProps) {
+function ProductTable({ products, t, onNavigateWithFilter }: ProductTableProps) {
   
   const handleStoreClick = (storeName: string | undefined) => {
     if (storeName) {
@@ -21,10 +22,10 @@ function ProductTable({ products, onNavigateWithFilter }: ProductTableProps) {
       <table className="w-full text-right">
         <thead className="bg-light-background dark:bg-dark-background">
           <tr>
-            <th className="px-6 py-3 text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">المنتج</th>
-            <th className="px-6 py-3 text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">المتجر</th>
-            <th className="px-6 py-3 text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">تاريخ الإضافة</th>
-            <th className="px-6 py-3 text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider text-center">الإجراءات</th>
+            <th className="px-6 py-3 text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">Product</th>
+            <th className="px-6 py-3 text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">Store</th>
+            <th className="px-6 py-3 text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">Date Added</th>
+            <th className="px-6 py-3 text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider text-center">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-light-border dark:divide-dark-border">
@@ -55,13 +56,13 @@ function ProductTable({ products, onNavigateWithFilter }: ProductTableProps) {
                       {product.store.name}
                     </span>
                   ) : (
-                    <span className="text-light-text-secondary dark:text-dark-text-secondary">غير معروف</span>
+                    <span className="text-light-text-secondary dark:text-dark-text-secondary">Unknown</span>
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-light-text-secondary dark:text-dark-text-secondary">{formatDate(product.created_at)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                   <a href={product.url} target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:text-brand-primary-dark">
-                    عرض المنتج
+                    View Product
                   </a>
                 </td>
               </tr>

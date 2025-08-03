@@ -1,10 +1,8 @@
 import React from 'react';
 import { LayoutGrid, List, ChevronDown, X } from 'lucide-react';
-import { Locale } from '../types';
-import { translations } from '../translations';
 
 interface FilterComponentProps {
-  locale: Locale;
+  t: any;
   stores: string[];
   filters: {
     name: string;
@@ -19,9 +17,8 @@ interface FilterComponentProps {
 }
 
 const FilterComponent: React.FC<FilterComponentProps> = ({
-  locale, stores, filters, onFilterChange, onResetFilters, viewMode, onViewModeChange, productsPerPage, onProductsPerPageChange
+  t, stores, filters, onFilterChange, onResetFilters, viewMode, onViewModeChange, productsPerPage, onProductsPerPageChange
 }) => {
-  const t = translations[locale];
   const isFilterActive = filters.name !== '' || filters.store !== '';
 
   return (

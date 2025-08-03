@@ -1,33 +1,35 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Product, Locale } from '../types';
+import { Product } from '../types';
 import ProductTable from './ProductTable';
 import { EmptyState } from './EmptyState';
 import Pagination from './Pagination';
 import FilterComponent from './FilterComponent';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import ProductCard from './ProductCard';
+import { useLanguageStore } from '../stores/languageStore';
+import { translations } from '../translations';
 
 interface ProductViewProps {
   products: Product[];
   isLoading: boolean;
   stores: string[];
-  locale: Locale;
   blacklist: string[];
   onClearInitialFilters: () => void;
   initialFilters: { store?: string; name?: string } | null;
-  onNavigateWithFilter: (filter: { store?: string; language?: string }) => void;
+  onNavigateWithFilter: (filter: { store?: string; name?: string }) => void;
 }
 
 const ProductView: React.FC<ProductViewProps> = ({
   products,
   isLoading,
   stores,
-  locale,
   blacklist,
   initialFilters,
   onClearInitialFilters,
   onNavigateWithFilter
 }) => {
+  const { language } = useLanguageStore();
+  const t = translations[language];
   const [viewMode, setViewMode] = useLocalStorage<'grid' | 'table'>('viewMode', 'grid');
   const [currentPage, setCurrentPage] = useLocalStorage('currentPage', 1);
   const [productsPerPage, setProductsPerPage] = useLocalStorage('productsPerPage', 24);
@@ -48,7 +50,7 @@ const ProductView: React.FC<ProductViewProps> = ({
       setCurrentPage(1);
       onClearInitialFilters();
     }
-  }, [initialFilters, onClearInitialFilters]);
+  }, [initialFilters, onClearInitialFilters, setCurrentPage]);
 
   const handleFilterChange = (filterName: string, value: string) => {
     setFilters(prev => ({ ...prev, [filterName]: value }));
@@ -71,15 +73,11 @@ const ProductView: React.FC<ProductViewProps> = ({
     const normalizedFilterName = normalizeText(filters.name);
 
     const filtered = products.filter(product => {
-      // Blacklist filter
       if (blacklistRegex && product.name && blacklistRegex.test(product.name)) {
         return false;
       }
       
-      // Name filter
       const nameMatch = filters.name ? normalizeText(product.name).includes(normalizedFilterName) : true;
-      
-      // Store filter
       const storeMatch = filters.store ? product.vendor === filters.store : true;
       
       return nameMatch && storeMatch;
@@ -95,7 +93,7 @@ const ProductView: React.FC<ProductViewProps> = ({
   return (
     <div className="animate-fade-in-up">
        <FilterComponent
-        locale={locale}
+        t={t}
         stores={stores}
         filters={filters}
         onFilterChange={handleFilterChange}
@@ -113,23 +111,23 @@ const ProductView: React.FC<ProductViewProps> = ({
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {currentProducts.map(p => (
-                <ProductCard key={p.url} product={p} onNavigateWithFilter={onNavigateWithFilter} />
+                <ProductCard key={p.url} product={p} t={t} onNavigateWithFilter={onNavigateWithFilter} />
               ))}
             </div>
           ) : (
-            <ProductTable products={currentProducts} onNavigateWithFilter={onNavigateWithFilter} />
+            <ProductTable products={currentProducts} t={t} onNavigateWithFilter={onNavigateWithFilter} />
           )}
           <Pagination
-            locale={locale}
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={handlePageChange}
             totalItems={processedProducts.length}
             itemsPerPage={productsPerPage}
+            t={t}
           />
         </>
       ) : (
-        <EmptyState />
+        <EmptyState t={t} />
       )}
     </div>
   );

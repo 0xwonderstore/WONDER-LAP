@@ -1,11 +1,9 @@
 
 import React, { FC, ReactNode } from 'react';
 import { SearchX } from 'lucide-react';
-import { translations } from '../translations';
-import { useLocalStorage } from '../hooks/useLocalStorage';
-import { Locale } from '../types';
 
 interface EmptyStateProps {
+    t: any;
     icon?: ReactNode;
     title?: string;
     description?: string;
@@ -13,10 +11,7 @@ interface EmptyStateProps {
     onButtonClick?: () => void;
 }
 
-export const EmptyState: FC<EmptyStateProps> = ({ icon, title, description, buttonText, onButtonClick }) => {
-    const [locale] = useLocalStorage<Locale>('locale', 'ar');
-    const t = translations[locale];
-
+export const EmptyState: FC<EmptyStateProps> = ({ t, icon, title, description, buttonText, onButtonClick }) => {
     return (
         <div className="text-center py-24 px-6 bg-light-surface dark:bg-dark-surface rounded-2xl shadow-lg animate-fade-in border border-dashed border-light-border dark:border-dark-border">
             <div className="mx-auto w-fit p-4 bg-light-background dark:bg-dark-background rounded-full">

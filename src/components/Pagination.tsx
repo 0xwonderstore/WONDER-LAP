@@ -1,27 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Locale } from '../types';
-
-const translations = {
-  ar: {
-    showing: 'عرض',
-    of: 'من إجمالي',
-    product: 'منتج',
-    products: 'منتجات',
-    previous: 'السابق',
-    next: 'التالي',
-    goTo: 'الذهاب إلى',
-  },
-  en: {
-    showing: 'Showing',
-    of: 'of',
-    product: 'product',
-    products: 'products',
-    previous: 'Previous',
-    next: 'Next',
-    goTo: 'Go to',
-  }
-};
 
 interface PaginationProps {
   currentPage: number;
@@ -29,7 +7,7 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
   totalItems: number;
   itemsPerPage: number;
-  locale: Locale;
+  t: any;
 }
 
 export default function Pagination({
@@ -38,10 +16,8 @@ export default function Pagination({
   onPageChange,
   totalItems: initialTotalItems,
   itemsPerPage: initialItemsPerPage,
-  locale,
+  t,
 }: PaginationProps) {
-  const t = translations[locale];
-
   const currentPage = initialCurrentPage || 1;
   const totalPages = initialTotalPages || 0;
   const totalItems = initialTotalItems || 0;

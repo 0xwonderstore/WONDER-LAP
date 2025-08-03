@@ -1,20 +1,21 @@
 import React, { useMemo } from 'react';
-import { Product, Locale } from '../types';
+import { Product } from '../types';
 import { useFavoritesStore } from '../stores/favoritesStore';
 import ProductCard from './ProductCard';
 import { EmptyState } from './EmptyState';
+import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
 import { normalizeUrl } from '../utils/urlUtils';
 
 interface FavoritesPageProps {
   allProducts: Product[];
-  locale: Locale;
   onNavigateWithFilter: (filter: { store?: string; name?: string }) => void;
 }
 
-const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, locale, onNavigateWithFilter }) => {
+const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, onNavigateWithFilter }) => {
+  const { language } = useLanguageStore();
+  const t = translations[language];
   const { favorites } = useFavoritesStore();
-  const t = translations[locale];
 
   const favoriteProducts = useMemo(() => {
     const favoriteUrls = new Set(favorites.my_main_favorites.products.map(normalizeUrl));
@@ -32,13 +33,14 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, locale, onNa
           {favoriteProducts.map(p => (
             <ProductCard 
               key={p.url} 
-              product={p} 
+              product={p}
+              t={t}
               onNavigateWithFilter={onNavigateWithFilter}
             />
           ))}
         </div>
       ) : (
-        <EmptyState />
+        <EmptyState t={t} />
       )}
     </div>
   );

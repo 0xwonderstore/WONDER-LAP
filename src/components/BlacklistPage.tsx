@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import { Locale } from '../types';
 import { X, PlusCircle } from 'lucide-react';
+import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
 
 interface BlacklistPageProps {
-  locale: Locale;
   blacklist: string[];
   onAddWord: (word: string) => void;
   onRemoveWord: (word: string) => void;
 }
 
-const BlacklistPage: React.FC<BlacklistPageProps> = ({ locale, blacklist, onAddWord, onRemoveWord }) => {
+const BlacklistPage: React.FC<BlacklistPageProps> = ({ blacklist, onAddWord, onRemoveWord }) => {
   const [newWord, setNewWord] = useState('');
-  const t = translations[locale];
+  const { language } = useLanguageStore();
+  const t = translations[language];
 
   const handleAdd = () => {
     if (newWord.trim()) {
