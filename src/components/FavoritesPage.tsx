@@ -19,7 +19,9 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, onNavigateWi
 
   const favoriteProducts = useMemo(() => {
     const favoriteUrls = new Set(favorites.my_main_favorites.products.map(normalizeUrl));
-    return allProducts.filter(p => favoriteUrls.has(normalizeUrl(p.url)));
+    return allProducts
+      .filter(p => favoriteUrls.has(normalizeUrl(p.url)))
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [allProducts, favorites]);
 
   return (
