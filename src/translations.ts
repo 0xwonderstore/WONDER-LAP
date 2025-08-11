@@ -20,12 +20,13 @@ export const translations = {
     apply: 'تطبيق',
     suggestions: 'اقتراحات',
     pickADate: 'اختر تاريخًا',
-    today: 'اليوم',
+    last24hours: 'آخر 24 ساعة',
     last7days: 'آخر 7 أيام',
     last15days: 'آخر 15 يومًا',
     last30days: 'آخر 30 يومًا',
     last2months: 'آخر شهرين',
     last3months: 'آخر 3 أشهر',
+    last1year: 'آخر سنة',
 
     // DashboardPage.tsx
     dashboard_totalProducts: 'إجمالي المنتجات',
@@ -77,12 +78,13 @@ export const translations = {
     apply: 'Apply',
     suggestions: 'Suggestions',
     pickADate: 'Pick a date',
-    today: 'Today',
+    last24hours: 'Last 24 hours',
     last7days: 'Last 7 days',
     last15days: 'Last 15 days',
     last30days: 'Last 30 days',
     last2months: 'Last 2 months',
     last3months: 'Last 3 months',
+    last1year: 'Last 1 year',
 
     // DashboardPage.tsx
     dashboard_totalProducts: 'Total Products',
