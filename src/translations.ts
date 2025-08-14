@@ -40,6 +40,8 @@ export const translations = {
     totalProducts: 'إجمالي المنتجات',
     storeActivity: 'نشاط المتاجر',
     searchInMeta: 'البحث في مكتبة ميتا',
+    dashboard_filterByStore: 'عرض منتجات هذا المتجر',
+    dashboard_searchForKeyword: 'البحث عن هذه الكلمة',
 
     // EmptyState.tsx
     noResults: 'لا توجد نتائج',
@@ -98,6 +100,8 @@ export const translations = {
     totalProducts: 'Total Products',
     storeActivity: 'Store Activity',
     searchInMeta: 'Search in Meta Library',
+    dashboard_filterByStore: 'Filter by this store',
+    dashboard_searchForKeyword: 'Search for this keyword',
 
     // EmptyState.tsx
     noResults: 'No results found',

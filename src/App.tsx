@@ -1,7 +1,7 @@
 import React, { useState, useMemo, Suspense, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Moon, Sun, Sparkles, Heart, EyeOff, LayoutDashboard } from 'lucide-react';
-import { Product, Locale } from './types';
+import { Product } from './types';
 import { loadProducts } from './utils/productLoader';
 import { useFavoritesStore } from './stores/favoritesStore';
 import { useLanguageStore } from './stores/languageStore';
@@ -28,7 +28,7 @@ const LoadingFallback: React.FC = () => (
 const App: React.FC = () => {
   // --- State Hooks ---
   const [darkMode, setDarkMode] = useState(false);
-  const { language, setLanguage } = useLanguageStore();
+  const { language } = useLanguageStore();
   const { favorites } = useFavoritesStore();
   
   const { data: allProducts = [], isLoading } = useQuery({
@@ -66,11 +66,11 @@ const App: React.FC = () => {
     if (word && !blacklist.includes(word.toLowerCase())) {
       setBlacklist(prev => [...prev, word.toLowerCase()]);
     }
-  }, [blacklist, setBlacklist]);
+  }, [blacklist]);
 
   const removeWordFromBlacklist = useCallback((word: string) => {
     setBlacklist(prev => prev.filter(item => item !== word));
-  }, [setBlacklist]);
+  }, []);
   
   const uniqueStores = useMemo(() => [...new Set(allProducts.map(p => p.vendor).filter(Boolean))], [allProducts]);
 
@@ -86,7 +86,7 @@ const App: React.FC = () => {
     switch (currentPage) {
       case 'favorites': return <FavoritesPage allProducts={allProducts} onNavigateWithFilter={navigateToHomeWithFilter} />;
       case 'blacklist': return <BlacklistPage blacklist={blacklist} onAddWord={addWordToBlacklist} onRemoveWord={removeWordFromBlacklist} />;
-      case 'dashboard': return <DashboardPage products={allProducts} />;
+      case 'dashboard': return <DashboardPage products={allProducts} onNavigateWithFilter={navigateToHomeWithFilter} />;
       default: return <ProductView products={allProducts} isLoading={isLoading} stores={uniqueStores} blacklist={blacklist} onClearInitialFilters={clearInitialFilters} initialFilters={initialFilters} onNavigateWithFilter={navigateToHomeWithFilter} />;
     }
   };

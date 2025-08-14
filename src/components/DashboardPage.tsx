@@ -9,19 +9,23 @@ import {
   getSortedRowModel,
   flexRender,
   SortingState,
+  ColumnDef,
 } from '@tanstack/react-table';
 import SegmentedControl from './SegmentedControl';
 import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
 
-// --- Types ---
-interface DashboardPageProps { products: Product[]; }
+// --- Type Definitions ---
+interface DashboardPageProps { 
+  products: Product[];
+  onNavigateWithFilter: (filter: { name?: string; store?: string }) => void;
+}
 interface KpiCardProps { title: string; value: string | number; icon: React.ReactNode; }
 interface StoreRow { vendor: string; totalProducts: number; }
 type ActiveView = 'stores' | 'keywords';
 
 // --- Main Component ---
-const DashboardPage: React.FC<DashboardPageProps> = ({ products }) => {
+const DashboardPage: React.FC<DashboardPageProps> = ({ products, onNavigateWithFilter }) => {
   const { language } = useLanguageStore();
   const t = translations[language];
   const [activeView, setActiveView] = useState<ActiveView>('stores');
@@ -30,8 +34,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products }) => {
     const now = new Date();
     const thirtyDaysAgo = subDays(now, 30);
     const recentProducts = products.filter(p => parseISO(p.created_at) >= thirtyDaysAgo);
-    const uniqueStores = new Set(products.map(p => p.vendor));
-    const recentUniqueStores = new Set(recentProducts.map(p => p.vendor));
+    const uniqueStores = new Set(products.map(p => p.vendor).filter(Boolean));
+    const recentUniqueStores = new Set(recentProducts.map(p => p.vendor).filter(Boolean));
 
     const dailyProductCounts = recentProducts.reduce((acc, product) => {
         const day = format(parseISO(product.created_at), 'yyyy-MM-dd');
@@ -88,7 +92,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products }) => {
       
       <div className="bg-light-surface dark:bg-dark-surface rounded-2xl shadow">
         <div className="p-4"><SegmentedControl tabs={tabs} activeTab={activeView} onTabChange={setActiveView} /></div>
-        {activeView === 'stores' ? <StoreTable data={storeTableData} t={t} /> : <KeywordList data={keywordData} t={t} />}
+        {activeView === 'stores' ? 
+            <StoreTable data={storeTableData} t={t} onNavigateWithFilter={onNavigateWithFilter} /> : 
+            <KeywordList data={keywordData} t={t} onNavigateWithFilter={onNavigateWithFilter} />
+        }
       </div>
     </div>
   );
@@ -96,21 +103,58 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products }) => {
 
 const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon }) => ( <div className="bg-light-surface dark:bg-dark-surface p-6 rounded-2xl shadow flex items-center gap-6"> <div className="bg-light-background dark:bg-dark-background p-4 rounded-full">{React.cloneElement(icon as React.ReactElement, { size: 32 })}</div> <div> <h3 className="text-lg font-semibold text-light-text-secondary dark:text-dark-text-secondary">{title}</h3> <p className="text-4xl font-bold text-light-text-primary dark:text-dark-text-primary mt-1">{value}</p> </div> </div> );
 
-const StoreTable: React.FC<{data: StoreRow[], t: any}> = ({ data, t }) => {
+const StoreTable: React.FC<{data: StoreRow[], t: any, onNavigateWithFilter: (f: any) => void}> = ({ data, t, onNavigateWithFilter }) => {
     const [sorting, setSorting] = useState<SortingState>([]);
-    const columns = useMemo(() => [
-        { accessorKey: 'vendor', header: t.storeName }, { accessorKey: 'totalProducts', header: t.totalProducts },
-        { id: 'actions', header: '', meta: { thClassName: 'text-right' }, cell: ({ row }: { row: { original: StoreRow } }) => (<div className="text-right"><MetaAdLibraryLink vendor={row.original.vendor} t={t} /></div>) }
-    ], [t]);
+    
+    const columns = useMemo<ColumnDef<StoreRow>[]>(() => [
+        { 
+            accessorKey: 'vendor', 
+            header: t.storeName,
+            cell: ({ row }) => (
+                <span 
+                    onClick={() => onNavigateWithFilter({ store: row.original.vendor })}
+                    className="cursor-pointer hover:underline text-brand-primary"
+                    title={t.dashboard_filterByStore}
+                >
+                    {row.original.vendor}
+                </span>
+            )
+        }, 
+        { 
+            accessorKey: 'totalProducts', 
+            header: t.totalProducts 
+        },
+        { 
+            id: 'actions', 
+            header: '', 
+            meta: { thClassName: 'text-right' }, 
+            cell: ({ row }) => (<div className="text-right"><MetaAdLibraryLink vendor={row.original.vendor} t={t} /></div>) 
+        }
+    ], [t, onNavigateWithFilter]);
+
     const table = useReactTable({ data, columns, state: { sorting }, onSortingChange: setSorting, getCoreRowModel: getCoreRowModel(), getSortedRowModel: getSortedRowModel() });
-    return (<div className="overflow-x-auto"><table className="w-full text-left"><thead>{table.getHeaderGroups().map(hg => (<tr key={hg.id} className="border-b border-light-border dark:border-dark-border">{hg.headers.map(h => (<th key={h.id} className={`p-4 font-semibold cursor-pointer select-none ${h.column.columnDef.meta?.thClassName || ''}`} onClick={h.column.getToggleSortingHandler()}><div className="flex items-center gap-2">{flexRender(h.column.columnDef.header, h.getContext())}{{ asc: <ChevronDown size={16} className="rotate-180"/>, desc: <ChevronDown size={16}/> }[h.column.getIsSorted() as string] ?? (h.column.getCanSort() ? <ChevronsUpDown size={16} className="text-gray-400"/> : null)}</div></th>))}</tr>))}</thead><tbody>{table.getRowModel().rows.map(row => (<tr key={row.id} className="border-b border-light-border dark:border-dark-border last:border-b-0 hover:bg-light-background-hover dark:hover:bg-dark-background-hover">{row.getVisibleCells().map(cell => (<td key={cell.id} className="p-4">{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>))}</tr>))}</tbody></table></div>);
+    
+    return (
+        <div className="overflow-x-auto">
+            <table className="w-full text-left rtl:text-right">
+                <thead>{table.getHeaderGroups().map(hg => (<tr key={hg.id} className="border-b border-light-border dark:border-dark-border">{hg.headers.map(h => (<th key={h.id} className={`p-4 font-semibold ${h.column.getCanSort() ? 'cursor-pointer select-none' : ''} ${h.column.columnDef.meta?.thClassName || ''}`} onClick={h.column.getToggleSortingHandler()}><div className="flex items-center gap-2">{flexRender(h.column.columnDef.header, h.getContext())}{{ asc: <ChevronDown size={16} className="rotate-180"/>, desc: <ChevronDown size={16}/> }[h.column.getIsSorted() as string] ?? (h.column.getCanSort() ? <ChevronsUpDown size={16} className="text-gray-400"/> : null)}</div></th>))}</tr>))}</thead>
+                <tbody>{table.getRowModel().rows.map(row => (<tr key={row.id} className="border-b border-light-border dark:border-dark-border last:border-b-0 hover:bg-light-background-hover dark:hover:bg-dark-background-hover">{row.getVisibleCells().map(cell => (<td key={cell.id} className="p-4">{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>))}</tr>))}</tbody>
+            </table>
+        </div>
+    );
 };
 
-const KeywordList: React.FC<{data: {text: string, value: number}[], t: any}> = ({data, t}) => (
+const KeywordList: React.FC<{data: {text: string, value: number}[], t: any, onNavigateWithFilter: (f: any) => void}> = ({data, t, onNavigateWithFilter}) => (
     <div className="divide-y divide-light-border dark:divide-dark-border">
         {data.map(({text, value}) => (
             <div key={text} className="p-4 flex justify-between items-center hover:bg-light-background-hover dark:hover:bg-dark-background-hover">
-                <span className="font-semibold">{text}</span>
+                <span 
+                    onClick={() => onNavigateWithFilter({ name: text })}
+                    className="font-semibold cursor-pointer hover:underline"
+                    title={t.dashboard_searchForKeyword}
+                >
+                    {text}
+                </span>
                 <span className="font-mono text-sm bg-light-background dark:bg-dark-background px-2 py-1 rounded-md">{value}</span>
             </div>
         ))}
