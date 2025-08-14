@@ -1,20 +1,16 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { Locale } from '../types';
+import { translations } from '../translations';
+
+type Language = 'en' | 'ar';
 
 interface LanguageState {
-  language: Locale;
-  setLanguage: (language: Locale) => void;
+  language: Language;
+  translations: any;
+  setLanguage: (language: Language) => void;
 }
 
-export const useLanguageStore = create<LanguageState>()(
-  persist(
-    (set) => ({
-      language: 'en',
-      setLanguage: (language) => set({ language }),
-    }),
-    {
-      name: 'language-storage',
-    }
-  )
-);
+export const useLanguageStore = create<LanguageState>((set) => ({
+  language: 'en',
+  translations: translations.en,
+  setLanguage: (language) => set({ language, translations: translations[language] }),
+}));

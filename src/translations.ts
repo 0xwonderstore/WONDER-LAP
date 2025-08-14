@@ -1,11 +1,12 @@
 export const translations = {
   ar: {
+    rtl: true,
     // App.tsx
     dashboard: 'لوحة التحكم',
     favorites: 'المفضلة',
     theme: 'تغيير المظهر',
     blacklist: 'القائمة السوداء',
-    
+
     // FilterComponent.tsx
     searchByName: 'ابحث بالاسم',
     searchPlaceholder: 'مثال: T-shirt',
@@ -15,7 +16,7 @@ export const translations = {
     product: 'منتج',
     resetFilters: 'إلغاء الفلاتر',
     dateAdded: 'تاريخ الإضافة',
-    
+
     // DateRangePicker
     apply: 'تطبيق',
     suggestions: 'اقتراحات',
@@ -49,7 +50,9 @@ export const translations = {
 
     // ProductCard.tsx
     searchWithImage: "بحث بصورة المنتج",
-    searchInAdLibrary: "البحت في مكتبة اعلانات المتجر",
+    searchInAdLibrary: "البحث في مكتبة إعلانات المتجر",
+    searchInShopify: "البحث في شوبيفاي",
+
 
     // Pagination.tsx
     showing: 'عرض',
@@ -110,6 +113,7 @@ export const translations = {
     // ProductCard.tsx
     searchWithImage: "Search with product image",
     searchInAdLibrary: "Search in store's ad library",
+    searchInShopify: "Search in Shopify",
 
     // Pagination.tsx
     showing: 'Showing',
