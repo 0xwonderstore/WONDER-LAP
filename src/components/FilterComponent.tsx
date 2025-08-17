@@ -57,7 +57,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
       {/* Products Per Page Select */}
       <div className="flex-grow min-w-[140px]">
         <label htmlFor="per-page-select" className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1 px-2">{t.show}</label>
-        <Select id="per-page-select" value={productsPerPage} onChange={(e) => onProductsPerPageChange(Number(e.target.value))} options={perPageOptions} />
+        <Select id="per-page-select" value={String(productsPerPage)} onChange={(e) => onProductsPerPageChange(Number(e.target.value))} options={perPageOptions} />
       </div>
 
       {/* Action Buttons */}

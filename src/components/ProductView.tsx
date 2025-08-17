@@ -95,7 +95,7 @@ const ProductView: React.FC<ProductViewProps> = ({
       }
       
       const productNameLower = product.name.toLowerCase();
-      const nameMatch = searchTerms.every(term => productNameLower.includes(term));
+      const nameMatch = searchTerms.length === 0 ? true : searchTerms.some(term => productNameLower.includes(term));
       const storeMatch = filters.store ? product.vendor === filters.store : true;
       
       return nameMatch && storeMatch;
