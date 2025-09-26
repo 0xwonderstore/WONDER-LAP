@@ -1,4 +1,3 @@
-
 import { Product } from '../types';
 
 export const formatDate = (dateString: string | Date): string => {
@@ -10,41 +9,32 @@ export const formatDate = (dateString: string | Date): string => {
     }).format(date);
 };
 
-// Helper function to normalize a URL to its core hostname
-const normalizeHostname = (url: string): string => {
-  if (!url) return '';
-  // Strips protocol, 'www.' prefix, and any path. Converts to lowercase.
-  return url.trim().toLowerCase().replace(/^(?:https?|ftp):\/\//, '').replace(/^(?:www\.)?/, '').split('/')[0];
-};
-
 export const filterProducts = (
   products: Product[],
   blacklistedKeywords: string[],
-  blockedStores: string[]
 ): Product[] => {
-  if (!products) return [];
+  const safeProducts = products || [];
 
-  const normalizedBlockedStores = blockedStores.map(normalizeHostname);
+  if (!blacklistedKeywords || blacklistedKeywords.length === 0 || safeProducts.length === 0) {
+    return safeProducts;
+  }
 
-  return products.filter(product => {
-    // Check for blacklisted keywords in product title and description
-    const hasBlacklistedKeyword = blacklistedKeywords.some(keyword =>
-      product.title.toLowerCase().includes(keyword) ||
-      product.description.toLowerCase().includes(keyword)
-    );
+  const lowercasedKeywords = blacklistedKeywords
+    .map(k => k.toLowerCase().trim())
+    .filter(Boolean);
 
-    if (hasBlacklistedKeyword) {
-      return false; // Exclude product if it contains a blacklisted keyword
-    }
+  if (lowercasedKeywords.length === 0) {
+    return safeProducts;
+  }
 
-    // Check for blocked stores
-    const normalizedStoreUrl = normalizeHostname(product.store_url);
-    const isStoreBlocked = normalizedBlockedStores.includes(normalizedStoreUrl);
+  return safeProducts.filter(product => {
+    const isBlacklisted = lowercasedKeywords.some(keyword => {
+      const title = (product.title || '').toLowerCase();
+      const description = (product.description || '').toLowerCase();
+      
+      return title.includes(keyword) || description.includes(keyword);
+    });
 
-    if (isStoreBlocked) {
-      return false; // Exclude product if its store is blocked
-    }
-
-    return true; // Include product if it passes all checks
+    return !isBlacklisted;
   });
 };

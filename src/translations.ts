@@ -51,10 +51,6 @@ export const translations = {
     blacklist_placeholder: 'أدخل كلمة مفتاحية',
     blacklist_remove: 'إزالة',
     blacklist_noKeywords: 'لا توجد كلمات مفتاحية في القائمة السوداء.',
-    blacklist_blockedStores: 'المتاجر المحظورة',
-    blacklist_addStore: 'إضافة متجر',
-    blacklist_store_placeholder: 'أدخل رابط المتجر',
-    blacklist_noStores: 'لا توجد متاجر محظورة في القائمة.',
 
     // EmptyState.tsx
     noResults: 'لا توجد نتائج',
@@ -125,10 +121,6 @@ export const translations = {
     blacklist_placeholder: 'Enter keyword',
     blacklist_remove: 'Remove',
     blacklist_noKeywords: 'No keywords in blacklist.',
-    blacklist_blockedStores: 'Blocked Stores',
-    blacklist_addStore: 'Add Store',
-    blacklist_store_placeholder: 'Enter store URL',
-    blacklist_noStores: 'No stores in the blacklist.',
 
     // EmptyState.tsx
     noResults: 'No results found',
