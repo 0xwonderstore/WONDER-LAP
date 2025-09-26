@@ -6,6 +6,17 @@ export const translations = {
     favorites: 'المفضلة',
     theme: 'تغيير المظهر',
     blacklist: 'القائمة السوداء',
+    block_store: 'حظر المتجر',
+
+    // BlacklistPage.tsx
+    blacklist_addKeyword: 'إضافة كلمة مفتاحية',
+    blacklist_placeholder: 'أدخل كلمة مفتاحية...',
+    blacklist_add: 'إضافة',
+    blacklist_noKeywords: 'لا توجد كلمات مفتاحية في القائمة السوداء.',
+    blacklist_blockedStores: 'المتاجر المحظورة',
+    blacklist_addStore: 'إضافة متجر',
+    blacklist_store_placeholder: 'أدخل رابط أو اسم المتجر',
+    blacklist_noStores: 'لا توجد متاجر محظورة في القائمة.',
 
     // FilterComponent.tsx
     searchByName: 'ابحث بالاسم',
@@ -46,12 +57,6 @@ export const translations = {
     dashboard_searchForKeyword: 'البحث عن هذه الكلمة',
     exportData: 'تصدير البيانات',
 
-    // BlacklistPage.tsx
-    blacklist_addKeyword: 'إضافة كلمة مفتاحية',
-    blacklist_placeholder: 'أدخل كلمة مفتاحية',
-    blacklist_remove: 'إزالة',
-    blacklist_noKeywords: 'لا توجد كلمات مفتاحية في القائمة السوداء.',
-
     // EmptyState.tsx
     noResults: 'لا توجد نتائج',
     noResultsHint: 'لم يتم العثور على منتجات. حاول تغيير الفلاتر الخاصة بك.',
@@ -76,6 +81,17 @@ export const translations = {
     favorites: 'Favorites',
     theme: 'Change Theme',
     blacklist: 'Blacklist',
+    block_store: 'Block Store',
+
+    // BlacklistPage.tsx
+    blacklist_addKeyword: 'Add Keyword',
+    blacklist_placeholder: 'Enter a keyword...',
+    blacklist_add: 'Add',
+    blacklist_noKeywords: 'No keywords in the blacklist.',
+    blacklist_blockedStores: 'Blocked Stores',
+    blacklist_addStore: 'Add Store',
+    blacklist_store_placeholder: 'Enter store URL or name',
+    blacklist_noStores: 'No stores in the blacklist.',
 
     // FilterComponent.tsx
     searchByName: 'Search by Name',
@@ -115,12 +131,6 @@ export const translations = {
     dashboard_filterByStore: 'Filter by this store',
     dashboard_searchForKeyword: 'Search for this keyword',
     exportData: 'Export Data',
-
-    // BlacklistPage.tsx
-    blacklist_addKeyword: 'Add Keyword',
-    blacklist_placeholder: 'Enter keyword',
-    blacklist_remove: 'Remove',
-    blacklist_noKeywords: 'No keywords in blacklist.',
 
     // EmptyState.tsx
     noResults: 'No results found',

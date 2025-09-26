@@ -1,8 +1,9 @@
 import React, { memo } from 'react';
-import { Calendar, Heart, Search } from 'lucide-react';
+import { Calendar, Heart, Search, EyeOff } from 'lucide-react';
 import { Product } from '../types';
 import { formatDate } from '../utils/productUtils';
 import { useFavoritesStore } from '../stores/favoritesStore';
+import { useBlacklistStore } from '../stores/blacklistStore';
 import { normalizeUrl } from '../utils/urlUtils';
 import MetaIcon from './MetaIcon';
 
@@ -14,11 +15,21 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFilter }) => {
   const { favorites, toggleFavorite } = useFavoritesStore();
+  const { addStore } = useBlacklistStore();
   const isFavorite = favorites.my_main_favorites?.products.includes(normalizeUrl(product.url));
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     toggleFavorite(product.url);
+  };
+
+  const handleBlockStore = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click event
+    if (product.store?.url) {
+      addStore(product.store.url);
+    } else if (product.vendor) {
+      addStore(product.vendor);
+    }
   };
 
   const storeUrl = product.store?.url ? new URL(product.store.url).origin : new URL(product.url).origin;
@@ -53,12 +64,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
         <h3 className="font-bold text-light-text-primary dark:text-dark-text-primary mb-2 h-14 line-clamp-2 flex-grow">{product.name}</h3>
         <div className="flex items-center justify-between mt-2">
             {product.store?.name && (
-              <div 
-                className="text-sm font-medium text-brand-primary cursor-pointer hover:underline truncate" 
-                onClick={() => onNavigateWithFilter({ store: product.store.name })}
-                title={product.store.name}
-              >
-                {product.store.name}
+              <div className="flex items-center gap-2 truncate">
+                <div 
+                  className="text-sm font-medium text-brand-primary cursor-pointer hover:underline truncate" 
+                  onClick={() => onNavigateWithFilter({ store: product.store.name })}
+                  title={product.store.name}
+                >
+                  {product.store.name}
+                </div>
+                <button
+                  onClick={handleBlockStore}
+                  className="text-gray-400 hover:text-red-500 transition-colors duration-200"
+                  title={`${t.block_store} ${product.store.name}`}
+                >
+                  <EyeOff size={16} />
+                </button>
               </div>
             )}
         </div>

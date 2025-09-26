@@ -9,32 +9,65 @@ export const formatDate = (dateString: string | Date): string => {
     }).format(date);
 };
 
+// Helper function to normalize a URL to its core hostname
+export const normalizeHostname = (url: string): string => {
+  if (!url) return '';
+  // Strips protocol, 'www.' prefix, and any path. Converts to lowercase.
+  return url.trim().toLowerCase().replace(/^(?:https?|ftp):\/\//, '').replace(/^(?:www\.)?/, '').split('/')[0];
+};
+
 export const filterProducts = (
   products: Product[],
   blacklistedKeywords: string[],
+  blockedStores: string[]
 ): Product[] => {
   const safeProducts = products || [];
 
-  if (!blacklistedKeywords || blacklistedKeywords.length === 0 || safeProducts.length === 0) {
+  const hasKeywords = blacklistedKeywords && blacklistedKeywords.length > 0;
+  const hasStores = blockedStores && blockedStores.length > 0;
+
+  if (!hasKeywords && !hasStores) {
     return safeProducts;
   }
 
-  const lowercasedKeywords = blacklistedKeywords
-    .map(k => k.toLowerCase().trim())
-    .filter(Boolean);
-
-  if (lowercasedKeywords.length === 0) {
-    return safeProducts;
-  }
+  const lowercasedKeywords = hasKeywords
+    ? blacklistedKeywords.map(k => k.toLowerCase().trim()).filter(Boolean)
+    : [];
+  
+  const normalizedBlockedStores = hasStores
+    ? blockedStores.map(normalizeHostname)
+    : [];
 
   return safeProducts.filter(product => {
-    const isBlacklisted = lowercasedKeywords.some(keyword => {
-      const title = (product.title || '').toLowerCase();
+    // Check for blacklisted keywords
+    if (lowercasedKeywords.length > 0) {
+      const name = (product.name || '').toLowerCase();
       const description = (product.description || '').toLowerCase();
-      
-      return title.includes(keyword) || description.includes(keyword);
-    });
+      const hasKeyword = lowercasedKeywords.some(keyword => 
+        name.includes(keyword) || description.includes(keyword)
+      );
+      if (hasKeyword) {
+        return false; // Exclude product
+      }
+    }
 
-    return !isBlacklisted;
+    // Check for blocked stores
+    if (normalizedBlockedStores.length > 0) {
+      // We check against both the product's store URL and the vendor name
+      const storeUrl = product.store?.url || '';
+      const vendorName = (product.vendor || '').toLowerCase();
+      const normalizedStoreUrl = normalizeHostname(storeUrl);
+
+      const isStoreBlocked = normalizedBlockedStores.some(blockedStore => 
+        (normalizedStoreUrl && normalizedStoreUrl.includes(blockedStore)) || 
+        (vendorName && vendorName.includes(blockedStore))
+      );
+
+      if (isStoreBlocked) {
+        return false; // Exclude product
+      }
+    }
+
+    return true; // Include product if it passes all checks
   });
 };
