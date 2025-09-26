@@ -15,7 +15,6 @@ interface ProductViewProps {
   products: Product[];
   isLoading: boolean;
   stores: string[];
-  blacklist: string[];
   onClearInitialFilters: () => void;
   initialFilters: { store?: string; name?: string } | null;
   onNavigateWithFilter: (filter: { store?: string; name?: string }) => void;
@@ -25,7 +24,6 @@ const ProductView: React.FC<ProductViewProps> = ({
   products,
   isLoading,
   stores,
-  blacklist,
   initialFilters,
   onClearInitialFilters,
   onNavigateWithFilter
@@ -73,7 +71,6 @@ const ProductView: React.FC<ProductViewProps> = ({
   };
 
   const processedProducts = useMemo(() => {
-    const blacklistRegex = blacklist.length > 0 ? new RegExp(`\\b(${blacklist.join('|')})\\b`, 'i') : null;
     const searchTerms = filters.name.toLowerCase().split(' ').filter(term => term.length > 0);
 
     let filtered = products;
@@ -90,10 +87,6 @@ const ProductView: React.FC<ProductViewProps> = ({
 
     // Other filters
     filtered = filtered.filter(product => {
-      if (blacklistRegex && product.name && blacklistRegex.test(product.name)) {
-        return false;
-      }
-      
       const productNameLower = product.name.toLowerCase();
       const nameMatch = searchTerms.length === 0 ? true : searchTerms.some(term => productNameLower.includes(term));
       const storeMatch = filters.store ? product.vendor === filters.store : true;
@@ -102,7 +95,7 @@ const ProductView: React.FC<ProductViewProps> = ({
     });
 
     return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [products, filters, blacklist, date]);
+  }, [products, filters, date]);
 
   const totalPages = Math.ceil(processedProducts.length / productsPerPage);
   const currentProducts = processedProducts.slice((currentPage - 1) * productsPerPage, currentPage * productsPerPage);

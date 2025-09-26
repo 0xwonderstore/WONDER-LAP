@@ -34,7 +34,8 @@ export const translations = {
     dashboard_totalStores: 'إجمالي المتاجر',
     dashboard_newProducts30d: 'منتجات جديدة (30 يومًا)',
     dashboard_newStores30d: 'متاجر جديدة (30 يومًا)',
-    dashboard_productTrends: 'اتجاه المنتجات الجديدة (30 يومًا)',
+    dashboard_newProducts30d_store: 'منتجات جديدة في 30 يومًا',
+    dashboard_lastProductAdded: 'تاريخ آخر منتج مضاف',
     dashboard_topStores: 'أبرز المتاجر',
     dashboard_topKeywords: 'أبرز الكلمات',
     storeName: 'اسم المتجر',
@@ -43,6 +44,17 @@ export const translations = {
     searchInMeta: 'البحث في مكتبة ميتا',
     dashboard_filterByStore: 'عرض منتجات هذا المتجر',
     dashboard_searchForKeyword: 'البحث عن هذه الكلمة',
+    exportData: 'تصدير البيانات',
+
+    // BlacklistPage.tsx
+    blacklist_addKeyword: 'إضافة كلمة مفتاحية',
+    blacklist_placeholder: 'أدخل كلمة مفتاحية',
+    blacklist_remove: 'إزالة',
+    blacklist_noKeywords: 'لا توجد كلمات مفتاحية في القائمة السوداء.',
+    blacklist_blockedStores: 'المتاجر المحظورة',
+    blacklist_addStore: 'إضافة متجر',
+    blacklist_store_placeholder: 'أدخل رابط المتجر',
+    blacklist_noStores: 'لا توجد متاجر محظورة في القائمة.',
 
     // EmptyState.tsx
     noResults: 'لا توجد نتائج',
@@ -96,7 +108,8 @@ export const translations = {
     dashboard_totalStores: 'Total Stores',
     dashboard_newProducts30d: 'New Products (30d)',
     dashboard_newStores30d: 'New Stores (30d)',
-    dashboard_productTrends: 'New Product Trend (30d)',
+    dashboard_newProducts30d_store: 'New Products (30d)',
+    dashboard_lastProductAdded: 'Last Product Added',
     dashboard_topStores: 'Top Stores',
     dashboard_topKeywords: 'Top Keywords',
     storeName: 'Store Name',
@@ -105,6 +118,17 @@ export const translations = {
     searchInMeta: 'Search in Meta Library',
     dashboard_filterByStore: 'Filter by this store',
     dashboard_searchForKeyword: 'Search for this keyword',
+    exportData: 'Export Data',
+
+    // BlacklistPage.tsx
+    blacklist_addKeyword: 'Add Keyword',
+    blacklist_placeholder: 'Enter keyword',
+    blacklist_remove: 'Remove',
+    blacklist_noKeywords: 'No keywords in blacklist.',
+    blacklist_blockedStores: 'Blocked Stores',
+    blacklist_addStore: 'Add Store',
+    blacklist_store_placeholder: 'Enter store URL',
+    blacklist_noStores: 'No stores in the blacklist.',
 
     // EmptyState.tsx
     noResults: 'No results found',

@@ -5,7 +5,9 @@ import { Product } from './types';
 import { loadProducts } from './utils/productLoader';
 import { useFavoritesStore } from './stores/favoritesStore';
 import { useLanguageStore } from './stores/languageStore';
+import { useBlacklistStore } from './stores/blacklistStore';
 import { translations } from './translations';
+import { filterProducts, normalizeHostname } from './utils/productUtils'; // Import from productUtils
 
 // --- Lazy Imports ---
 const ProductView = React.lazy(() => import('./components/ProductView'));
@@ -30,6 +32,7 @@ const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
   const { language } = useLanguageStore();
   const { favorites } = useFavoritesStore();
+  const { keywords: blacklistKeywords, blockedStores } = useBlacklistStore();
   
   const { data: allProducts = [], isLoading } = useQuery({
     queryKey: ['products'],
@@ -37,7 +40,6 @@ const App: React.FC = () => {
     staleTime: 1000 * 60 * 5,
   });
   
-  const [blacklist, setBlacklist] = useState<string[]>(['t-shirt', 'shorts', 'tshirt', 'rakhi']);
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [initialFilters, setInitialFilters] = useState<InitialFilter | null>(null);
 
@@ -49,6 +51,12 @@ const App: React.FC = () => {
     document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = language;
   }, [darkMode, language]);
+
+  // --- Memoized Filtered Products ---
+  const filteredProducts = useMemo(() => {
+    // Use the filterProducts utility directly
+    return filterProducts(allProducts, blacklistKeywords, blockedStores);
+  }, [allProducts, blacklistKeywords, blockedStores]);
 
   // --- Handlers ---
   const navigateTo = (page: Page) => setCurrentPage(prev => (prev === page ? 'home' : page));
@@ -62,17 +70,11 @@ const App: React.FC = () => {
     setInitialFilters(null);
   }, []);
   
-  const addWordToBlacklist = useCallback((word: string) => {
-    if (word && !blacklist.includes(word.toLowerCase())) {
-      setBlacklist(prev => [...prev, word.toLowerCase()]);
-    }
-  }, [blacklist]);
-
-  const removeWordFromBlacklist = useCallback((word: string) => {
-    setBlacklist(prev => prev.filter(item => item !== word));
-  }, []);
-  
-  const uniqueStores = useMemo(() => [...new Set(allProducts.map(p => p.vendor).filter(Boolean))], [allProducts]);
+  const uniqueStores = useMemo(() => {
+    // Ensure uniqueStores are derived from filteredProducts
+    const vendors = [...new Set(filteredProducts.map(p => p.vendor).filter(Boolean))];
+    return vendors;
+  }, [filteredProducts]);
 
   const HeaderButton: React.FC<{ onClick: () => void; className?: string; tooltip: string; 'aria-label': string; children?: React.ReactNode; }> = 
     ({ onClick, className, tooltip, children, ...props }) => (
@@ -85,9 +87,9 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (currentPage) {
       case 'favorites': return <FavoritesPage allProducts={allProducts} onNavigateWithFilter={navigateToHomeWithFilter} />;
-      case 'blacklist': return <BlacklistPage blacklist={blacklist} onAddWord={addWordToBlacklist} onRemoveWord={removeWordFromBlacklist} />;
-      case 'dashboard': return <DashboardPage products={allProducts} onNavigateWithFilter={navigateToHomeWithFilter} />;
-      default: return <ProductView products={allProducts} isLoading={isLoading} stores={uniqueStores} blacklist={blacklist} onClearInitialFilters={clearInitialFilters} initialFilters={initialFilters} onNavigateWithFilter={navigateToHomeWithFilter} />;
+      case 'blacklist': return <BlacklistPage />;
+      case 'dashboard': return <DashboardPage products={filteredProducts} onNavigateWithFilter={navigateToHomeWithFilter} />;
+      default: return <ProductView products={filteredProducts} isLoading={isLoading} stores={uniqueStores} onClearInitialFilters={clearInitialFilters} initialFilters={initialFilters} onNavigateWithFilter={navigateToHomeWithFilter} />;
     }
   };
 
