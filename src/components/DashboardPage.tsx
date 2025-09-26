@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Product } from '../types';
 import { TrendingUp, Package, Store, Clock, ChevronsUpDown, ChevronDown, Tag, Download } from 'lucide-react';
+import { ResponsiveLine } from '@nivo/line';
 import { subDays, format, parseISO } from 'date-fns';
 import {
   useReactTable,
@@ -20,7 +21,7 @@ interface DashboardPageProps {
   onNavigateWithFilter: (filter: { name?: string; store?: string }) => void;
 }
 interface KpiCardProps { title: string; value: string | number; icon: React.ReactNode; }
-interface StoreRow { vendor: string; totalProducts: number; newProducts30d: number; lastProductAdded: string; }
+interface StoreRow { vendor: string; totalProducts: number; newProducts30d: number; lastProductAdded: string; firstProductAdded: string; }
 type ActiveView = 'stores' | 'keywords';
 
 // --- Utility Functions ---
@@ -77,6 +78,17 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, onNavigateWithF
         return acc;
     }, {} as {[key: string]: string});
 
+    const firstProductAddedDates = products.reduce((acc, product) => {
+        if (product.vendor) {
+            const currentFirstDate = acc[product.vendor] ? parseISO(acc[product.vendor]) : null;
+            const productDate = parseISO(product.created_at);
+            if (!currentFirstDate || productDate < currentFirstDate) {
+                acc[product.vendor] = product.created_at;
+            }
+        }
+        return acc;
+    }, {} as {[key: string]: string});
+
     const keywordCounts = products.reduce((acc, product) => {
         (product.name || '').toLowerCase().split(/[\\s,،-]+/).forEach(word => {
             if (word && word.length > 3 && !new Set(['from', 'with', 'for']).has(word) && !/\\d/.test(word)) {
@@ -92,7 +104,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, onNavigateWithF
             vendor,
             totalProducts: count,
             newProducts30d: storeNewProductCounts30d[vendor] || 0,
-            lastProductAdded: lastProductAddedDates[vendor] ? format(parseISO(lastProductAddedDates[vendor]), 'yyyy-MM-dd HH:mm') : 'N/A'
+            lastProductAdded: lastProductAddedDates[vendor] ? format(parseISO(lastProductAddedDates[vendor]), 'yyyy-MM-dd') : 'N/A',
+            firstProductAdded: firstProductAddedDates[vendor] ? format(parseISO(firstProductAddedDates[vendor]), 'yyyy-MM-dd') : 'N/A'
         })),
         keywordData: Array.from(keywordCounts.entries()).map(([text, value]) => ({ text, value })).sort((a,b) => b.value - a.value).slice(0, 20)
     };
@@ -104,7 +117,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, onNavigateWithF
   ];
 
   const handleExportStores = () => {
-    const headers = ['vendor', 'totalProducts', 'newProducts30d', 'lastProductAdded'];
+    const headers = ['vendor', 'totalProducts', 'newProducts30d', 'lastProductAdded', 'firstProductAdded'];
     exportToCsv(storeTableData, 'stores_data.csv', headers);
   };
 
@@ -172,6 +185,11 @@ const StoreTable: React.FC<{data: StoreRow[], t: any, onNavigateWithFilter: (f: 
             accessorKey: 'lastProductAdded',
             header: t.dashboard_lastProductAdded,
             cell: ({ row }) => row.original.lastProductAdded
+        },
+        {
+            accessorKey: 'firstProductAdded',
+            header: t.dashboard_firstProductAdded,
+            cell: ({ row }) => row.original.firstProductAdded
         },
         { 
             id: 'metaAdLibrary',

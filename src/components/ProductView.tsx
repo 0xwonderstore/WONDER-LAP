@@ -74,7 +74,7 @@ const ProductView: React.FC<ProductViewProps> = ({
     const searchTerms = filters.name.toLowerCase().split(' ').filter(term => term.length > 0);
 
     let filtered = products;
-
+    
     // Date range filter
     if (date?.from) {
       const from = startOfDay(date.from);

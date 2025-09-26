@@ -8,15 +8,17 @@ export const translations = {
     blacklist: 'القائمة السوداء',
     block_store: 'حظر المتجر',
 
-    // BlacklistPage.tsx
-    blacklist_addKeyword: 'إضافة كلمة مفتاحية',
-    blacklist_placeholder: 'أدخل كلمة مفتاحية...',
-    blacklist_add: 'إضافة',
-    blacklist_noKeywords: 'لا توجد كلمات مفتاحية في القائمة السوداء.',
-    blacklist_blockedStores: 'المتاجر المحظورة',
-    blacklist_addStore: 'إضافة متجر',
-    blacklist_store_placeholder: 'أدخل رابط أو اسم المتجر',
-    blacklist_noStores: 'لا توجد متاجر محظورة في القائمة.',
+    // DateRangePicker
+    apply: 'تطبيق',
+    suggestions: 'اقتراحات',
+    pickADate: 'اختر تاريخًا',
+    last7days: 'آخر 7 أيام',
+    last14days: 'آخر 14 يومًا',
+    last30days: 'آخر 30 يومًا',
+    last90days: 'آخر 90 يومًا',
+    last180days: 'آخر 180 يومًا',
+    last1year: 'آخر سنة',
+    last_year_period: 'الموسم الماضي',
 
     // FilterComponent.tsx
     searchByName: 'ابحث بالاسم',
@@ -28,25 +30,14 @@ export const translations = {
     resetFilters: 'إلغاء الفلاتر',
     dateAdded: 'تاريخ الإضافة',
 
-    // DateRangePicker
-    apply: 'تطبيق',
-    suggestions: 'اقتراحات',
-    pickADate: 'اختر تاريخًا',
-    last24hours: 'آخر 24 ساعة',
-    last7days: 'آخر 7 أيام',
-    last15days: 'آخر 15 يومًا',
-    last30days: 'آخر 30 يومًا',
-    last2months: 'آخر شهرين',
-    last3months: 'آخر 3 أشهر',
-    last1year: 'آخر سنة',
-
     // DashboardPage.tsx
     dashboard_totalProducts: 'إجمالي المنتجات',
     dashboard_totalStores: 'إجمالي المتاجر',
     dashboard_newProducts30d: 'منتجات جديدة (30 يومًا)',
-    dashboard_newStores30d: 'متاجر جديدة (30 يومًا)',
+    dashboard_newStores30d: 'متاجر نشطة',
     dashboard_newProducts30d_store: 'منتجات جديدة في 30 يومًا',
     dashboard_lastProductAdded: 'تاريخ آخر منتج مضاف',
+    dashboard_firstProductAdded: 'تاريخ أول منتج مضاف',
     dashboard_topStores: 'أبرز المتاجر',
     dashboard_topKeywords: 'أبرز الكلمات',
     storeName: 'اسم المتجر',
@@ -66,7 +57,6 @@ export const translations = {
     searchInAdLibrary: "البحث في مكتبة إعلانات المتجر",
     searchInShopify: "البحث في شوبيفاي",
 
-
     // Pagination.tsx
     showing: 'عرض',
     of: 'من إجمالي',
@@ -74,6 +64,16 @@ export const translations = {
     previous: 'السابق',
     next: 'التالي',
     goTo: 'الذهاب إلى',
+
+    // BlacklistPage.tsx
+    blacklist_addKeyword: 'إضافة كلمة مفتاحية',
+    blacklist_placeholder: 'أدخل كلمة مفتاحية...',
+    blacklist_add: 'إضافة',
+    blacklist_noKeywords: 'لا توجد كلمات مفتاحية في القائمة السوداء.',
+    blacklist_blockedStores: 'المتاجر المحظورة',
+    blacklist_addStore: 'إضافة متجر',
+    blacklist_store_placeholder: 'أدخل رابط أو اسم المتجر',
+    blacklist_noStores: 'لا توجد متاجر محظورة في القائمة.',
   },
   en: {
     // App.tsx
@@ -83,15 +83,17 @@ export const translations = {
     blacklist: 'Blacklist',
     block_store: 'Block Store',
 
-    // BlacklistPage.tsx
-    blacklist_addKeyword: 'Add Keyword',
-    blacklist_placeholder: 'Enter a keyword...',
-    blacklist_add: 'Add',
-    blacklist_noKeywords: 'No keywords in the blacklist.',
-    blacklist_blockedStores: 'Blocked Stores',
-    blacklist_addStore: 'Add Store',
-    blacklist_store_placeholder: 'Enter store URL or name',
-    blacklist_noStores: 'No stores in the blacklist.',
+    // DateRangePicker
+    apply: 'Apply',
+    suggestions: 'Suggestions',
+    pickADate: 'Pick a date',
+    last7days: 'Last 7 days',
+    last14days: 'Last 14 days',
+    last30days: 'Last 30 days',
+    last90days: 'Last 90 days',
+    last180days: 'Last 180 days',
+    last1year: 'Last 1 year',
+    last_year_period: 'Last Season',
 
     // FilterComponent.tsx
     searchByName: 'Search by Name',
@@ -103,25 +105,14 @@ export const translations = {
     resetFilters: 'Reset Filters',
     dateAdded: 'Date Added',
 
-    // DateRangePicker
-    apply: 'Apply',
-    suggestions: 'Suggestions',
-    pickADate: 'Pick a date',
-    last24hours: 'Last 24 hours',
-    last7days: 'Last 7 days',
-    last15days: 'Last 15 days',
-    last30days: 'Last 30 days',
-    last2months: 'Last 2 months',
-    last3months: 'Last 3 months',
-    last1year: 'Last 1 year',
-
     // DashboardPage.tsx
     dashboard_totalProducts: 'Total Products',
     dashboard_totalStores: 'Total Stores',
     dashboard_newProducts30d: 'New Products (30d)',
-    dashboard_newStores30d: 'New Stores (30d)',
+    dashboard_newStores30d: 'Active Stores',
     dashboard_newProducts30d_store: 'New Products (30d)',
     dashboard_lastProductAdded: 'Last Product Added',
+    dashboard_firstProductAdded: 'First Product Added',
     dashboard_topStores: 'Top Stores',
     dashboard_topKeywords: 'Top Keywords',
     storeName: 'Store Name',
@@ -148,5 +139,15 @@ export const translations = {
     previous: 'Previous',
     next: 'Next',
     goTo: 'Go to',
+
+    // BlacklistPage.tsx
+    blacklist_addKeyword: 'Add Keyword',
+    blacklist_placeholder: 'Enter a keyword...',
+    blacklist_add: 'Add',
+    blacklist_noKeywords: 'No keywords in the blacklist.',
+    blacklist_blockedStores: 'Blocked Stores',
+    blacklist_addStore: 'Add Store',
+    blacklist_store_placeholder: 'Enter store URL or name',
+    blacklist_noStores: 'No stores in the blacklist.',
   },
 };

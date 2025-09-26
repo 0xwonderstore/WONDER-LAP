@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { DayPicker, DateRange } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
 import { useLanguageStore } from '../stores/languageStore';
-import { format, subDays, subMonths, subYears } from 'date-fns';
+import { translations } from '../translations';
+import { format, subDays, subYears, startOfMonth, endOfMonth, addMonths } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
 
 interface DateRangePickerProps {
@@ -11,8 +12,8 @@ interface DateRangePickerProps {
 }
 
 export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate }) => {
-  const { translations } = useLanguageStore();
-  const t = translations;
+  const { language } = useLanguageStore();
+  const t = translations[language];
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -37,25 +38,40 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate 
     setDate(undefined);
   }
 
+  const handleLastYearPeriodClick = () => {
+    const today = new Date();
+    const lastYearToday = subYears(today, 1);
+    
+    // Start of the current month, last year
+    const from = startOfMonth(lastYearToday);
+    // End of the third month after the current month, last year
+    const to = endOfMonth(addMonths(lastYearToday, 3));
+
+    setDate({ from, to });
+    setIsOpen(false);
+  };
+
   const suggestionRanges = [
-    { label: t.last24hours, days: 1 },
     { label: t.last7days, days: 7 },
-    { label: t.last15days, days: 15 },
+    { label: t.last14days, days: 14 },
     { label: t.last30days, days: 30 },
-    { label: t.last2months, months: 2 },
-    { label: t.last3months, months: 3 },
+    { label: t.last90days, days: 90 },
+    { label: t.last180days, days: 180 },
     { label: t.last1year, years: 1 },
   ]
 
-  const handleSuggestionClick = (suggestion: any) => {
+  const handleSuggestionClick = (suggestion: { days?: number; years?: number }) => {
     const to = new Date();
     let from;
 
-    if (suggestion.days) from = subDays(to, suggestion.days -1);
-    else if (suggestion.months) from = subMonths(to, suggestion.months);
-    else if (suggestion.years) from = subYears(to, suggestion.years);
+    if (suggestion.days) {
+      from = subDays(to, suggestion.days - 1);
+    } else if (suggestion.years) {
+      from = subYears(to, suggestion.years);
+    }
     
     setDate({ from, to });
+    setIsOpen(false); // Close picker after selection
   }
 
   const footer = (
@@ -107,10 +123,14 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate 
                 {range.label}
               </button>
             ))}
+             <button onClick={handleLastYearPeriodClick} className='text-left text-sm whitespace-nowrap px-2 py-1.5 rounded-md hover:bg-light-border dark:hover:bg-dark-border transition-colors'>
+                {t.last_year_period}
+              </button>
             </div>
           </div>
           <div className='pl-4'>
             <DayPicker
+              dir={language === 'ar' ? 'rtl' : 'ltr'}
               mode="range"
               selected={date}
               onSelect={setDate}
