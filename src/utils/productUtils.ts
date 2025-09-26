@@ -53,7 +53,6 @@ export const filterProducts = (
 
     // Check for blocked stores
     if (normalizedBlockedStores.length > 0) {
-      // We check against both the product's store URL and the vendor name
       const storeUrl = product.store?.url || '';
       const vendorName = (product.vendor || '').toLowerCase();
       const normalizedStoreUrl = normalizeHostname(storeUrl);
