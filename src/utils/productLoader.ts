@@ -47,7 +47,7 @@ export async function loadProducts(): Promise<LoadProductsResult> {
                 }));
                 allProducts.push(...mappedProducts);
             }
-        } catch (error) => {
+        } catch (error) {
             console.error(`Error loading or processing ${path}:`, error);
         }
     }

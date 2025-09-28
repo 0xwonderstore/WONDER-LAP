@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Product } from '../types';
 import { TrendingUp, Package, Store, Clock, ChevronsUpDown, ChevronDown, Tag, Download, Globe, Filter } from 'lucide-react';
-import { ResponsiveLine } from '@nivo/line';
 import { subDays, format, parseISO } from 'date-fns';
 import {
   useReactTable,
@@ -55,7 +54,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, totalBeforeFilt
   const { kpiData, storeTableData, keywordData, languageData } = useMemo(() => {
     const now = new Date();
     const thirtyDaysAgo = subDays(now, 30);
-    const recentProducts = products.filter(p => parseISO(p.created_at) >= thirtyDaysAgo);
+    const recentProducts = products.filter(p => p.created_at && parseISO(p.created_at) >= thirtyDaysAgo);
     const uniqueStores = new Set(products.map(p => p.vendor).filter(Boolean));
     const recentUniqueStores = new Set(recentProducts.map(p => p.vendor).filter(Boolean));
 
@@ -70,7 +69,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, totalBeforeFilt
     }, {} as {[key: string]: number});
 
     const lastProductAddedDates = products.reduce((acc, product) => {
-        if (product.vendor) {
+        if (product.vendor && product.created_at) {
             const currentLastDate = acc[product.vendor] ? parseISO(acc[product.vendor]) : null;
             const productDate = parseISO(product.created_at);
             if (!currentLastDate || productDate > currentLastDate) {
@@ -81,7 +80,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, totalBeforeFilt
     }, {} as {[key: string]: string});
 
     const firstProductAddedDates = products.reduce((acc, product) => {
-        if (product.vendor) {
+        if (product.vendor && product.created_at) {
             const currentFirstDate = acc[product.vendor] ? parseISO(acc[product.vendor]) : null;
             const productDate = parseISO(product.created_at);
             if (!currentFirstDate || productDate < currentFirstDate) {
@@ -119,8 +118,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, totalBeforeFilt
         keywordData: Array.from(keywordCounts.entries()).map(([text, value]) => ({ text, value })).sort((a,b) => b.value - a.value).slice(0, 20),
         languageData: Object.entries(languageCounts)
           .map(([code, count]) => ({ code, count }))
-          .sort((a, b) => b.count - a.count) // Sort by count descending
-          .slice(0, 20), // Take top 20
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 20),
     };
   }, [products]);
 
