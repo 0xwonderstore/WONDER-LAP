@@ -4,10 +4,8 @@ export interface Product {
   id: number;
   name: string;
   url: string;
-  store: {
-    name: string;
-    url: string;
-  };
+  vendor: string;
+  created_at: string;
   images: {
     id: number;
     src: string;
@@ -15,8 +13,6 @@ export interface Product {
   }[];
   price: string;
   currency: string;
-  language: string;
-  country: string;
-  created_at: string;
+  language?: string; // Make language optional, as not all products might have it
   description: string;
 }

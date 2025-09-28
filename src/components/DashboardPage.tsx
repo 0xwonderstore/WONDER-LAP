@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Product } from '../types';
-import { TrendingUp, Package, Store, Clock, ChevronsUpDown, ChevronDown, Tag, Download } from 'lucide-react';
+import { TrendingUp, Package, Store, Clock, ChevronsUpDown, ChevronDown, Tag, Download, Globe, Filter } from 'lucide-react';
 import { ResponsiveLine } from '@nivo/line';
 import { subDays, format, parseISO } from 'date-fns';
 import {
@@ -18,11 +18,13 @@ import { translations } from '../translations';
 // --- Type Definitions ---
 interface DashboardPageProps {
   products: Product[];
-  onNavigateWithFilter: (filter: { name?: string; store?: string }) => void;
+  totalBeforeFilter: number;
+  onNavigateWithFilter: (filter: { name?: string; store?: string; language?: string }) => void;
 }
 interface KpiCardProps { title: string; value: string | number; icon: React.ReactNode; }
 interface StoreRow { vendor: string; totalProducts: number; newProducts30d: number; lastProductAdded: string; firstProductAdded: string; }
-type ActiveView = 'stores' | 'keywords';
+interface LanguageItem { code: string; count: number; }
+type ActiveView = 'stores' | 'keywords' | 'languages';
 
 // --- Utility Functions ---
 const exportToCsv = (data: any[], filename: string, headers: string[]) => {
@@ -45,12 +47,12 @@ const exportToCsv = (data: any[], filename: string, headers: string[]) => {
 };
 
 // --- Main Component ---
-const DashboardPage: React.FC<DashboardPageProps> = ({ products, onNavigateWithFilter }) => {
+const DashboardPage: React.FC<DashboardPageProps> = ({ products, totalBeforeFilter, onNavigateWithFilter }) => {
   const { language } = useLanguageStore();
   const t = translations[language];
   const [activeView, setActiveView] = useState<ActiveView>('stores');
 
-  const { kpiData, storeTableData, keywordData } = useMemo(() => {
+  const { kpiData, storeTableData, keywordData, languageData } = useMemo(() => {
     const now = new Date();
     const thirtyDaysAgo = subDays(now, 30);
     const recentProducts = products.filter(p => parseISO(p.created_at) >= thirtyDaysAgo);
@@ -97,6 +99,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, onNavigateWithF
         });
         return acc;
     }, new Map<string, number>());
+
+    const languageCounts = products.reduce((acc, product) => {
+        if (product.language) {
+            acc[product.language] = (acc[product.language] || 0) + 1;
+        }
+        return acc;
+    }, {} as {[key: string]: number});
     
     return {
         kpiData: { totalProducts: products.length, totalStores: uniqueStores.size, newProducts30d: recentProducts.length, newStores30d: recentUniqueStores.size },
@@ -107,13 +116,18 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, onNavigateWithF
             lastProductAdded: lastProductAddedDates[vendor] ? format(parseISO(lastProductAddedDates[vendor]), 'yyyy-MM-dd') : 'N/A',
             firstProductAdded: firstProductAddedDates[vendor] ? format(parseISO(firstProductAddedDates[vendor]), 'yyyy-MM-dd') : 'N/A'
         })),
-        keywordData: Array.from(keywordCounts.entries()).map(([text, value]) => ({ text, value })).sort((a,b) => b.value - a.value).slice(0, 20)
+        keywordData: Array.from(keywordCounts.entries()).map(([text, value]) => ({ text, value })).sort((a,b) => b.value - a.value).slice(0, 20),
+        languageData: Object.entries(languageCounts)
+          .map(([code, count]) => ({ code, count }))
+          .sort((a, b) => b.count - a.count) // Sort by count descending
+          .slice(0, 20), // Take top 20
     };
   }, [products]);
 
   const tabs = [
       { id: 'stores' as ActiveView, label: t.dashboard_topStores, icon: <Store size={16} /> },
-      { id: 'keywords' as ActiveView, label: t.dashboard_topKeywords, icon: <Tag size={16} /> }
+      { id: 'keywords' as ActiveView, label: t.dashboard_topKeywords, icon: <Tag size={16} /> },
+      { id: 'languages' as ActiveView, label: t.dashboard_topLanguages, icon: <Globe size={16} /> },
   ];
 
   const handleExportStores = () => {
@@ -124,10 +138,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, onNavigateWithF
   return (
     <div className="animate-fade-in-up space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KpiCard title={t.dashboard_totalProducts} value={kpiData.totalProducts} icon={<Package className="text-blue-500" />} />
-        <KpiCard title={t.dashboard_totalStores} value={kpiData.totalStores} icon={<Store className="text-purple-500" />} />
+        <KpiCard title={t.dashboard_totalProductsAll} value={totalBeforeFilter} icon={<Package className="text-blue-500" />} />
+        <KpiCard title={t.dashboard_totalProductsUnique} value={kpiData.totalProducts} icon={<Filter className="text-cyan-500" />} />
         <KpiCard title={t.dashboard_newProducts30d} value={kpiData.newProducts30d} icon={<TrendingUp className="text-green-500" />} />
-        <KpiCard title={t.dashboard_newStores30d} value={kpiData.newStores30d} icon={<Clock className="text-yellow-500" />} />
+        <KpiCard title={t.dashboard_totalStores} value={kpiData.totalStores} icon={<Store className="text-purple-500" />} />
       </div>
 
       
@@ -146,7 +160,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, onNavigateWithF
         </div>
         {activeView === 'stores' ? 
             <StoreTable data={storeTableData} t={t} onNavigateWithFilter={onNavigateWithFilter} /> : 
-            <KeywordList data={keywordData} t={t} onNavigateWithFilter={onNavigateWithFilter} />
+            activeView === 'keywords' ? 
+                <KeywordList data={keywordData} t={t} onNavigateWithFilter={onNavigateWithFilter} /> : 
+                <LanguageList data={languageData} t={t} onNavigateWithFilter={onNavigateWithFilter} />
         }
       </div>
     </div>
@@ -222,6 +238,23 @@ const KeywordList: React.FC<{data: {text: string, value: number}[], t: any, onNa
                     {text}
                 </span>
                 <span className="font-mono text-sm bg-light-background dark:bg-dark-background px-2 py-1 rounded-md">{value}</span>
+            </div>
+        ))}
+    </div>
+);
+
+const LanguageList: React.FC<{data: LanguageItem[], t: any, onNavigateWithFilter: (f: { language?: string }) => void}> = ({data, t, onNavigateWithFilter}) => (
+    <div className="divide-y divide-light-border dark:divide-dark-border">
+        {data.map(({code, count}) => (
+            <div key={code} className="p-4 flex justify-between items-center hover:bg-light-background-hover dark:hover:bg-dark-background-hover">
+                <span 
+                    onClick={() => onNavigateWithFilter({ language: code })}
+                    className="font-semibold cursor-pointer hover:underline"
+                    title={t.dashboard_filterByLanguage}
+                >
+                    {t[code] || code.toUpperCase()}
+                </span>
+                <span className="font-mono text-sm bg-light-background dark:bg-dark-background px-2 py-1 rounded-md">{count}</span>
             </div>
         ))}
     </div>

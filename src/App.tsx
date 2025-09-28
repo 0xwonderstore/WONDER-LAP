@@ -2,7 +2,7 @@ import React, { useState, useMemo, Suspense, useCallback, useEffect } from 'reac
 import { useQuery } from '@tanstack/react-query';
 import { Moon, Sun, Sparkles, Heart, LayoutDashboard, EyeOff } from 'lucide-react';
 import { Product } from './types';
-import { loadProducts } from './utils/productLoader';
+import { loadProducts, LoadProductsResult } from './utils/productLoader';
 import { filterProducts } from './utils/productUtils';
 import { useFavoritesStore } from './stores/favoritesStore';
 import { useLanguageStore } from './stores/languageStore';
@@ -19,7 +19,7 @@ const LanguageSwitcher = React.lazy(() => import('./components/LanguageSwitcher'
 
 // --- Type Definitions ---
 type Page = 'home' | 'favorites' | 'dashboard' | 'blacklist';
-type InitialFilter = { name?: string; store?: string; };
+type InitialFilter = { name?: string; store?: string; language?: string };
 
 const LoadingFallback: React.FC = () => (
   <div className="flex justify-center items-center h-96">
@@ -34,11 +34,14 @@ const App: React.FC = () => {
   const { favorites } = useFavoritesStore();
   const { keywords: blacklistedKeywords, blockedStores } = useBlacklistStore();
   
-  const { data: allProducts = [], isLoading } = useQuery({
+  const { data: productData, isLoading } = useQuery<LoadProductsResult>({
     queryKey: ['products'],
     queryFn: loadProducts,
     staleTime: 1000 * 60 * 5,
   });
+
+  const allProducts = productData?.uniqueProducts || [];
+  const totalBeforeFilter = productData?.totalBeforeFilter || 0;
   
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [initialFilters, setInitialFilters] = useState<InitialFilter | null>(null);
@@ -84,7 +87,7 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (currentPage) {
       case 'favorites': return <FavoritesPage allProducts={filteredProducts} onNavigateWithFilter={navigateToHomeWithFilter} />;
-      case 'dashboard': return <DashboardPage products={filteredProducts} onNavigateWithFilter={navigateToHomeWithFilter} />;
+      case 'dashboard': return <DashboardPage products={filteredProducts} totalBeforeFilter={totalBeforeFilter} onNavigateWithFilter={navigateToHomeWithFilter} />;
       case 'blacklist': return <BlacklistPage />;
       default: return <ProductView products={filteredProducts} isLoading={isLoading} stores={uniqueStores} onClearInitialFilters={clearInitialFilters} initialFilters={initialFilters} onNavigateWithFilter={navigateToHomeWithFilter} />;
     }
@@ -104,8 +107,8 @@ const App: React.FC = () => {
             <Suspense fallback={<div className="w-24 h-10 rounded-full bg-gray-200 animate-pulse" />}>
               <LanguageSwitcher />
             </Suspense>
-            <HeaderButton onClick={() => navigateTo('dashboard')} className={isDashboardActive ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.dashboard} aria-label="Dashboard"><LayoutDashboard className={`w-5 h-5 transition-transform duration-200 ${isDashboardActive ? 'rotate-6' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isDashboardActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.dashboard}</span></HeaderButton>
-            <HeaderButton onClick={() => navigateTo('blacklist')} className={isBlacklistActive ? 'bg-gray-200 dark:bg-gray-700 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.blacklist} aria-label="Blacklist"><EyeOff className={`w-5 h-5 transition-transform duration-200 ${isBlacklistActive ? 'text-gray-800 dark:text-gray-200' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isBlacklistActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.blacklist}</span></HeaderButton>
+            <HeaderButton onClick={() => navigateTo('dashboard')} className={isDashboardActive ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.dashboard} aria-label="Dashboard"><LayoutDashboard className={`w-5 h-5 transition-transform duration-200 ${isDashboardActive ? 'rotate-6' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isDashboardActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.dashboard}</span></headerButton>
+            <HeaderButton onClick={() => navigateTo('blacklist')} className={isBlacklistActive ? 'bg-gray-200 dark:bg-gray-700 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.blacklist} aria-label="Blacklist"><EyeOff className={`w-5 h-5 transition-transform duration-200 ${isBlacklistActive ? 'text-gray-800 dark:text-gray-200' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isBlacklistActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.blacklist}</span></headerButton>
             <HeaderButton onClick={() => navigateTo('favorites')} className={isFavoritesActive ? 'bg-red-100 dark:bg-red-900/50 text-red-500 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.favorites} aria-label="Favorites">
               <Heart className={`w-5 h-5 transition-all duration-200 ${isFavoritesActive ? 'fill-red-500 text-red-500 rotate-0' : 'text-current -rotate-12'}`} />
               <span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isFavoritesActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.favorites}</span>

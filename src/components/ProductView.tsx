@@ -17,7 +17,7 @@ interface ProductViewProps {
   stores: string[];
   onClearInitialFilters: () => void;
   initialFilters: { store?: string; name?: string } | null;
-  onNavigateWithFilter: (filter: { store?: string; name?: string }) => void;
+  onNavigateWithFilter: (filter: { store?: string; name?: string; language?: string }) => void;
 }
 
 const ProductView: React.FC<ProductViewProps> = ({
@@ -37,9 +37,11 @@ const ProductView: React.FC<ProductViewProps> = ({
   const [filters, setFilters] = useState<{
     name: string;
     store: string;
+    language: string;
   }>(() => ({
     name: initialFilters?.name || '',
     store: initialFilters?.store || '',
+    language: '',
   }));
 
   useEffect(() => {
@@ -48,6 +50,7 @@ const ProductView: React.FC<ProductViewProps> = ({
         ...prev,
         name: initialFilters.name || '',
         store: initialFilters.store || '',
+        language: initialFilters.language || '',
       }));
       setCurrentPage(1);
       onClearInitialFilters();
@@ -65,15 +68,41 @@ const ProductView: React.FC<ProductViewProps> = ({
   };
 
   const handleResetFilters = () => {
-    setFilters({ name: '', store: '' });
+    setFilters({ name: '', store: '', language: '' });
     setDate(undefined);
     setCurrentPage(1);
   };
+
+  // Collect all unique languages from products for the filter dropdown
+  const availableLanguages = useMemo(() => {
+    const langs = new Set<string>();
+    products.forEach(p => {
+      if (p.language) {
+        langs.add(p.language);
+      }
+    });
+    return Array.from(langs);
+  }, [products]);
+  
+  const languageCounts = useMemo(() => {
+      const counts: { [key: string]: number } = {};
+      products.forEach(p => {
+        if (p.language) {
+          counts[p.language] = (counts[p.language] || 0) + 1;
+        }
+      });
+      return counts;
+  }, [products]);
 
   const processedProducts = useMemo(() => {
     const searchTerms = filters.name.toLowerCase().split(' ').filter(term => term.length > 0);
 
     let filtered = products;
+
+    // Apply language filter based on product.language field
+    if (filters.language) {
+      filtered = filtered.filter(p => p.language === filters.language);
+    }
     
     // Date range filter
     if (date?.from) {
@@ -106,6 +135,8 @@ const ProductView: React.FC<ProductViewProps> = ({
        <FilterComponent
         t={t}
         stores={stores}
+        languages={availableLanguages}
+        languageCounts={languageCounts}
         filters={filters}
         date={date}
         setDate={setDate}
