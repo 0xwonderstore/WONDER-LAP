@@ -8,6 +8,9 @@ export const translations = {
     blacklist: 'القائمة السوداء',
     block_store: 'حظر المتجر',
 
+    // FavoritesPage.tsx
+    favorites_title: 'المفضلة ({count})',
+    
     // DateRangePicker
     apply: 'تطبيق',
     suggestions: 'اقتراحات',
@@ -56,6 +59,8 @@ export const translations = {
     // EmptyState.tsx
     noResults: 'لا توجد نتائج',
     noResultsHint: 'لم يتم العثور على منتجات. حاول تغيير الفلاتر الخاصة بك.',
+    no_favorites_title: 'قائمة المفضلة فارغة',
+    no_favorites_hint: 'أضف منتجات إلى المفضلة لتراها هنا.',
 
     // ProductCard.tsx
     searchWithImage: "بحث بصورة المنتج",
@@ -110,6 +115,9 @@ export const translations = {
     blacklist: 'Blacklist',
     block_store: 'Block Store',
 
+    // FavoritesPage.tsx
+    favorites_title: 'Favorites ({count})',
+
     // DateRangePicker
     apply: 'Apply',
     suggestions: 'Suggestions',
@@ -158,6 +166,9 @@ export const translations = {
     // EmptyState.tsx
     noResults: 'No results found',
     noResultsHint: 'No products were found. Try changing your filters.',
+    no_favorites_title: 'Favorites List is Empty',
+    no_favorites_hint: 'Add products to your favorites to see them here.',
+
 
     // ProductCard.tsx
     searchWithImage: "Search with product image",

@@ -40,7 +40,8 @@ const App: React.FC = () => {
     staleTime: 1000 * 60 * 5,
   });
 
-  const allProducts = productData?.uniqueProducts || [];
+  const uniqueProducts = productData?.uniqueProducts || [];
+  const allProductsRaw = productData?.allProducts || [];
   const totalBeforeFilter = productData?.totalBeforeFilter || 0;
   
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -57,12 +58,21 @@ const App: React.FC = () => {
 
   // --- Memoized Data ---
   const filteredProducts = useMemo(() => {
-    return filterProducts(allProducts, blacklistedKeywords, blockedStores);
-  }, [allProducts, blacklistedKeywords, blockedStores]);
+    return filterProducts(uniqueProducts, blacklistedKeywords, blockedStores);
+  }, [uniqueProducts, blacklistedKeywords, blockedStores]);
 
   const uniqueStores = useMemo(() => {
     return [...new Set(filteredProducts.map(p => p.vendor).filter(Boolean))];
   }, [filteredProducts]);
+
+  // --- Correct Favorites Count ---
+  const favoritesCount = useMemo(() => {
+    const favoriteUrls = new Set(favorites.my_main_favorites?.products?.map(p => p.url) || []);
+    if (favoriteUrls.size === 0) return 0;
+    // Count how many of the currently available products are in the favorites list
+    return uniqueProducts.filter(p => favoriteUrls.has(p.url)).length;
+  }, [favorites, uniqueProducts]);
+
 
   // --- Handlers ---
   const navigateTo = (page: Page) => setCurrentPage(prev => (prev === page ? 'home' : page));
@@ -87,7 +97,7 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (currentPage) {
       case 'favorites': return <FavoritesPage allProducts={filteredProducts} onNavigateWithFilter={navigateToHomeWithFilter} />;
-      case 'dashboard': return <DashboardPage products={filteredProducts} totalBeforeFilter={totalBeforeFilter} onNavigateWithFilter={navigateToHomeWithFilter} />;
+      case 'dashboard': return <DashboardPage products={filteredProducts} allProductsRaw={allProductsRaw} totalBeforeFilter={totalBeforeFilter} onNavigateWithFilter={navigateToHomeWithFilter} />;
       case 'blacklist': return <BlacklistPage />;
       default: return <ProductView products={filteredProducts} isLoading={isLoading} stores={uniqueStores} onClearInitialFilters={clearInitialFilters} initialFilters={initialFilters} onNavigateWithFilter={navigateToHomeWithFilter} />;
     }
@@ -96,7 +106,6 @@ const App: React.FC = () => {
   const isFavoritesActive = currentPage === 'favorites';
   const isDashboardActive = currentPage === 'dashboard';
   const isBlacklistActive = currentPage === 'blacklist';
-  const favoritesCount = favorites.my_main_favorites?.products?.length || 0;
 
   return (
     <div className="min-h-screen">

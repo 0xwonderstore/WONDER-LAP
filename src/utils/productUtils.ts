@@ -16,6 +16,41 @@ export const normalizeHostname = (url: string): string => {
   return url.trim().toLowerCase().replace(/^(?:https?|ftp):\/\//, '').replace(/^(?:www\.)?/, '').split('/')[0];
 };
 
+/**
+ * A more robust search function that normalizes text for better matching.
+ * It handles different character cases and accents.
+ */
+const normalizeText = (text: string): string => {
+    return text
+        .toLowerCase()
+        // NFD: Normalization Form Canonical Decomposition.
+        // This separates combined characters into their base characters and diacritical marks.
+        // For example, 'é' becomes 'e' + '´'.
+        .normalize('NFD')
+        // This regex removes the separated diacritical marks (accents, etc.).
+        .replace(/[\\u0300-\\u036f]/g, '');
+};
+
+export const searchProducts = (
+    products: Product[],
+    searchTerm: string
+): Product[] => {
+    if (!searchTerm) {
+        return products;
+    }
+
+    const normalizedSearchTerm = normalizeText(searchTerm);
+
+    return products.filter(product => {
+        const normalizedName = normalizeText(product.name || '');
+        const normalizedDescription = normalizeText(product.description || '');
+        
+        return normalizedName.includes(normalizedSearchTerm) ||
+               normalizedDescription.includes(normalizedSearchTerm);
+    });
+};
+
+
 export const filterProducts = (
   products: Product[],
   blacklistedKeywords: string[],

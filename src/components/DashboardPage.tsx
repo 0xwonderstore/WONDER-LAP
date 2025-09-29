@@ -16,7 +16,8 @@ import { translations } from '../translations';
 
 // --- Type Definitions ---
 interface DashboardPageProps {
-  products: Product[];
+  products: Product[]; // Unique, filtered products
+  allProductsRaw: Product[]; // All products, unfiltered
   totalBeforeFilter: number;
   onNavigateWithFilter: (filter: { name?: string; store?: string; language?: string }) => void;
 }
@@ -46,7 +47,7 @@ const exportToCsv = (data: any[], filename: string, headers: string[]) => {
 };
 
 // --- Main Component ---
-const DashboardPage: React.FC<DashboardPageProps> = ({ products, totalBeforeFilter, onNavigateWithFilter }) => {
+const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw, totalBeforeFilter, onNavigateWithFilter }) => {
   const { language } = useLanguageStore();
   const t = translations[language];
   const [activeView, setActiveView] = useState<ActiveView>('stores');
@@ -54,11 +55,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, totalBeforeFilt
   const { kpiData, storeTableData, keywordData, languageData } = useMemo(() => {
     const now = new Date();
     const thirtyDaysAgo = subDays(now, 30);
+    // Use the unique 'products' list for time-sensitive and unique-based stats
     const recentProducts = products.filter(p => p.created_at && parseISO(p.created_at) >= thirtyDaysAgo);
     const uniqueStores = new Set(products.map(p => p.vendor).filter(Boolean));
     const recentUniqueStores = new Set(recentProducts.map(p => p.vendor).filter(Boolean));
 
-    const storeProductCounts = products.reduce((acc, product) => {
+    // Use the 'allProductsRaw' list for total counts per store
+    const storeProductCounts = allProductsRaw.reduce((acc, product) => {
         if(product.vendor) acc[product.vendor] = (acc[product.vendor] || 0) + 1;
         return acc;
     }, {} as {[key: string]: number});
@@ -68,6 +71,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, totalBeforeFilt
         return acc;
     }, {} as {[key: string]: number});
 
+    // Dates can be derived from the unique list to be consistent
     const lastProductAddedDates = products.reduce((acc, product) => {
         if (product.vendor && product.created_at) {
             const currentLastDate = acc[product.vendor] ? parseISO(acc[product.vendor]) : null;
@@ -114,14 +118,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, totalBeforeFilt
             newProducts30d: storeNewProductCounts30d[vendor] || 0,
             lastProductAdded: lastProductAddedDates[vendor] ? format(parseISO(lastProductAddedDates[vendor]), 'yyyy-MM-dd') : 'N/A',
             firstProductAdded: firstProductAddedDates[vendor] ? format(parseISO(firstProductAddedDates[vendor]), 'yyyy-MM-dd') : 'N/A'
-        })),
+        })).sort((a, b) => b.totalProducts - a.totalProducts),
         keywordData: Array.from(keywordCounts.entries()).map(([text, value]) => ({ text, value })).sort((a,b) => b.value - a.value).slice(0, 20),
         languageData: Object.entries(languageCounts)
           .map(([code, count]) => ({ code, count }))
           .sort((a, b) => b.count - a.count)
           .slice(0, 20),
     };
-  }, [products]);
+  }, [products, allProductsRaw]);
 
   const tabs = [
       { id: 'stores' as ActiveView, label: t.dashboard_topStores, icon: <Store size={16} /> },
@@ -259,6 +263,6 @@ const LanguageList: React.FC<{data: LanguageItem[], t: any, onNavigateWithFilter
     </div>
 );
 
-const MetaAdLibraryLink: React.FC<{ vendor: string; t: any}> = ({ vendor, t }) => { const url = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&q=${encodeURIComponent(vendor)}&search_type=keyword_unordered`; return <a href={url} target="_blank" rel="noopener noreferrer" title={t.searchInMeta} className="inline-flex items-center justify-center p-2 rounded-lg hover:bg-light-background dark:hover:bg-dark-background"><img src="https://www.citypng.com/public/uploads/preview/facebook-meta-logo-icon-hd-png-701751694777703xqxtpvbu9q.png" alt="Meta Ad Library" className="w-5 h-5" /></a> };
+const MetaAdLibraryLink: React.FC<{ vendor: string; t: any}> = ({ vendor, t }) => { const url = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&q=${encodeURIComponent(vendor)}&search_type=keyword_unordered`; return <a href={url} target="_blank" rel="noopener noreferrer" title={t.searchInMeta} className="inline-flex items-center justify-center p-2 rounded-lg hover:bg-light-background dark:hover:bg-dark-background"><img src="https://www.citypng.com/public/uploads/preview/facebook-meta-logo-icon-hd-png-701751694777703xqxtpvbu9q.png" alt="Meta AdLibrary" className="w-5 h-5" /></a> };
 
 export default DashboardPage;

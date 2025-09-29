@@ -22,10 +22,13 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, onNavigateWi
   const productsPerPage = 48;
 
   const { favoriteProducts, paginatedProducts, totalPages, totalItems } = useMemo(() => {
-    const favoriteUrls = new Set(favorites.my_main_favorites.products.map(normalizeUrl));
+    const favoriteUrls = new Set(favorites.my_main_favorites.products.map(p => normalizeUrl(p.url)));
     const filtered = allProducts
       .filter(p => favoriteUrls.has(normalizeUrl(p.url)))
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      .sort((a, b) => {
+        if (!a.created_at || !b.created_at) return 0;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      });
     
     const total = filtered.length;
     const pages = Math.ceil(total / productsPerPage);
@@ -43,12 +46,13 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, onNavigateWi
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <div className="animate-fade-in-up">
       <h1 className="text-3xl font-bold mb-8 text-light-text-primary dark:text-dark-text-primary">
-        {t.favorites}
+        {t.favorites_title.replace('{count}', totalItems.toString())}
       </h1>
       
       {favoriteProducts.length > 0 ? (
@@ -73,7 +77,10 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, onNavigateWi
           />
         </>
       ) : (
-        <EmptyState t={t} />
+        <EmptyState 
+            title={t.no_favorites_title}
+            hint={t.no_favorites_hint}
+        />
       )}
     </div>
   );

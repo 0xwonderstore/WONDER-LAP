@@ -10,13 +10,14 @@ import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
 import { parseISO, startOfDay, endOfDay } from 'date-fns';
 import { DateRange } from 'react-day-picker';
+import { searchProducts } from '../utils/productUtils'; // Import the new search function
 
 interface ProductViewProps {
   products: Product[];
   isLoading: boolean;
   stores: string[];
   onClearInitialFilters: () => void;
-  initialFilters: { store?: string; name?: string } | null;
+  initialFilters: { store?: string; name?: string; language?: string } | null;
   onNavigateWithFilter: (filter: { store?: string; name?: string; language?: string }) => void;
 }
 
@@ -41,7 +42,7 @@ const ProductView: React.FC<ProductViewProps> = ({
   }>(() => ({
     name: initialFilters?.name || '',
     store: initialFilters?.store || '',
-    language: '',
+    language: initialFilters?.language || '',
   }));
 
   useEffect(() => {
@@ -73,7 +74,6 @@ const ProductView: React.FC<ProductViewProps> = ({
     setCurrentPage(1);
   };
 
-  // Collect all unique languages from products for the filter dropdown
   const availableLanguages = useMemo(() => {
     const langs = new Set<string>();
     products.forEach(p => {
@@ -95,35 +95,39 @@ const ProductView: React.FC<ProductViewProps> = ({
   }, [products]);
 
   const processedProducts = useMemo(() => {
-    const searchTerms = filters.name.toLowerCase().split(' ').filter(term => term.length > 0);
-
     let filtered = products;
 
-    // Apply language filter based on product.language field
+    // Apply text search using the new robust function
+    if (filters.name) {
+        filtered = searchProducts(filtered, filters.name);
+    }
+    
+    // Apply store filter
+    if (filters.store) {
+      filtered = filtered.filter(p => p.vendor === filters.store);
+    }
+
+    // Apply language filter
     if (filters.language) {
       filtered = filtered.filter(p => p.language === filters.language);
     }
     
-    // Date range filter
+    // Apply date range filter
     if (date?.from) {
       const from = startOfDay(date.from);
       const to = date.to ? endOfDay(date.to) : endOfDay(date.from);
       filtered = filtered.filter(p => {
+        if (!p.created_at) return false;
         const productDate = parseISO(p.created_at);
         return productDate >= from && productDate <= to;
       });
     }
 
-    // Other filters
-    filtered = filtered.filter(product => {
-      const productNameLower = product.name.toLowerCase();
-      const nameMatch = searchTerms.length === 0 ? true : searchTerms.some(term => productNameLower.includes(term));
-      const storeMatch = filters.store ? product.vendor === filters.store : true;
-      
-      return nameMatch && storeMatch;
+    // Sort the final list by creation date
+    return filtered.sort((a, b) => {
+        if (!a.created_at || !b.created_at) return 0;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     });
-
-    return filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [products, filters, date]);
 
   const totalPages = Math.ceil(processedProducts.length / productsPerPage);

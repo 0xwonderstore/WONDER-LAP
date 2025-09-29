@@ -3,6 +3,7 @@ import { normalizeUrl } from './urlUtils';
 
 export interface LoadProductsResult {
     uniqueProducts: Product[];
+    allProducts: Product[]; // <-- Add this to return all products
     totalBeforeFilter: number;
     uniqueCount: number;
 }
@@ -89,6 +90,7 @@ export async function loadProducts(): Promise<LoadProductsResult> {
 
     return {
         uniqueProducts,
+        allProducts, // <-- Return the full list
         totalBeforeFilter,
         uniqueCount: uniqueProducts.length,
     };
