@@ -1,18 +1,17 @@
-export type Locale = 'ar' | 'en';
-
-export interface Product {
-  id: number;
-  name: string;
+// Add this to your types.ts file
+export interface InstagramPost {
+  type: string;
+  shortCode: string;
+  caption: string;
+  hashtags: string[];
+  mentions: string[];
+  position: number;
   url: string;
-  vendor: string;
-  created_at: string;
-  images: {
-    id: number;
-    src: string;
-    alt: string | null;
-  }[];
-  price: string;
-  currency: string;
-  language?: string; // Make language optional, as not all products might have it
-  description: string;
+  commentsCount: number;
+  displayUrl: string;
+  id: string;
+  likesCount: number;
+  timestamp: string;
+  ownerUsername: string;
+  language: string;
 }
