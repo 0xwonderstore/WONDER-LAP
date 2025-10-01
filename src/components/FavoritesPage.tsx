@@ -16,18 +16,17 @@ interface FavoritesPageProps {
 const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, onNavigateWithFilter }) => {
   const { language } = useLanguageStore();
   const t = translations[language];
-  const { favorites } = useFavoritesStore();
+  const { favoriteUrls } = useFavoritesStore();
 
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 48;
 
   const { favoriteProducts, paginatedProducts, totalPages, totalItems } = useMemo(() => {
-    const favoriteUrls = new Set(favorites.my_main_favorites.products.map(p => normalizeUrl(p.url)));
     const filtered = allProducts
       .filter(p => favoriteUrls.has(normalizeUrl(p.url)))
       .sort((a, b) => {
         if (!a.created_at || !b.created_at) return 0;
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
     
     const total = filtered.length;
@@ -42,7 +41,7 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, onNavigateWi
       totalPages: pages,
       totalItems: total,
     };
-  }, [allProducts, favorites, currentPage]);
+  }, [allProducts, favoriteUrls, currentPage]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

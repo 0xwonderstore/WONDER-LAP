@@ -1,61 +1,64 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 import { normalizeUrl } from '../utils/urlUtils';
 
-export interface FavoritesData {
-  my_main_favorites: {
-    name: string;
-    products: string[];
-  };
-}
-
+// A simpler, more direct state shape.
 interface FavoritesState {
-  favorites: FavoritesData;
+  // Using a Set for efficient add/delete/has operations.
+  favoriteUrls: Set<string>;
   toggleFavorite: (productUrl: string) => void;
+  isFavorite: (productUrl: string) => boolean;
 }
-
-const initialState = {
-    my_main_favorites: { name: 'My Favorites', products: [] },
-};
 
 export const useFavoritesStore = create<FavoritesState>()(
   persist(
-    (set) => ({
-      favorites: initialState,
-      toggleFavorite: (productUrl) => set((state) => {
+    (set, get) => ({
+      favoriteUrls: new Set(),
+
+      toggleFavorite: (productUrl: string) => {
         const normalized = normalizeUrl(productUrl);
-        const products = new Set(state.favorites.my_main_favorites.products);
+        set((state) => {
+          const newFavoriteUrls = new Set(state.favoriteUrls);
+          if (newFavoriteUrls.has(normalized)) {
+            newFavoriteUrls.delete(normalized);
+          } else {
+            newFavoriteUrls.add(normalized);
+          }
+          return { favoriteUrls: newFavoriteUrls };
+        });
+      },
 
-        if (products.has(normalized)) {
-          products.delete(normalized);
-        } else {
-          products.add(normalized);
-        }
-
-        return {
-          favorites: {
-            ...state.favorites,
-            my_main_favorites: {
-              ...state.favorites.my_main_favorites,
-              products: Array.from(products),
-            },
-          },
-        };
-      }),
+      isFavorite: (productUrl: string) => {
+        const normalized = normalizeUrl(productUrl);
+        return get().favoriteUrls.has(normalized);
+      },
     }),
     {
       name: 'favorites-storage',
-      storage: createJSONStorage(() => localStorage),
-      version: 0, // A base version for our simple state
-      migrate: (persistedState: any, version: number) => {
-        // This function handles loading old data.
-        // If the data is from a complex version or is broken, we reset it.
-        if (persistedState && persistedState.actions) {
-          console.log("Old state detected, resetting to a simpler format.");
-          return { favorites: initialState, toggleFavorite: (initialState as any).toggleFavorite };
-        }
-        // If the state looks simple enough, we use it.
-        return persistedState;
+      // Custom serializer for storing a Set in localStorage
+      storage: {
+        getItem: (name) => {
+          const str = localStorage.getItem(name);
+          if (!str) return null;
+          const { state } = JSON.parse(str);
+          return {
+            state: {
+              ...state,
+              favoriteUrls: new Set(state.favoriteUrls),
+            },
+          };
+        },
+        setItem: (name, newValue) => {
+          // Convert Set to array before storing
+          const str = JSON.stringify({
+            state: {
+              ...newValue.state,
+              favoriteUrls: Array.from(newValue.state.favoriteUrls),
+            },
+          });
+          localStorage.setItem(name, str);
+        },
+        removeItem: (name) => localStorage.removeItem(name),
       },
     }
   )

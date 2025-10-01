@@ -4,7 +4,6 @@ import { Product } from '../types';
 import { formatDate } from '../utils/productUtils';
 import { useFavoritesStore } from '../stores/favoritesStore';
 import { useBlacklistStore } from '../stores/blacklistStore';
-import { normalizeUrl } from '../utils/urlUtils';
 import MetaIcon from './MetaIcon';
 
 interface ProductCardProps {
@@ -14,24 +13,25 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFilter }) => {
-  const { favorites, toggleFavorite } = useFavoritesStore();
+  const { toggleFavorite, isFavorite } = useFavoritesStore();
   const { addStore } = useBlacklistStore();
-  const isFavorite = favorites.my_main_favorites?.products.includes(normalizeUrl(product.url));
+  const favorite = isFavorite(product.url);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     toggleFavorite(product.url);
   };
 
   const handleBlockStore = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click event
+    e.stopPropagation();
     if (product.store?.url) {
       addStore(product.store.url);
     } else if (product.vendor) {
       addStore(product.vendor);
     }
   };
-
+  
   const storeUrl = product.store?.url ? new URL(product.store.url).origin : new URL(product.url).origin;
   const adLibraryUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&q=${encodeURIComponent(storeUrl)}&search_type=keyword_unordered&media_type=all`;
   const imageSearchUrl = `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(product.images?.[0]?.src || '')}`;
@@ -46,7 +46,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
         </a>
         <div className="absolute top-3 right-3 flex flex-col gap-2">
             <button onClick={handleFavoriteClick} className={buttonClasses} aria-label="Toggle Favorite">
-                <Heart className={`w-5 h-5 transition-all ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-700 dark:text-gray-300'}`} />
+                <Heart className={`w-5 h-5 transition-all ${favorite ? 'fill-red-500 text-red-500' : 'text-gray-700 dark:text-gray-300'}`} />
             </button>
             {product.images?.[0]?.src && (
                 <a href={imageSearchUrl} target="_blank" rel="noopener noreferrer" className={buttonClasses} title={t.searchWithImage}>

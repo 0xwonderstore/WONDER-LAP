@@ -31,7 +31,8 @@ const App: React.FC = () => {
   // --- State Hooks ---
   const [darkMode, setDarkMode] = useState(false);
   const { language } = useLanguageStore();
-  const { favorites } = useFavoritesStore();
+  // Use the new, simpler state from the rebuilt store
+  const { favoriteUrls } = useFavoritesStore();
   const { keywords: blacklistedKeywords, blockedStores } = useBlacklistStore();
   
   const { data: productData, isLoading } = useQuery<LoadProductsResult>({
@@ -65,14 +66,8 @@ const App: React.FC = () => {
     return [...new Set(filteredProducts.map(p => p.vendor).filter(Boolean))];
   }, [filteredProducts]);
 
-  // --- Correct Favorites Count ---
-  const favoritesCount = useMemo(() => {
-    const favoriteUrls = new Set(favorites.my_main_favorites?.products?.map(p => p.url) || []);
-    if (favoriteUrls.size === 0) return 0;
-    // Count how many of the currently available products are in the favorites list
-    return uniqueProducts.filter(p => favoriteUrls.has(p.url)).length;
-  }, [favorites, uniqueProducts]);
-
+  // The count is now simply the size of the Set.
+  const favoritesCount = favoriteUrls.size;
 
   // --- Handlers ---
   const navigateTo = (page: Page) => setCurrentPage(prev => (prev === page ? 'home' : page));

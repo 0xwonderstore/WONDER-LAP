@@ -175,7 +175,7 @@ const ProductView: React.FC<ProductViewProps> = ({
           />
         </>
       ) : (
-        <EmptyState t={t} />
+        <EmptyState title={t.noResults} hint={t.noResultsHint} />
       )}
     </div>
   );
