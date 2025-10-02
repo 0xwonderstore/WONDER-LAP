@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import InstagramPostCard from './InstagramPostCard';
 import { EmptyState } from './EmptyState';
@@ -6,6 +5,7 @@ import { InstagramPost } from '../types';
 import postsData from '../data/instagram_posts.json';
 import Pagination from './Pagination';
 import { InstagramFilterComponent } from './InstagramFilterComponent';
+import { DateRange } from 'react-day-picker';
 
 const InstagramFeedPage: React.FC = () => {
   // Ensure posts is always an array
@@ -14,10 +14,20 @@ const InstagramFeedPage: React.FC = () => {
   const postsPerPage = 100;
 
   const [sortOrder, setSortOrder] = useState('default');
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined); // Changed to single dateRange state
   const [selectedLanguage, setSelectedLanguage] = useState('all');
   const [minLikes, setMinLikes] = useState(0);
+  const [selectedUsername, setSelectedUsername] = useState<string>('all');
+
+  const availableUsernames = useMemo(() => {
+    const usernames = new Set<string>();
+    posts.forEach(post => {
+      if (post.username) {
+        usernames.add(post.username);
+      }
+    });
+    return Array.from(usernames).sort();
+  }, [posts]);
 
   const processedPosts = useMemo(() => {
     let filteredPosts = posts.filter(post => 
@@ -29,14 +39,15 @@ const InstagramFeedPage: React.FC = () => {
       typeof post.displayUrl === 'string' &&
       post.displayUrl.trim() !== '' &&
       typeof post.commentsCount === 'number' &&
-      typeof post.language === 'string'
+      typeof post.language === 'string' &&
+      typeof post.username === 'string'
     );
 
     // Filter by date range
-    if (startDate && endDate) {
+    if (dateRange?.from && dateRange?.to) {
       filteredPosts = filteredPosts.filter(post => {
         const postDate = new Date(post.postedAt);
-        return postDate >= startDate && postDate <= endDate;
+        return postDate >= dateRange.from! && postDate <= dateRange.to!;
       });
     }
 
@@ -50,6 +61,11 @@ const InstagramFeedPage: React.FC = () => {
       filteredPosts = filteredPosts.filter(post => post.likesCount >= minLikes);
     }
 
+    // Filter by selected username
+    if (selectedUsername !== 'all') {
+      filteredPosts = filteredPosts.filter(post => post.username === selectedUsername);
+    }
+
     // Sort by likes
     if (sortOrder === 'asc') {
       filteredPosts.sort((a, b) => a.likesCount - b.likesCount);
@@ -58,7 +74,7 @@ const InstagramFeedPage: React.FC = () => {
     }
 
     return filteredPosts;
-  }, [posts, sortOrder, startDate, endDate, selectedLanguage, minLikes]);
+  }, [posts, sortOrder, dateRange, selectedLanguage, minLikes, selectedUsername]);
   
   const totalPages = Math.ceil(processedPosts.length / postsPerPage);
   const indexOfLastPost = currentPage * postsPerPage;
@@ -75,14 +91,15 @@ const InstagramFeedPage: React.FC = () => {
       <InstagramFilterComponent
         sortOrder={sortOrder}
         setSortOrder={setSortOrder}
-        startDate={startDate}
-        setStartDate={setStartDate}
-        endDate={endDate}
-        setEndDate={setEndDate}
+        dateRange={dateRange}
+        setDateRange={setDateRange}
         selectedLanguage={selectedLanguage}
         setSelectedLanguage={setSelectedLanguage}
         minLikes={minLikes}
         setMinLikes={setMinLikes}
+        availableUsernames={availableUsernames}
+        selectedUsername={selectedUsername}
+        setSelectedUsername={setSelectedUsername}
       />
       {currentPosts.length > 0 ? (
         <>

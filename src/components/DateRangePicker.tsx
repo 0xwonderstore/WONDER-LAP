@@ -29,7 +29,6 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate 
     };
   }, [wrapperRef]);
 
-
   const handleApply = () => {
     setIsOpen(false);
   }
@@ -42,9 +41,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate 
     const today = new Date();
     const lastYearToday = subYears(today, 1);
     
-    // Start of the current month, last year
     const from = startOfMonth(lastYearToday);
-    // End of the third month after the current month, last year
     const to = endOfMonth(addMonths(lastYearToday, 3));
 
     setDate({ from, to });
@@ -71,8 +68,17 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate 
     }
     
     setDate({ from, to });
-    setIsOpen(false); // Close picker after selection
+    setIsOpen(false); 
   }
+
+  const handleDayPickerSelect = (range: DateRange | undefined) => {
+    if (range?.from && !range.to) {
+      // If only 'from' is selected, set 'to' to be the same as 'from' for a single-day range
+      setDate({ from: range.from, to: range.from });
+    } else {
+      setDate(range);
+    }
+  };
 
   const footer = (
     <div className="p-2 flex justify-end gap-2 border-t border-light-border dark:border-dark-border mt-2">
@@ -133,7 +139,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate 
               dir={language === 'ar' ? 'rtl' : 'ltr'}
               mode="range"
               selected={date}
-              onSelect={setDate}
+              onSelect={handleDayPickerSelect}
               footer={footer}
               classNames={{
                 caption: 'flex justify-center items-center h-10',

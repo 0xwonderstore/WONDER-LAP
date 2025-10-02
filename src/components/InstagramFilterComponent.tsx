@@ -1,47 +1,55 @@
-
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Select from './Select';
 import { DateRangePicker } from './DateRangePicker';
 import { X } from 'lucide-react';
+import { DateRange } from 'react-day-picker';
 
 interface InstagramFilterComponentProps {
   sortOrder: string;
   setSortOrder: (order: string) => void;
-  startDate: Date | null;
-  setStartDate: (date: Date | null) => void;
-  endDate: Date | null;
-  setEndDate: (date: Date | null) => void;
+  dateRange: DateRange | undefined;
+  setDateRange: (dateRange: DateRange | undefined) => void;
   selectedLanguage: string;
   setSelectedLanguage: (language: string) => void;
   minLikes: number;
   setMinLikes: (likes: number) => void;
+  availableUsernames: string[];
+  selectedUsername: string;
+  setSelectedUsername: (username: string) => void;
 }
 
 export function InstagramFilterComponent({
   sortOrder,
   setSortOrder,
-  startDate,
-  setStartDate,
-  endDate,
-  setEndDate,
+  dateRange,
+  setDateRange,
   selectedLanguage,
   setSelectedLanguage,
   minLikes,
   setMinLikes,
+  availableUsernames,
+  selectedUsername,
+  setSelectedUsername,
 }: InstagramFilterComponentProps) {
   const { t } = useTranslation();
 
   const languages = ['en', 'ar'];
 
-  const isFilterActive = sortOrder !== 'default' || startDate !== null || endDate !== null || selectedLanguage !== 'all' || minLikes > 0;
+  const isFilterActive = sortOrder !== 'default' || dateRange !== undefined || selectedLanguage !== 'all' || minLikes > 0 || selectedUsername !== 'all';
 
   const onResetFilters = () => {
     setSortOrder('default');
-    setStartDate(null);
-    setEndDate(null);
+    setDateRange(undefined);
     setSelectedLanguage('all');
     setMinLikes(0);
+    setSelectedUsername('all');
   };
+
+  const usernameOptions = [
+    { value: 'all', label: t('all_users') },
+    ...availableUsernames.map(username => ({ value: username, label: `@${username}` }))
+  ];
 
   return (
     <div className="bg-light-surface dark:bg-dark-surface p-4 rounded-2xl mb-6 shadow-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
@@ -65,10 +73,8 @@ export function InstagramFilterComponent({
           {t('date_added')}
         </label>
         <DateRangePicker
-          startDate={startDate}
-          setStartDate={setStartDate}
-          endDate={endDate}
-          setEndDate={setEndDate}
+          date={dateRange}
+          setDate={setDateRange}
         />
       </div>
       <div className="flex-1">
@@ -95,6 +101,17 @@ export function InstagramFilterComponent({
           value={minLikes}
           onChange={(e) => setMinLikes(Number(e.target.value))}
           className="w-full p-2.5 border border-light-border dark:border-dark-border rounded-xl bg-light-background dark:bg-dark-background focus:ring-2 focus:ring-brand-primary"
+        />
+      </div>
+      <div className="flex-1">
+        <label className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1 px-2">
+          {t('filter_by_user')}
+        </label>
+        <Select
+          id="username-filter"
+          value={selectedUsername}
+          onChange={(e) => setSelectedUsername(e.target.value)}
+          options={usernameOptions}
         />
       </div>
       {isFilterActive && (

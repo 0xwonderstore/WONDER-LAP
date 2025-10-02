@@ -85,6 +85,8 @@ export const translations = {
     date_added: 'تاريخ الإضافة',
     min_likes: 'الحد الأدنى للإعجابات',
     reset_filters: 'إعادة تعيين الفلاتر',
+    filter_by_user: 'تصفية حسب المستخدم',
+    all_users: 'جميع المستخدمين',
 
     // Language Codes
     en: 'English',
@@ -107,6 +109,7 @@ export const translations = {
     ko: 'Korean',
     vi: 'Vietnamese',
     it: 'Italian',
+    username: 'اسم المستخدم',
   },
   en: {
     rtl: false,
@@ -194,6 +197,8 @@ export const translations = {
     date_added: 'Date Added',
     min_likes: 'Minimum Likes',
     reset_filters: 'Reset Filters',
+    filter_by_user: 'Filter by User',
+    all_users: 'All Users',
 
     // Language Codes
     en: 'English',
@@ -216,5 +221,6 @@ export const translations = {
     ko: 'Korean',
     vi: 'Vietnamese',
     it: 'Italian',
+    username: 'Username',
   },
 };

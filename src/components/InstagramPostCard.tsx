@@ -1,7 +1,7 @@
 import React from 'react';
 import { InstagramPost } from '../types';
 import { useTranslation } from 'react-i18next';
-import { Heart, MessageCircle, Calendar } from 'lucide-react';
+import { Heart, MessageCircle, Calendar, User } from 'lucide-react'; // Import User icon
 
 interface InstagramPostCardProps {
   post: InstagramPost;
@@ -46,6 +46,10 @@ const InstagramPostCard: React.FC<InstagramPostCardProps> = ({ post }) => {
         </div>
       </div>
       <div className="p-3">
+        <div className="flex items-center gap-1.5 mb-2 text-light-text-primary dark:text-dark-text-primary">
+          <User className="w-4 h-4 text-brand-primary" />
+          <span className="font-medium text-sm">@{post.username}</span>
+        </div>
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5 text-light-text-primary dark:text-dark-text-primary">
