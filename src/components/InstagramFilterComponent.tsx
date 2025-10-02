@@ -1,7 +1,8 @@
 
 import { useTranslation } from 'react-i18next';
-import { Select } from './Select';
+import Select from './Select';
 import { DateRangePicker } from './DateRangePicker';
+import { X } from 'lucide-react';
 
 interface InstagramFilterComponentProps {
   sortOrder: string;
@@ -32,25 +33,36 @@ export function InstagramFilterComponent({
 
   const languages = ['en', 'ar'];
 
+  const isFilterActive = sortOrder !== 'default' || startDate !== null || endDate !== null || selectedLanguage !== 'all' || minLikes > 0;
+
+  const onResetFilters = () => {
+    setSortOrder('default');
+    setStartDate(null);
+    setEndDate(null);
+    setSelectedLanguage('all');
+    setMinLikes(0);
+  };
+
   return (
-    <div className="flex flex-col md:flex-row gap-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+    <div className="bg-light-surface dark:bg-dark-surface p-4 rounded-2xl mb-6 shadow-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
       <div className="flex-1">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-          {t('sortByLikes')}
+        <label className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1 px-2">
+          {t('sort_by_likes')}
         </label>
         <Select
+          id="sort-by-likes"
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value)}
           options={[
-            { value: 'default', label: t('defaultOrder') },
+            { value: 'default', label: t('default_order') },
             { value: 'asc', label: t('ascending') },
             { value: 'desc', label: t('descending') },
           ]}
         />
       </div>
       <div className="flex-1">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-          {t('dateAdded')}
+        <label className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1 px-2">
+          {t('date_added')}
         </label>
         <DateRangePicker
           startDate={startDate}
@@ -60,29 +72,36 @@ export function InstagramFilterComponent({
         />
       </div>
       <div className="flex-1">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+        <label className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1 px-2">
           {t('language_filter')}
         </label>
         <Select
+          id="language-filter"
           value={selectedLanguage}
           onChange={(e) => setSelectedLanguage(e.target.value)}
           options={[
             { value: 'all', label: t('all_languages') },
-            ...languages.map((lang) => ({ value: lang, label: lang })),
+            ...languages.map((lang) => ({ value: lang, label: t(lang) || lang })),
           ]}
         />
       </div>
       <div className="flex-1">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-          {t('minLikes')}
+        <label className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1 px-2">
+          {t('min_likes')}
         </label>
         <input
           type="number"
+          id="min-likes"
           value={minLikes}
           onChange={(e) => setMinLikes(Number(e.target.value))}
-          className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          className="w-full p-2.5 border border-light-border dark:border-dark-border rounded-xl bg-light-background dark:bg-dark-background focus:ring-2 focus:ring-brand-primary"
         />
       </div>
+      {isFilterActive && (
+        <button onClick={onResetFilters} className="p-2.5 bg-red-500/10 text-red-500 rounded-xl border border-red-500/20 hover:bg-red-500/20 transition-colors" aria-label={t('reset_filters')}>
+          <X className="h-5 w-5" />
+        </button>
+      )}
     </div>
   );
 }

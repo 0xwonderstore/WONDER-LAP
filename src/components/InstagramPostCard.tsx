@@ -1,7 +1,6 @@
 import React from 'react';
 import { InstagramPost } from '../types';
-import { useLanguageStore } from '../stores/languageStore';
-import { translations } from '../translations';
+import { useTranslation } from 'react-i18next';
 import { Heart, MessageCircle, Calendar } from 'lucide-react';
 
 interface InstagramPostCardProps {
@@ -9,8 +8,7 @@ interface InstagramPostCardProps {
 }
 
 const InstagramPostCard: React.FC<InstagramPostCardProps> = ({ post }) => {
-  const { language } = useLanguageStore();
-  const t = translations[language] || translations.en;
+  const { t, i18n } = useTranslation();
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     e.currentTarget.src = `https://placehold.co/1080x1080/777/FFFFFF/png?text=Image+Failed`;
@@ -19,7 +17,7 @@ const InstagramPostCard: React.FC<InstagramPostCardProps> = ({ post }) => {
   const proxiedImageUrl = `https://images.weserv.nl/?url=${encodeURIComponent(post.displayUrl)}`;
 
   const formattedDate = post.postedAt
-    ? new Date(post.postedAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', {
+    ? new Date(post.postedAt).toLocaleDateString(i18n.language === 'ar' ? 'ar-EG' : 'en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -43,7 +41,7 @@ const InstagramPostCard: React.FC<InstagramPostCardProps> = ({ post }) => {
         />
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300">
             <div className="absolute top-2 right-2 bg-black bg-opacity-60 text-white text-xs font-bold px-2 py-1 rounded-full uppercase">
-              {t[post.language] || post.language}
+              {t(post.language) || post.language}
             </div>
         </div>
       </div>
