@@ -1,61 +1,88 @@
-import React from 'react';
-import Select from './Select';
-import { useLanguageStore } from '../stores/languageStore';
-import { translations } from '../translations';
 
-type SortOrder = 'default' | 'asc' | 'desc';
+import { useTranslation } from 'react-i18next';
+import { Select } from './Select';
+import { DateRangePicker } from './DateRangePicker';
 
 interface InstagramFilterComponentProps {
-  sortOrder: SortOrder;
-  onSortOrderChange: (order: SortOrder) => void;
-  languages: string[];
-  selectedLanguage: string | null;
-  onLanguageChange: (language: string | null) => void;
+  sortOrder: string;
+  setSortOrder: (order: string) => void;
+  startDate: Date | null;
+  setStartDate: (date: Date | null) => void;
+  endDate: Date | null;
+  setEndDate: (date: Date | null) => void;
+  selectedLanguage: string;
+  setSelectedLanguage: (language: string) => void;
+  minLikes: number;
+  setMinLikes: (likes: number) => void;
 }
 
-const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
+export function InstagramFilterComponent({
   sortOrder,
-  onSortOrderChange,
-  languages,
+  setSortOrder,
+  startDate,
+  setStartDate,
+  endDate,
+  setEndDate,
   selectedLanguage,
-  onLanguageChange,
-}) => {
-  const { language } = useLanguageStore();
-  const t = translations[language];
+  setSelectedLanguage,
+  minLikes,
+  setMinLikes,
+}: InstagramFilterComponentProps) {
+  const { t } = useTranslation();
 
-  const sortOptions = [
-    { value: 'default', label: t.defaultOrder },
-    { value: 'asc', label: t.ascending },
-    { value: 'desc', label: t.descending },
-  ];
-  
-  const languageOptions = [
-    { value: '', label: t.all_languages },
-    ...languages.map(lang => ({ value: lang, label: t[lang] || lang })),
-  ];
+  const languages = ['en', 'ar'];
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md mb-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t.sortByLikes}</label>
-          <Select
-            options={sortOptions}
-            value={sortOrder}
-            onChange={value => onSortOrderChange(value as SortOrder)}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t.language_filter}</label>
-          <Select
-            options={languageOptions}
-            value={selectedLanguage || ''}
-            onChange={value => onLanguageChange(value === '' ? null : value)}
-          />
-        </div>
+    <div className="flex flex-col md:flex-row gap-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+      <div className="flex-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+          {t('sortByLikes')}
+        </label>
+        <Select
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value)}
+          options={[
+            { value: 'default', label: t('defaultOrder') },
+            { value: 'asc', label: t('ascending') },
+            { value: 'desc', label: t('descending') },
+          ]}
+        />
+      </div>
+      <div className="flex-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+          {t('dateAdded')}
+        </label>
+        <DateRangePicker
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
+        />
+      </div>
+      <div className="flex-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+          {t('language_filter')}
+        </label>
+        <Select
+          value={selectedLanguage}
+          onChange={(e) => setSelectedLanguage(e.target.value)}
+          options={[
+            { value: 'all', label: t('all_languages') },
+            ...languages.map((lang) => ({ value: lang, label: lang })),
+          ]}
+        />
+      </div>
+      <div className="flex-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+          {t('minLikes')}
+        </label>
+        <input
+          type="number"
+          value={minLikes}
+          onChange={(e) => setMinLikes(Number(e.target.value))}
+          className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        />
       </div>
     </div>
   );
-};
-
-export default InstagramFilterComponent;
+}

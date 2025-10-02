@@ -27,7 +27,7 @@ export interface Product {
     url: string;
 }
 
-// Updated InstagramPost interface
+// Corrected InstagramPost interface to use postedAt
 export interface InstagramPost {
   id: string;
   url: string;
@@ -35,4 +35,5 @@ export interface InstagramPost {
   likesCount: number;
   commentsCount: number;
   language: string;
+  postedAt: string; // Corrected from timestamp to postedAt
 }
