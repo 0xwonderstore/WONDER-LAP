@@ -76,18 +76,10 @@ export const translations = {
     previous: 'السابق',
     next: 'التالي',
     goTo: 'الذهاب إلى',
-
-    // InstagramFilterComponent.tsx
-    sort_by_likes: 'الترتيب حسب الإعجابات',
-    default_order: 'افتراضي',
-    ascending: 'تصاعدي',
-    descending: 'تنازلي',
-    date_added: 'تاريخ الإضافة',
-    min_likes: 'الحد الأدنى للإعجابات',
-    reset_filters: 'إعادة تعيين الفلاتر',
-    filter_by_user: 'تصفية حسب المستخدم',
-    all_users: 'جميع المستخدمين',
-
+    page: 'صفحة',
+    first: 'الأول',
+    last: 'الأخير',
+    
     // Language Codes
     en: 'English',
     zh: 'Chinese',
@@ -188,17 +180,9 @@ export const translations = {
     previous: 'Previous',
     next: 'Next',
     goTo: 'Go to',
-
-    // InstagramFilterComponent.tsx
-    sort_by_likes: 'Sort by Likes',
-    default_order: 'Default',
-    ascending: 'Ascending',
-    descending: 'Descending',
-    date_added: 'Date Added',
-    min_likes: 'Minimum Likes',
-    reset_filters: 'Reset Filters',
-    filter_by_user: 'Filter by User',
-    all_users: 'All Users',
+    page: 'Page',
+    first: 'First',
+    last: 'Last',
 
     // Language Codes
     en: 'English',
