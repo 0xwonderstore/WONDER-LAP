@@ -68,6 +68,11 @@ const InstagramPage = () => {
     setCurrentPage(1);
   }, []);
 
+  const handleUsernameClick = useCallback((username: string) => {
+    setFilters(prev => ({ ...prev, username }));
+    setCurrentPage(1);
+  }, []);
+
   const handleDateChange = useCallback((newDateRange: DateRange | undefined) => {
     setDateRange(newDateRange);
     setCurrentPage(1);
@@ -105,7 +110,11 @@ const InstagramPage = () => {
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {paginatedPosts.map(post => (
-          <InstagramCard key={post.id} post={post} />
+          <InstagramCard 
+            key={post.id} 
+            post={post}
+            onUsernameClick={handleUsernameClick}
+          />
         ))}
       </div>
       <div className="mt-8">

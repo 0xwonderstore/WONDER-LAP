@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Heart, MessageCircle, ExternalLink } from 'lucide-react';
+import { Heart, MessageCircle, ExternalLink, Calendar } from 'lucide-react';
 
 interface InstagramCardProps {
   post: {
@@ -12,13 +12,20 @@ interface InstagramCardProps {
     postedAt: string;
     username: string;
   };
+  onUsernameClick: (username: string) => void;
 }
 
-const InstagramCard = ({ post }: InstagramCardProps) => {
-  const { t } = useTranslation();
+const InstagramCard = ({ post, onUsernameClick }: InstagramCardProps) => {
+  const { t, i18n } = useTranslation();
   
   const formattedLikes = new Intl.NumberFormat('en-US', { notation: 'compact' }).format(post.likesCount);
   const formattedComments = new Intl.NumberFormat('en-US', { notation: 'compact' }).format(post.commentsCount);
+  const formattedDate = new Intl.DateTimeFormat(i18n.language, { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  }).format(new Date(post.postedAt));
+
 
   const proxiedImageUrl = `https://images.weserv.nl/?url=${encodeURIComponent(post.displayUrl)}`;
 
@@ -30,7 +37,9 @@ const InstagramCard = ({ post }: InstagramCardProps) => {
             {/* Placeholder for profile picture */}
           </div>
         </div>
-        <div className="font-semibold text-gray-800 dark:text-gray-200">{post.username}</div>
+        <button onClick={() => onUsernameClick(post.username)} className="font-semibold text-gray-800 dark:text-gray-200 hover:underline">
+            {post.username}
+        </button>
       </div>
       
       <div className="aspect-[9/16]">
@@ -51,6 +60,11 @@ const InstagramCard = ({ post }: InstagramCardProps) => {
                <span className="text-sm">{t('comments')}</span>
             </div>
           </div>
+        </div>
+        
+        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-3">
+            <Calendar className="w-4 h-4" />
+            <span>{formattedDate}</span>
         </div>
 
         <a 

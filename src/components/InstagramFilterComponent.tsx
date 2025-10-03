@@ -38,17 +38,11 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Date Picker */}
-        <div className="lg:col-span-1">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('date_posted')}</label>
-          <DateRangePicker date={date} setDate={setDate} />
-        </div>
-
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-8 border border-gray-200 dark:border-gray-700">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Username Filter */}
         <div>
-          <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('select_user')}</label>
+          <label htmlFor="username" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('select_user')}</label>
           <Select id="username" name="username" onChange={handleInputChange}>
             <option value="">{t('all_users')}</option>
             {usernames.map(user => (
@@ -56,10 +50,16 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
             ))}
           </Select>
         </div>
-        
+
+        {/* Date Picker */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('date_posted')}</label>
+          <DateRangePicker date={date} setDate={setDate} />
+        </div>
+
         {/* Likes Range Filter */}
-        <div className="lg:col-span-1">
-           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('likes_range')}</label>
+        <div>
+           <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('likes_range')}</label>
            <div className="flex items-center gap-2">
             <input
               type="number"
@@ -78,32 +78,34 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
             />
           </div>
         </div>
-
       </div>
-      <div className="mt-4 flex justify-between items-center">
+
+      <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6 flex justify-between items-center">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('sort_by_likes')}</label>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('sort_by_likes')}</label>
           <div className="flex gap-2">
             <button
               onClick={() => onSortChange('desc')}
-              className={`px-4 py-2 rounded-md flex items-center gap-1 ${currentSort === 'desc' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
+              className={`px-4 py-2 rounded-md flex items-center gap-1 transition-colors ${currentSort === 'desc' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
             >
               <ArrowDown size={16} /> {t('descending')}
             </button>
             <button
               onClick={() => onSortChange('asc')}
-              className={`px-4 py-2 rounded-md flex items-center gap-1 ${currentSort === 'asc' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
+              className={`px-4 py-2 rounded-md flex items-center gap-1 transition-colors ${currentSort === 'asc' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
             >
               <ArrowUp size={16} /> {t('ascending')}
             </button>
           </div>
         </div>
-        <button
-          onClick={onReset}
-          className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-        >
-          {t('resetFilters')}
-        </button>
+        <div className="self-end">
+            <button
+            onClick={onReset}
+            className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors shadow-md"
+            >
+            {t('resetFilters')}
+            </button>
+        </div>
       </div>
     </div>
   );
