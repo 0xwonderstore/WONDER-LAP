@@ -1,26 +1,48 @@
-import { useState, useMemo, useCallback } from 'react';
-import InstagramCard from './InstagramCard';
-import allPosts from '../data/instagram_posts.json';
-import Pagination from './Pagination';
-import { useTranslation } from 'react-i18next';
-import InstagramFilterComponent from './InstagramFilterComponent';
-import { DateRange } from 'react-day-picker';
+import { useState, useMemo, useCallback } from "react";
+import InstagramCard from "./InstagramCard";
+import posts1 from "../data/instagram_posts_1.json";
+import posts2 from "../data/instagram_posts_2.json";
+import posts3 from "../data/instagram_posts_3.json";
+import posts4 from "../data/instagram_posts_4.json";
+import posts5 from "../data/instagram_posts_5.json";
+import posts6 from "../data/instagram_posts_6.json";
+import posts7 from "../data/instagram_posts_7.json";
+import posts8 from "../data/instagram_posts_8.json";
+import posts9 from "../data/instagram_posts_9.json";
+import posts10 from "../data/instagram_posts_10.json";
+import Pagination from "./Pagination";
+import { useTranslation } from "react-i18next";
+import InstagramFilterComponent from "./InstagramFilterComponent";
+import { DateRange } from "react-day-picker";
+
+const allPosts = [
+  ...posts1,
+  ...posts2,
+  ...posts3,
+  ...posts4,
+  ...posts5,
+  ...posts6,
+  ...posts7,
+  ...posts8,
+  ...posts9,
+  ...posts10,
+];
 
 const InstagramPage = () => {
   const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState({
-    username: '',
+    username: "",
     minLikes: null,
     maxLikes: null,
   });
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [sort, setSort] = useState<'asc' | 'desc' | null>(null);
+  const [sort, setSort] = useState<"asc" | "desc" | null>(null);
 
   const POSTS_PER_PAGE = 100;
 
   const uniqueUsernames = useMemo(() => {
-    return [...new Set(allPosts.map(p => p.username).filter(Boolean))];
+    return [...new Set(allPosts.map((p) => p.username).filter(Boolean))];
   }, []);
 
   const filteredAndSortedPosts = useMemo(() => {
@@ -28,25 +50,25 @@ const InstagramPage = () => {
 
     // Apply filters
     if (filters.username) {
-      posts = posts.filter(p => p.username === filters.username);
+      posts = posts.filter((p) => p.username === filters.username);
     }
     if (filters.minLikes !== null) {
-      posts = posts.filter(p => p.likesCount >= filters.minLikes!);
+      posts = posts.filter((p) => p.likesCount >= filters.minLikes!);
     }
     if (filters.maxLikes !== null) {
-        posts = posts.filter(p => p.likesCount <= filters.maxLikes!);
+      posts = posts.filter((p) => p.likesCount <= filters.maxLikes!);
     }
     if (dateRange?.from) {
-        posts = posts.filter(p => new Date(p.postedAt) >= dateRange.from!);
+      posts = posts.filter((p) => new Date(p.postedAt) >= dateRange.from!);
     }
     if (dateRange?.to) {
-        posts = posts.filter(p => new Date(p.postedAt) <= dateRange.to!);
+      posts = posts.filter((p) => new Date(p.postedAt) <= dateRange.to!);
     }
 
     // Apply sorting
     if (sort) {
       posts.sort((a, b) => {
-        if (sort === 'asc') {
+        if (sort === "asc") {
           return a.likesCount - b.likesCount;
         } else {
           return b.likesCount - a.likesCount;
@@ -57,35 +79,40 @@ const InstagramPage = () => {
     return posts;
   }, [filters, dateRange, sort]);
 
-  const totalPages = Math.ceil(filteredAndSortedPosts.length / POSTS_PER_PAGE);
+  const totalPages = Math.ceil(
+    filteredAndSortedPosts.length / POSTS_PER_PAGE
+  );
   const paginatedPosts = filteredAndSortedPosts.slice(
     (currentPage - 1) * POSTS_PER_PAGE,
     currentPage * POSTS_PER_PAGE
   );
-  
+
   const handleFilterChange = useCallback((newFilters: any) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+    setFilters((prev) => ({ ...prev, ...newFilters }));
     setCurrentPage(1);
   }, []);
 
   const handleUsernameClick = useCallback((username: string) => {
-    setFilters(prev => ({ ...prev, username }));
+    setFilters((prev) => ({ ...prev, username }));
     setCurrentPage(1);
   }, []);
 
-  const handleDateChange = useCallback((newDateRange: DateRange | undefined) => {
-    setDateRange(newDateRange);
-    setCurrentPage(1);
-  }, []);
+  const handleDateChange = useCallback(
+    (newDateRange: DateRange | undefined) => {
+      setDateRange(newDateRange);
+      setCurrentPage(1);
+    },
+    []
+  );
 
-  const handleSortChange = useCallback((newSort: 'asc' | 'desc' | null) => {
+  const handleSortChange = useCallback((newSort: "asc" | "desc" | null) => {
     setSort(newSort);
     setCurrentPage(1);
   }, []);
 
   const handleReset = useCallback(() => {
     setFilters({
-      username: '',
+      username: "",
       minLikes: null,
       maxLikes: null,
     });
@@ -94,7 +121,6 @@ const InstagramPage = () => {
     setCurrentPage(1);
     // You might need to manually reset the input fields in the filter component
   }, []);
-
 
   return (
     <div className="container mx-auto p-4">
@@ -109,9 +135,9 @@ const InstagramPage = () => {
         setDate={setDateRange}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {paginatedPosts.map(post => (
-          <InstagramCard 
-            key={post.id} 
+        {paginatedPosts.map((post) => (
+          <InstagramCard
+            key={post.id}
             post={post}
             onUsernameClick={handleUsernameClick}
           />
@@ -124,7 +150,7 @@ const InstagramPage = () => {
           onPageChange={setCurrentPage}
           itemsPerPage={POSTS_PER_PAGE}
           totalItems={filteredAndSortedPosts.length}
-          itemName={t('instagram_posts')}
+          itemName={t("instagram_posts")}
         />
       </div>
     </div>
