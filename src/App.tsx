@@ -1,6 +1,6 @@
 import React, { useState, useMemo, Suspense, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Moon, Sun, Sparkles, Heart, LayoutDashboard, EyeOff } from 'lucide-react';
+import { Moon, Sun, Sparkles, Heart, LayoutDashboard, EyeOff, Instagram } from 'lucide-react';
 import { Product } from './types';
 import { loadProducts, LoadProductsResult } from './utils/productLoader';
 import { filterProducts } from './utils/productUtils';
@@ -14,11 +14,12 @@ const ProductView = React.lazy(() => import('./components/ProductView'));
 const FavoritesPage = React.lazy(() => import('./components/FavoritesPage'));
 const DashboardPage = React.lazy(() => import('./components/DashboardPage'));
 const BlacklistPage = React.lazy(() => import('./components/BlacklistPage'));
+const InstagramPage = React.lazy(() => import('./components/InstagramPage'));
 const ScrollButtons = React.lazy(() => import('./components/ScrollButtons'));
 const LanguageSwitcher = React.lazy(() => import('./components/LanguageSwitcher'));
 
 // --- Type Definitions ---
-type Page = 'home' | 'favorites' | 'dashboard' | 'blacklist';
+type Page = 'home' | 'favorites' | 'dashboard' | 'blacklist' | 'instagram';
 type InitialFilter = { name?: string; store?: string; language?: string };
 
 const LoadingFallback: React.FC = () => (
@@ -92,6 +93,7 @@ const App: React.FC = () => {
       case 'favorites': return <FavoritesPage allProducts={filteredProducts} onNavigateWithFilter={navigateToHomeWithFilter} />;
       case 'dashboard': return <DashboardPage products={filteredProducts} allProductsRaw={allProductsRaw} totalBeforeFilter={totalBeforeFilter} onNavigateWithFilter={navigateToHomeWithFilter} />;
       case 'blacklist': return <BlacklistPage />;
+      case 'instagram': return <InstagramPage />;
       default: return <ProductView products={filteredProducts} isLoading={isLoading} stores={uniqueStores} onClearInitialFilters={clearInitialFilters} initialFilters={initialFilters} onNavigateWithFilter={navigateToHomeWithFilter} />;
     }
   };
@@ -99,6 +101,7 @@ const App: React.FC = () => {
   const isFavoritesActive = currentPage === 'favorites';
   const isDashboardActive = currentPage === 'dashboard';
   const isBlacklistActive = currentPage === 'blacklist';
+  const isInstagramActive = currentPage === 'instagram';
 
   return (
     <div className="min-h-screen">
@@ -110,6 +113,7 @@ const App: React.FC = () => {
               <LanguageSwitcher />
             </Suspense>
             <HeaderButton onClick={() => navigateTo('dashboard')} className={isDashboardActive ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.dashboard} aria-label="Dashboard"><LayoutDashboard className={`w-5 h-5 transition-transform duration-200 ${isDashboardActive ? 'rotate-6' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isDashboardActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.dashboard}</span></HeaderButton>
+            <HeaderButton onClick={() => navigateTo('instagram')} className={isInstagramActive ? 'bg-pink-100 dark:bg-pink-900/50 text-pink-600 dark:text-pink-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.instagram_feature} aria-label="Instagram"><Instagram className={`w-5 h-5 transition-transform duration-200 ${isInstagramActive ? 'rotate-6' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isInstagramActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.instagram_feature}</span></HeaderButton>
             <HeaderButton onClick={() => navigateTo('blacklist')} className={isBlacklistActive ? 'bg-gray-200 dark:bg-gray-700 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.blacklist} aria-label="Blacklist"><EyeOff className={`w-5 h-5 transition-transform duration-200 ${isBlacklistActive ? 'text-gray-800 dark:text-gray-200' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isBlacklistActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.blacklist}</span></HeaderButton>
             <HeaderButton onClick={() => navigateTo('favorites')} className={isFavoritesActive ? 'bg-red-100 dark:bg-red-900/50 text-red-500 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.favorites} aria-label="Favorites">
               <Heart className={`w-5 h-5 transition-all duration-200 ${isFavoritesActive ? 'fill-red-500 text-red-500 rotate-0' : 'text-current -rotate-12'}`} />

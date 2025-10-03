@@ -7,6 +7,7 @@ export const translations = {
     theme: 'تغيير المظهر',
     blacklist: 'القائمة السوداء',
     block_store: 'حظر المتجر',
+    instagram_feature: 'انستقرام',
 
     // FavoritesPage.tsx
     favorites_title: 'المفضلة ({count})',
@@ -73,6 +74,7 @@ export const translations = {
     showing: 'عرض',
     of: 'من إجمالي',
     products: 'منتجات',
+    instagram_posts: 'منشورات',
     previous: 'السابق',
     next: 'التالي',
     goTo: 'الذهاب إلى',
@@ -102,6 +104,9 @@ export const translations = {
     vi: 'Vietnamese',
     it: 'Italian',
     username: 'اسم المستخدم',
+    likes: 'إعجابات',
+    comments: 'تعليقات',
+    view_on_instagram: 'عرض على انستقرام',
   },
   en: {
     rtl: false,
@@ -111,6 +116,7 @@ export const translations = {
     theme: 'Toggle Theme',
     blacklist: 'Blacklist',
     block_store: 'Block Store',
+    instagram_feature: 'Instagram',
 
     // FavoritesPage.tsx
     favorites_title: 'Favorites ({count})',
@@ -177,6 +183,7 @@ export const translations = {
     showing: 'Showing',
     of: 'of',
     products: 'Products',
+    instagram_posts: 'Posts',
     previous: 'Previous',
     next: 'Next',
     goTo: 'Go to',
@@ -206,5 +213,8 @@ export const translations = {
     vi: 'Vietnamese',
     it: 'Italian',
     username: 'Username',
+    likes: 'Likes',
+    comments: 'Comments',
+    view_on_instagram: 'View on Instagram',
   },
 };
