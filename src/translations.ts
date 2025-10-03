@@ -82,6 +82,17 @@ export const translations = {
     last: 'الأخير',
     page: 'صفحة',
 
+    // InstagramFilterComponent.tsx
+    date_posted: 'تاريخ النشر',
+    select_user: 'اختر المستخدم',
+    all_users: 'كل المستخدمين',
+    likes_range: 'مدى الإعجابات',
+    min_likes: 'أقل عدد',
+    max_likes: 'أقصى عدد',
+    sort_by_likes: 'الترتيب حسب الإعجابات',
+    descending: 'تنازلي',
+    ascending: 'تصاعدي',
+
     // Language Codes
     en: 'English',
     zh: 'Chinese',
@@ -190,6 +201,17 @@ export const translations = {
     first: 'First',
     last: 'Last',
     page: 'Page',
+    
+    // InstagramFilterComponent.tsx
+    date_posted: 'Date Posted',
+    select_user: 'Select User',
+    all_users: 'All Users',
+    likes_range: 'Likes Range',
+    min_likes: 'Min Likes',
+    max_likes: 'Max Likes',
+    sort_by_likes: 'Sort by Likes',
+    descending: 'Descending',
+    ascending: 'Ascending',
 
     // Language Codes
     en: 'English',
