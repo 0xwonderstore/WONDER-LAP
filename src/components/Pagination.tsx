@@ -1,14 +1,7 @@
-import React from 'react';
-import {
-    Pagination as CanvasPagination,
-    getLastPage,
-    getVisibleResultsMax,
-    getVisibleResultsMin,
-} from '@workday/canvas-kit-react/pagination';
+import React, { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
-import { InputGroup } from '@workday/canvas-kit-react/text-input';
-import { styled } from '@workday/canvas-kit-react/style';
 
 interface PaginationProps {
     currentPage: number;
@@ -17,17 +10,6 @@ interface PaginationProps {
     totalItems: number;
     itemsPerPage: number;
 }
-
-const StyledInputGroup = styled(InputGroup)({
-    '& input': {
-        backgroundColor: 'var(--bg-color, #fff)',
-        color: 'var(--text-color, #000)',
-        borderColor: 'var(--border-color, #ccc)',
-    },
-    '& label': {
-        color: 'var(--text-color, #000)',
-    }
-});
 
 const Pagination: React.FC<PaginationProps> = ({
     currentPage,
@@ -38,58 +20,137 @@ const Pagination: React.FC<PaginationProps> = ({
 }) => {
     const { language } = useLanguageStore();
     const t = translations[language] || translations.en;
+    const [pageInput, setPageInput] = useState<string>(currentPage.toString());
 
-    const lastPage = getLastPage(itemsPerPage, totalItems);
+    useEffect(() => {
+        setPageInput(currentPage.toString());
+    }, [currentPage]);
 
-    const handlePageChange = (pageNumber: number) => {
-        onPageChange(pageNumber);
+    const handleFirst = () => onPageChange(1);
+    const handlePrevious = () => onPageChange(Math.max(1, currentPage - 1));
+    const handleNext = () => onPageChange(Math.min(totalPages, currentPage + 1));
+    const handleLast = () => onPageChange(totalPages);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setPageInput(e.target.value);
     };
 
+    const handleInputBlur = () => {
+        let page = parseInt(pageInput, 10);
+        if (isNaN(page) || page < 1) {
+            page = 1;
+        } else if (page > totalPages) {
+            page = totalPages;
+        }
+        setPageInput(page.toString());
+        onPageChange(page);
+    };
+
+    const handleInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            handleInputBlur();
+            (e.target as HTMLInputElement).blur();
+        }
+    };
+
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxPagesToShow = 5;
+        const halfPagesToShow = Math.floor(maxPagesToShow / 2);
+
+        if (totalPages <= maxPagesToShow) {
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+        } else {
+            let startPage = Math.max(1, currentPage - halfPagesToShow);
+            let endPage = Math.min(totalPages, currentPage + halfPagesToShow);
+
+            if (currentPage <= halfPagesToShow) {
+                endPage = maxPagesToShow;
+            }
+
+            if (currentPage + halfPagesToShow >= totalPages) {
+                startPage = totalPages - maxPagesToShow + 1;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                pages.push(i);
+            }
+        }
+        return pages;
+    };
+
+
+    const indexOfFirstItem = (currentPage - 1) * itemsPerPage + 1;
+    const indexOfLastItem = Math.min(currentPage * itemsPerPage, totalItems);
+
     return (
-        <div dir={t.rtl ? 'rtl' : 'ltr'} style={{ 
-            '--bg-color': 'var(--color-bg-surface)',
-            '--text-color': 'var(--color-text-primary)',
-            '--border-color': 'var(--color-border)',
-         } as React.CSSProperties}>
-            <CanvasPagination
-                onPageChange={handlePageChange}
-                aria-label="Pagination"
-                lastPage={lastPage}
-                currentPage={currentPage}
-            >
-                <CanvasPagination.Controls>
-                    <CanvasPagination.JumpToFirstButton aria-label={t.first} />
-                    <CanvasPagination.StepToPreviousButton aria-label={t.previous} />
-                    <CanvasPagination.PageList>
-                        {({ state }) =>
-                            state.range.map(pageNumber => (
-                                <CanvasPagination.PageListItem key={pageNumber}>
-                                    <CanvasPagination.PageButton aria-label={`${t.page} ${pageNumber}`} pageNumber={pageNumber} />
-                                </CanvasPagination.PageListItem>
-                            ))
-                        }
-                    </CanvasPagination.PageList>
-                    <CanvasPagination.StepToNextButton aria-label={t.next} />
-                    <CanvasPagination.JumpToLastButton aria-label={t.last} />
-                    <CanvasPagination.GoToForm>
-                        <StyledInputGroup>
-                            <InputGroup.Input as={CanvasPagination.GoToTextInput} aria-label={t.goTo} />
-                            <InputGroup.Label as={CanvasPagination.GoToLabel}>
-                                {({ state }) => `${t.of} ${state.lastPage} ${t.page}`}
-                            </InputGroup.Label>
-                        </StyledInputGroup>
-                    </CanvasPagination.GoToForm>
-                </CanvasPagination.Controls>
-                <CanvasPagination.AdditionalDetails shouldHideDetails>
-                    {() =>
-                        `${getVisibleResultsMin(currentPage, itemsPerPage)}-${getVisibleResultsMax(
-                            currentPage,
-                            itemsPerPage,
-                            totalItems
-                        )} ${t.of} ${totalItems} ${t.products}`
-                    }
-                </CanvasPagination.AdditionalDetails>
-            </CanvasPagination>
+        <div className="flex flex-col items-center justify-center mt-8 space-y-4">
+            <div className="flex items-center space-x-2">
+                <button
+                    onClick={handleFirst}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-md hover:bg-light-hover dark:hover:bg-dark-hover disabled:opacity-50"
+                    aria-label={t.first}
+                >
+                    <ChevronsLeft className="h-5 w-5" />
+                </button>
+                <button
+                    onClick={handlePrevious}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-md hover:bg-light-hover dark:hover:bg-dark-hover disabled:opacity-50"
+                    aria-label={t.previous}
+                >
+                    <ChevronLeft className="h-5 w-5" />
+                </button>
+
+                {getPageNumbers().map(page => (
+                    <button
+                        key={page}
+                        onClick={() => onPageChange(page)}
+                        className={`w-10 h-10 rounded-full text-sm font-medium transition-colors ${
+                            currentPage === page
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-light-surface dark:bg-dark-surface hover:bg-light-hover dark:hover:bg-dark-hover'
+                        }`}
+                    >
+                        {page}
+                    </button>
+                ))}
+
+                <button
+                    onClick={handleNext}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-md hover:bg-light-hover dark:hover:bg-dark-hover disabled:opacity-50"
+                    aria-label={t.next}
+                >
+                    <ChevronRight className="h-5 w-5" />
+                </button>
+                <button
+                    onClick={handleLast}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-md hover:bg-light-hover dark:hover:bg-dark-hover disabled:opacity-50"
+                    aria-label={t.last}
+                >
+                    <ChevronsRight className="h-5 w-5" />
+                </button>
+
+                <div className="flex items-center space-x-2 text-sm">
+                    <input
+                        type="text"
+                        value={pageInput}
+                        onChange={handleInputChange}
+                        onBlur={handleInputBlur}
+                        onKeyPress={handleInputKeyPress}
+                        className="w-16 text-center bg-light-surface dark:bg-dark-surface border border-light-border dark:border-dark-border rounded-md py-2 focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                    />
+                    <span className="text-light-text-secondary dark:text-dark-text-secondary">{`${t.of} ${totalItems} ${t.products}`}</span>
+                </div>
+            </div>
+            <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary">
+                {`${indexOfFirstItem}-${indexOfLastItem} ${t.of} ${totalItems} ${t.products}`}
+            </p>
         </div>
     );
 };

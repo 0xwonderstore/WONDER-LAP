@@ -19,7 +19,6 @@
     "@tanstack/react-query": "^5.83.0",
     "@tanstack/react-table": "^8.21.3",
     "@types/papaparse": "^5.3.16",
-    "@workday/canvas-kit-react": "^14.0.7",
     "date-fns": "^4.1.0",
     "i18next": "^25.5.3",
     "lucide-react": "^0.344.0",

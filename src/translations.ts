@@ -76,10 +76,10 @@ export const translations = {
     previous: 'السابق',
     next: 'التالي',
     goTo: 'الذهاب إلى',
-    page: 'صفحة',
     first: 'الأول',
     last: 'الأخير',
-    
+    page: 'صفحة',
+
     // Language Codes
     en: 'English',
     zh: 'Chinese',
@@ -180,9 +180,9 @@ export const translations = {
     previous: 'Previous',
     next: 'Next',
     goTo: 'Go to',
-    page: 'Page',
     first: 'First',
     last: 'Last',
+    page: 'Page',
 
     // Language Codes
     en: 'English',
