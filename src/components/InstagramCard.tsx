@@ -1,77 +1,86 @@
-import { useTranslation } from "react-i18next";
-import { Heart, MessageCircle, ExternalLink, Calendar } from 'lucide-react';
-import { InstagramPost } from "../types";
+import { useTranslation } from 'react-i18next';
+import { InstagramPost } from '../types';
+import { Heart, MessageCircle } from 'lucide-react';
+import { formatDate } from '../utils/productUtils';
 
 interface InstagramCardProps {
   post: InstagramPost;
-  onUsernameClick: (username: string) => void;
 }
 
-const InstagramCard = ({ post, onUsernameClick }: InstagramCardProps) => {
-  const { t, i18n } = useTranslation();
-  
-  const formattedLikes = new Intl.NumberFormat('en-US', { notation: 'compact' }).format(post.likesCount);
-  const formattedComments = new Intl.NumberFormat('en-US', { notation: 'compact' }).format(post.commentsCount);
-  const formattedDate = new Intl.DateTimeFormat(i18n.language, { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  }).format(new Date(post.postedAt));
+const InstagramCard = ({ post }: InstagramCardProps) => {
+  const { t } = useTranslation();
 
-
-  const proxiedImageUrl = `https://images.weserv.nl/?url=${encodeURIComponent(post.displayUrl)}`;
+  // Using a proxy for Instagram images to avoid potential blocking issues.
+  const imageUrl = `https://images.weserv.nl/?url=${encodeURIComponent(post.media_url)}`;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-      <div className="p-4 flex items-center gap-3 border-b border-gray-200 dark:border-gray-700">
-        <div className="w-10 h-10 bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 rounded-full p-0.5">
-          <div className="bg-white dark:bg-gray-800 rounded-full w-full h-full">
-            {/* Placeholder for profile picture */}
-          </div>
-        </div>
-        <button onClick={() => onUsernameClick(post.username)} className="font-semibold text-gray-800 dark:text-gray-200 hover:underline">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700 max-w-sm mx-auto font-sans">
+      {/* Card Header */}
+      <div className="p-3 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+        <a
+          href={`https://instagram.com/${post.username}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2"
+        >
+          {/* Placeholder for avatar */}
+          <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+          <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 hover:underline">
             {post.username}
-        </button>
+          </span>
+        </a>
       </div>
-      
-      <div className="aspect-[9/16]">
-        {post.mediaType === 'video' && post.videoUrl ? (
-          <video src={post.videoUrl} controls className="w-full h-full object-cover" />
+
+      {/* Media Content */}
+      <div className="bg-black">
+        {post.media_type === 'video' ? (
+          <video
+            controls
+            className="w-full aspect-[9/16] object-contain"
+            src={post.media_url}
+            playsInline
+            preload="metadata"
+          >
+            <source src={post.media_url} type="video/mp4" />
+            {t('video_not_supported')}
+          </video>
         ) : (
-          <img src={proxiedImageUrl} alt={`Instagram post by ${post.username}`} className="w-full h-full object-cover" />
+          <div className="w-full aspect-square flex items-center justify-center">
+            <img
+              src={imageUrl}
+              alt={t('view_on_instagram')}
+              className="max-h-full max-w-full object-contain"
+            />
+          </div>
         )}
       </div>
 
-      <div className="p-4 space-y-4">
-        <div className="flex justify-between items-center text-gray-600 dark:text-gray-400">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <Heart className="w-6 h-6 text-red-500" />
-              <span className="font-bold text-gray-800 dark:text-gray-200">{formattedLikes}</span>
-              <span className="text-sm">{t('likes')}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <MessageCircle className="w-6 h-6 text-blue-500" />
-              <span className="font-bold text-gray-800 dark:text-gray-200">{formattedComments}</span>
-               <span className="text-sm">{t('comments')}</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 pt-3">
-            <Calendar className="w-4 h-4" />
-            <span>{formattedDate}</span>
+      {/* Card Body & Footer */}
+      <div className="p-3">
+        {/* Action Icons */}
+        <div className="flex items-center gap-4 mb-2">
+           <Heart className="w-6 h-6 text-gray-700 dark:text-gray-300" />
+           <MessageCircle className="w-6 h-6 text-gray-700 dark:text-gray-300" />
         </div>
 
-        <a 
-          href={post.url} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-300 hover:from-blue-600 hover:to-indigo-700 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
-        >
-          <ExternalLink className="w-5 h-5" />
-          {t('view_on_instagram')}
-        </a>
+        {/* Likes and Comments Count */}
+        <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
+          {post.likes.toLocaleString()} {t('likes')}
+        </div>
+        
+         <a
+            href={post.permalink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-gray-500 dark:text-gray-400 hover:underline my-2 block"
+          >
+            {t('view_on_instagram')}
+          </a>
+
+        {/* Timestamp */}
+        <div className="text-xs text-gray-400 dark:text-gray-500 uppercase">
+          {formatDate(post.timestamp)}
+        </div>
       </div>
     </div>
   );

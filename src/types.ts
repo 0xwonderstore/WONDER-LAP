@@ -30,13 +30,11 @@ export interface Product {
 // Corrected InstagramPost interface to use postedAt and include username
 export interface InstagramPost {
   id: string;
-  url: string;
-  displayUrl: string;
-  likesCount: number;
-  commentsCount: number;
-  language: string;
-  postedAt: string; 
-  username: string; // Added username field
-  mediaType: 'image' | 'video';
-  videoUrl?: string;
+  username: string;
+  media_type: 'image' | 'video';
+  media_url: string;
+  likes: number;
+  comments: number;
+  timestamp: string;
+  permalink: string;
 }

@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "id": "19",
+    "username": "ultra_user",
+    "media_type": "image",
+    "media_url": "https://via.placeholder.com/300",
+    "likes": 400,
+    "comments": 105,
+    "timestamp": "2024-01-19T12:00:00Z",
+    "permalink": "#"
+  },
+  {
+    "id": "20",
+    "username": "ultra_user",
+    "media_type": "video",
+    "media_url": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+    "likes": 650,
+    "comments": 130,
+    "timestamp": "2024-01-20T12:00:00Z",
+    "permalink": "#"
+  }
+]

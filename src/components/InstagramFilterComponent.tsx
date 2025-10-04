@@ -19,7 +19,6 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
   usernames,
   onFilterChange,
   onSortChange,
-  onDateChange,
   onReset,
   currentSort,
   date,

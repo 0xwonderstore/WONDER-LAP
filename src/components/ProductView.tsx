@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Product } from '../types';
 import ProductTable from './ProductTable';
 import { EmptyState } from './EmptyState';
@@ -10,7 +10,7 @@ import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
 import { parseISO, startOfDay, endOfDay } from 'date-fns';
 import { DateRange } from 'react-day-picker';
-import { searchProducts } from '../utils/productUtils'; // Import the new search function
+import { searchProducts } from '../utils/productUtils';
 
 interface ProductViewProps {
   products: Product[];
@@ -47,32 +47,31 @@ const ProductView: React.FC<ProductViewProps> = ({
 
   useEffect(() => {
     if (initialFilters) {
-      setFilters(prev => ({
-        ...prev,
+      setFilters({
         name: initialFilters.name || '',
         store: initialFilters.store || '',
         language: initialFilters.language || '',
-      }));
+      });
       setCurrentPage(1);
       onClearInitialFilters();
     }
   }, [initialFilters, onClearInitialFilters, setCurrentPage]);
 
-  const handleFilterChange = (filterName: string, value: string) => {
+  const handleFilterChange = useCallback((filterName: string, value: string) => {
     setFilters(prev => ({ ...prev, [filterName]: value }));
     setCurrentPage(1);
-  };
+  }, [setCurrentPage]);
   
-  const handleProductsPerPageChange = (value: number) => {
+  const handleProductsPerPageChange = useCallback((value: number) => {
     setProductsPerPage(value);
     setCurrentPage(1);
-  };
+  }, [setProductsPerPage, setCurrentPage]);
 
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     setFilters({ name: '', store: '', language: '' });
     setDate(undefined);
     setCurrentPage(1);
-  };
+  }, [setCurrentPage]);
 
   const availableLanguages = useMemo(() => {
     const langs = new Set<string>();
@@ -97,22 +96,18 @@ const ProductView: React.FC<ProductViewProps> = ({
   const processedProducts = useMemo(() => {
     let filtered = products;
 
-    // Apply text search using the new robust function
     if (filters.name) {
         filtered = searchProducts(filtered, filters.name);
     }
     
-    // Apply store filter
     if (filters.store) {
       filtered = filtered.filter(p => p.vendor === filters.store);
     }
 
-    // Apply language filter
     if (filters.language) {
       filtered = filtered.filter(p => p.language === filters.language);
     }
     
-    // Apply date range filter
     if (date?.from) {
       const from = startOfDay(date.from);
       const to = date.to ? endOfDay(date.to) : endOfDay(date.from);
@@ -123,7 +118,6 @@ const ProductView: React.FC<ProductViewProps> = ({
       });
     }
 
-    // Sort the final list by creation date
     return filtered.sort((a, b) => {
         if (!a.created_at || !b.created_at) return 0;
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()

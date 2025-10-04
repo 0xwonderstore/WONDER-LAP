@@ -92,6 +92,7 @@ export const translations = {
     sort_by_likes: 'الترتيب حسب الإعجابات',
     descending: 'تنازلي',
     ascending: 'تصاعدي',
+    remove_duplicates: 'إزالة التكرار حسب الرابط',
 
     // Language Codes
     en: 'English',
@@ -118,6 +119,7 @@ export const translations = {
     likes: 'إعجابات',
     comments: 'تعليقات',
     view_on_instagram: 'عرض على انستقرام',
+    video_not_supported: 'متصفحك لا يدعم تشغيل الفيديو.',
   },
   en: {
     rtl: false,
@@ -212,6 +214,7 @@ export const translations = {
     sort_by_likes: 'Sort by Likes',
     descending: 'Descending',
     ascending: 'Ascending',
+    remove_duplicates: 'Remove duplicates by link',
 
     // Language Codes
     en: 'English',
@@ -238,5 +241,6 @@ export const translations = {
     likes: 'Likes',
     comments: 'Comments',
     view_on_instagram: 'View on Instagram',
+    video_not_supported: 'Your browser does not support the video tag.',
   },
 };

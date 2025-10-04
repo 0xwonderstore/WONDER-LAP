@@ -1,12 +1,22 @@
 [
   {
-    "id": "10",
-    "url": "https://www.instagram.com/p/testpost10/",
-    "displayUrl": "https://via.placeholder.com/1080?text=Instagram+Post+10",
-    "likesCount": 6000,
-    "commentsCount": 210,
-    "language": "en",
-    "postedAt": "2023-10-25T12:00:00Z",
-    "username": "fashion_guru"
+    "id": "17",
+    "username": "mega_user",
+    "media_type": "image",
+    "media_url": "https://via.placeholder.com/300",
+    "likes": 360,
+    "comments": 95,
+    "timestamp": "2024-01-17T12:00:00Z",
+    "permalink": "#"
+  },
+  {
+    "id": "18",
+    "username": "mega_user",
+    "media_type": "video",
+    "media_url": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
+    "likes": 600,
+    "comments": 120,
+    "timestamp": "2024-01-18T12:00:00Z",
+    "permalink": "#"
   }
 ]
