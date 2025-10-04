@@ -37,4 +37,6 @@ export interface InstagramPost {
   language: string;
   postedAt: string; 
   username: string; // Added username field
+  mediaType: 'image' | 'video';
+  videoUrl?: string;
 }

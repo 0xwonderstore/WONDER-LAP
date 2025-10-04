@@ -1,17 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { Heart, MessageCircle, ExternalLink, Calendar } from 'lucide-react';
+import { InstagramPost } from "../types";
 
 interface InstagramCardProps {
-  post: {
-    id: string;
-    url: string;
-    displayUrl: string;
-    likesCount: number;
-    commentsCount: number;
-    language: string;
-    postedAt: string;
-    username: string;
-  };
+  post: InstagramPost;
   onUsernameClick: (username: string) => void;
 }
 
@@ -43,7 +35,11 @@ const InstagramCard = ({ post, onUsernameClick }: InstagramCardProps) => {
       </div>
       
       <div className="aspect-[9/16]">
-        <img src={proxiedImageUrl} alt={`Instagram post by ${post.username}`} className="w-full h-full object-cover" />
+        {post.mediaType === 'video' && post.videoUrl ? (
+          <video src={post.videoUrl} controls className="w-full h-full object-cover" />
+        ) : (
+          <img src={proxiedImageUrl} alt={`Instagram post by ${post.username}`} className="w-full h-full object-cover" />
+        )}
       </div>
 
       <div className="p-4 space-y-4">
