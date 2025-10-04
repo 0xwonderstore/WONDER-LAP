@@ -1,41 +1,48 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { normalizeUrl } from '../utils/urlUtils';
+import { Product, InstagramPost } from '../types';
 
-// A simpler, more direct state shape.
+type FavoriteItem = (Product & { type: 'product' }) | (InstagramPost & { type: 'instagram' });
+
 interface FavoritesState {
-  // Using a Set for efficient add/delete/has operations.
-  favoriteUrls: Set<string>;
-  toggleFavorite: (productUrl: string) => void;
-  isFavorite: (productUrl: string) => boolean;
+  favoriteItems: Map<string, FavoriteItem>;
+  toggleFavorite: (item: Product | InstagramPost, type: 'product' | 'instagram') => void;
+  isFavorite: (id: string) => boolean;
 }
+
+const getItemId = (item: Product | InstagramPost, type: 'product' | 'instagram'): string => {
+  if (type === 'product') {
+    return normalizeUrl((item as Product).url);
+  }
+  return (item as InstagramPost).permalink;
+};
 
 export const useFavoritesStore = create<FavoritesState>()(
   persist(
     (set, get) => ({
-      favoriteUrls: new Set(),
+      favoriteItems: new Map(),
 
-      toggleFavorite: (productUrl: string) => {
-        const normalized = normalizeUrl(productUrl);
+      toggleFavorite: (item: Product | InstagramPost, type: 'product' | 'instagram') => {
+        const id = getItemId(item, type);
         set((state) => {
-          const newFavoriteUrls = new Set(state.favoriteUrls);
-          if (newFavoriteUrls.has(normalized)) {
-            newFavoriteUrls.delete(normalized);
+          const newFavoriteItems = new Map(state.favoriteItems);
+          if (newFavoriteItems.has(id)) {
+            newFavoriteItems.delete(id);
           } else {
-            newFavoriteUrls.add(normalized);
+            newFavoriteItems.set(id, { ...item, type });
           }
-          return { favoriteUrls: newFavoriteUrls };
+          return { favoriteItems: newFavoriteItems };
         });
       },
 
-      isFavorite: (productUrl: string) => {
-        const normalized = normalizeUrl(productUrl);
-        return get().favoriteUrls.has(normalized);
+      isFavorite: (id: string) => {
+        const normalizedId = id.startsWith('http') ? normalizeUrl(id) : id;
+        return get().favoriteItems.has(normalizedId);
       },
     }),
     {
       name: 'favorites-storage',
-      // Custom serializer for storing a Set in localStorage
       storage: {
         getItem: (name) => {
           const str = localStorage.getItem(name);
@@ -44,16 +51,15 @@ export const useFavoritesStore = create<FavoritesState>()(
           return {
             state: {
               ...state,
-              favoriteUrls: new Set(state.favoriteUrls),
+              favoriteItems: new Map(state.favoriteItems),
             },
           };
         },
         setItem: (name, newValue) => {
-          // Convert Set to array before storing
           const str = JSON.stringify({
             state: {
               ...newValue.state,
-              favoriteUrls: Array.from(newValue.state.favoriteUrls),
+              favoriteItems: Array.from(newValue.state.favoriteItems.entries()),
             },
           });
           localStorage.setItem(name, str);

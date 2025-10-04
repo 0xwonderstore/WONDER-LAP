@@ -1,13 +1,15 @@
 import { useTranslation } from 'react-i18next';
 import { InstagramPost } from '../types';
-import { Heart, MessageCircle } from 'lucide-react';
+import { Heart, MessageCircle, Eye, EyeOff } from 'lucide-react';
 import { formatDate } from '../utils/productUtils';
 
 interface InstagramCardProps {
   post: InstagramPost;
+  onBlacklistToggle: (username: string) => void;
+  isBlacklisted: boolean;
 }
 
-const InstagramCard = ({ post }: InstagramCardProps) => {
+const InstagramCard = ({ post, onBlacklistToggle, isBlacklisted }: InstagramCardProps) => {
   const { t } = useTranslation();
 
   // Using a proxy for Instagram images to avoid potential blocking issues.
@@ -29,6 +31,13 @@ const InstagramCard = ({ post }: InstagramCardProps) => {
             {post.username}
           </span>
         </a>
+        <button
+          onClick={() => onBlacklistToggle(post.username)}
+          className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          title={isBlacklisted ? t('unblock_user') : t('block_user')}
+        >
+          {isBlacklisted ? <EyeOff className="w-5 h-5 text-red-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
+        </button>
       </div>
 
       {/* Media Content */}
