@@ -37,15 +37,15 @@ export const translations = {
     all_languages: 'كل اللغات',
 
     // DashboardPage.tsx
-    dashboard_title: 'لوحة التحكم',
-    total_products_filtered: 'إجمالي المنتجات (بعد الفلترة)',
-    total_products_unfiltered: 'إجمالي المنتجات (قبل الفلترة)',
-    total_favorites: 'إجمالي المفضلة',
-    total_blacklisted_keywords: 'إجمالي الكلمات المحظورة',
-    total_blacklisted_stores: 'إجمالي المتاجر المحظورة',
-    top_5_stores: 'أفضل 5 متاجر حسب المنتج',
-    top_5_blacklisted_stores: 'أفضل 5 متاجر محظورة',
-    language_distribution: 'توزيع اللغات',
+    dashboard_title: 'لوحة المعلومات',
+    total_products_filtered: 'إجمالي المنتجات (بعد التصفية)',
+    total_products_unfiltered: 'إجمالي المنتجات (بدون تصفية)',
+    total_favorites: 'إجمالي المنتجات المفضلة',
+    total_blacklisted_keywords: 'إجمالي الكلمات في القائمة السوداء',
+    total_blacklisted_stores: 'إجمالي المتاجر في القائمة السوداء',
+    top_5_stores: 'أفضل 5 متاجر حسب عدد المنتجات',
+    top_5_blacklisted_stores: 'أفضل 5 متاجر في القائمة السوداء',
+    language_distribution: 'توزيع المنتجات حسب اللغة',
     
     // BlacklistPage.tsx
     blacklist_title: 'القائمة السوداء',
@@ -120,6 +120,9 @@ export const translations = {
     comments: 'تعليقات',
     view_on_instagram: 'عرض على انستقرام',
     video_not_supported: 'متصفحك لا يدعم تشغيل الفيديو.',
+    unblock_user: 'إلغاء حظر المستخدم',
+    block_user: 'حظر المستخدم',
+    video_error: 'حدث خطأ أثناء تشغيل الفيديو. قد يكون الرابط منتهي الصلاحية.',
   },
   en: {
     rtl: false,
@@ -242,5 +245,8 @@ export const translations = {
     comments: 'Comments',
     view_on_instagram: 'View on Instagram',
     video_not_supported: 'Your browser does not support the video tag.',
+    unblock_user: 'Unblock User',
+    block_user: 'Block User',
+    video_error: 'Error playing video. The link may have expired.',
   },
 };

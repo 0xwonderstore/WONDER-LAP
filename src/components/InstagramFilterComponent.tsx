@@ -6,6 +6,11 @@ import { ArrowUp, ArrowDown } from 'lucide-react';
 
 interface InstagramFilterComponentProps {
   usernames: string[];
+  filters: {
+    username: string;
+    minLikes: number | null;
+    maxLikes: number | null;
+  };
   onFilterChange: (filters: any) => void;
   onSortChange: (sort: 'asc' | 'desc' | null) => void;
   onDateChange: (dateRange: DateRange | undefined) => void;
@@ -17,6 +22,7 @@ interface InstagramFilterComponentProps {
 
 const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
   usernames,
+  filters,
   onFilterChange,
   onSortChange,
   onReset,
@@ -35,6 +41,11 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
     const { name, value } = e.target;
     onFilterChange({ [name]: value === '' ? null : Number(value) });
   };
+  
+  const usernameOptions = [
+    { value: '', label: `${t('all_users')} (${usernames.length})` },
+    ...usernames.sort().map(user => ({ value: user, label: user }))
+  ];
 
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-8 border border-gray-200 dark:border-gray-700">
@@ -42,12 +53,7 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
         {/* Username Filter */}
         <div>
           <label htmlFor="username" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('select_user')}</label>
-          <Select id="username" name="username" onChange={handleInputChange}>
-            <option value="">{t('all_users')}</option>
-            {usernames.map(user => (
-              <option key={user} value={user}>{user}</option>
-            ))}
-          </Select>
+          <Select id="username" name="username" value={filters.username} onChange={handleInputChange} options={usernameOptions} />
         </div>
 
         {/* Date Picker */}
@@ -64,6 +70,7 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
               type="number"
               name="minLikes"
               placeholder={t('min_likes')}
+              value={filters.minLikes ?? ''}
               onChange={handleLikesChange}
               className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
@@ -72,6 +79,7 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
               type="number"
               name="maxLikes"
               placeholder={t('max_likes')}
+              value={filters.maxLikes ?? ''}
               onChange={handleLikesChange}
               className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
