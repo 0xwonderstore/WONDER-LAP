@@ -22,6 +22,7 @@
     "date-fns": "^4.1.0",
     "i18next": "^25.5.3",
     "lucide-react": "^0.344.0",
+    "middleware": "^1.0.0",
     "papaparse": "^5.5.3",
     "react": "^18.3.1",
     "react-day-picker": "^9.8.1",
@@ -29,7 +30,7 @@
     "react-dropzone": "^14.3.8",
     "react-i18next": "^16.0.0",
     "recharts": "^3.1.0",
-    "zustand": "^5.0.6"
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
