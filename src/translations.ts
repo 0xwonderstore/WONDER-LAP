@@ -65,16 +65,16 @@ export const translations = {
     dashboard_filterByLanguage: 'تصفية حسب اللغة',
     
     // BlacklistPage.tsx
-    blacklist_title: 'القائمة السوداء',
-    keywords: 'الكلمات الرئيسية',
-    stores: 'المتاجر',
-    add_keyword: 'أضف كلمة رئيسية',
-    add_store: 'أضف متجرًا',
-    keyword_placeholder: 'مثال: "عرض خاص"',
-    store_placeholder: 'مثال: "supershop.com"',
-    added_keywords: 'الكلمات المضافة',
-    added_stores: 'المتاجر المضافة',
-    remove: 'إزالة',
+    blacklist_title: 'إدارة القائمة السوداء',
+    keywords: 'الكلمات المفتاحية المحظورة',
+    stores: 'المتاجر المحظورة',
+    add_keyword: 'إضافة كلمة مفتاحية',
+    add_store: 'إضافة متجر',
+    keyword_placeholder: 'مثال: "شحن مجاني"',
+    store_placeholder: 'مثال: "myshop.com"',
+    added_keywords: 'الكلمات المضافة حاليًا',
+    added_stores: 'المتاجر المضافة حاليًا',
+    remove: 'حذف',
 
     // EmptyState.tsx
     noResults: 'لا توجد نتائج',
@@ -207,15 +207,15 @@ export const translations = {
     dashboard_filterByLanguage: 'Filter by language',
 
     // BlacklistPage.tsx
-    blacklist_title: 'Blacklist',
-    keywords: 'Keywords',
-    stores: 'Stores',
+    blacklist_title: 'Manage Blacklist',
+    keywords: 'Blocked Keywords',
+    stores: 'Blocked Stores',
     add_keyword: 'Add Keyword',
     add_store: 'Add Store',
-    keyword_placeholder: 'e.g., "special offer"',
-    store_placeholder: 'e.g., "supershop.com"',
-    added_keywords: 'Added Keywords',
-    added_stores: 'Added Stores',
+    keyword_placeholder: 'e.g., "free shipping"',
+    store_placeholder: 'e.g., "myshop.com"',
+    added_keywords: 'Currently Added Keywords',
+    added_stores: 'Currently Added Stores',
     remove: 'Remove',
     
     // EmptyState.tsx
@@ -246,6 +246,7 @@ export const translations = {
     select_user: 'Select User',
     all_users: 'All Users',
     likes_range: 'Likes Range',
+
     min_likes: 'Min Likes',
     max_likes: 'Max Likes',
     sort_by_likes: 'Sort by Likes',

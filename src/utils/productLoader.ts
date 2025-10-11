@@ -61,7 +61,7 @@ export async function loadProducts(): Promise<LoadProductsResult> {
     
     const uniqueProducts = allProducts.filter(product => {
         // Products must have a name and at least one image to be considered valid.
-        if (!product || !product.name || !product.images || !Array.isArray(product.images) || product.images.length === 0) {
+        if (!product || !product.name || !product.images || !Array.isArray(product.images) || product.images.length === 0 || !product.images[0].src) {
             return false;
         }
 
