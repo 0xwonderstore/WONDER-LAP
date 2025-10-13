@@ -66,15 +66,19 @@ export const translations = {
     
     // BlacklistPage.tsx
     blacklist_title: 'إدارة القائمة السوداء',
-    keywords: 'الكلمات المفتاحية المحظورة',
-    stores: 'المتاجر المحظورة',
-    add_keyword: 'إضافة كلمة مفتاحية',
+    keywords_section_title: 'حظر الكلمات المفتاحية',
+    keywords_section_description: 'المنتجات التي تحتوي على هذه الكلمات في اسمها سيتم إخفاؤها.',
+    stores_section_title: 'حظر المتاجر',
+    stores_section_description: 'المنتجات من هذه المتاجر سيتم إخفاؤها.',
+    add_keyword: 'إضافة كلمة',
     add_store: 'إضافة متجر',
-    keyword_placeholder: 'مثال: "شحن مجاني"',
-    store_placeholder: 'مثال: "myshop.com"',
-    added_keywords: 'الكلمات المضافة حاليًا',
-    added_stores: 'المتاجر المضافة حاليًا',
-    remove: 'حذف',
+    keyword_placeholder: 'مثال: "عرض خاص"',
+    store_placeholder: 'مثال: "supershop.com"',
+    added_keywords: 'الكلمات المحظورة حاليًا',
+    added_stores: 'المتاجر المحظورة حاليًا',
+    remove: 'إزالة',
+    no_keywords_yet: 'لم تتم إضافة كلمات مفتاحية بعد.',
+    no_stores_yet: 'لم تتم إضافة متاجر بعد.',
 
     // EmptyState.tsx
     noResults: 'لا توجد نتائج',
@@ -208,15 +212,19 @@ export const translations = {
 
     // BlacklistPage.tsx
     blacklist_title: 'Manage Blacklist',
-    keywords: 'Blocked Keywords',
-    stores: 'Blocked Stores',
+    keywords_section_title: 'Block Keywords',
+    keywords_section_description: 'Products containing these keywords in their name will be hidden.',
+    stores_section_title: 'Block Stores',
+    stores_section_description: 'Products from these stores will be hidden.',
     add_keyword: 'Add Keyword',
     add_store: 'Add Store',
-    keyword_placeholder: 'e.g., "free shipping"',
-    store_placeholder: 'e.g., "myshop.com"',
-    added_keywords: 'Currently Added Keywords',
-    added_stores: 'Currently Added Stores',
+    keyword_placeholder: 'e.g., "special offer"',
+    store_placeholder: 'e.g., "supershop.com"',
+    added_keywords: 'Currently Blocked Keywords',
+    added_stores: 'Currently Blocked Stores',
     remove: 'Remove',
+    no_keywords_yet: 'No keywords have been added yet.',
+    no_stores_yet: 'No stores have been added yet.',
     
     // EmptyState.tsx
     noResults: 'No Results',
@@ -246,7 +254,6 @@ export const translations = {
     select_user: 'Select User',
     all_users: 'All Users',
     likes_range: 'Likes Range',
-
     min_likes: 'Min Likes',
     max_likes: 'Max Likes',
     sort_by_likes: 'Sort by Likes',

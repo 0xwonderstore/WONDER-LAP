@@ -14,8 +14,11 @@ const InstagramCard = ({ post, onBlacklistToggle, isBlacklisted }: InstagramCard
   const { t } = useTranslation();
   const [showVideo, setShowVideo] = useState(false);
 
-  const imageUrl = `https://images.weserv.nl/?url=${encodeURIComponent(post.media_url)}`;
-  const thumbnailUrl = post.thumbnail_url ? `https://images.weserv.nl/?url=${encodeURIComponent(post.thumbnail_url)}` : imageUrl;
+  // Automatically generate the thumbnail URL from the permalink
+  const generatedThumbnailUrl = `${post.permalink}media/?size=l`; // 'l' for large, 'm' for medium, 't' for thumb
+  
+  // Use the generated URL, proxied to prevent hotlinking issues
+  const thumbnailUrl = `https://images.weserv.nl/?url=${encodeURIComponent(generatedThumbnailUrl)}`;
   
   const embedUrl = `${post.permalink}embed`;
 

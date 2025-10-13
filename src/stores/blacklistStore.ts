@@ -11,12 +11,10 @@ const normalizeHostname = (url: string): string => {
 interface BlacklistState {
   keywords: string[];
   blockedStores: string[]; // This will store normalized hostnames
-  brokenImageUrls: Set<string>; // <-- To track products with broken images
   addKeyword: (keyword: string) => void;
   removeKeyword: (keyword: string) => void;
   addStore: (storeUrl: string) => void;
   removeStore: (storeUrl: string) => void;
-  addBrokenImageUrl: (url: string) => void; // <-- New action
 }
 
 export const useBlacklistStore = create<BlacklistState>()(
@@ -24,7 +22,6 @@ export const useBlacklistStore = create<BlacklistState>()(
     (set) => ({
       keywords: [],
       blockedStores: [],
-      brokenImageUrls: new Set(), // <-- Initialize as a Set for efficiency
       addKeyword: (keyword) => {
         const cleanedKeyword = keyword.toLowerCase().trim();
         if (cleanedKeyword) {
@@ -51,23 +48,10 @@ export const useBlacklistStore = create<BlacklistState>()(
           blockedStores: state.blockedStores.filter((hostname) => hostname !== normalized),
         }));
       },
-      addBrokenImageUrl: (url) => {
-        if (url) {
-          set((state) => {
-            const newBrokenUrls = new Set(state.brokenImageUrls);
-            newBrokenUrls.add(url);
-            return { brokenImageUrls: newBrokenUrls };
-          });
-        }
-      },
     }),
     {
-      name: 'blacklist-storage-v3', // <-- Incremented version for new structure
-      storage: createJSONStorage(() => localStorage, {
-        // Custom replacer/reviver to handle Set serialization
-        replacer: (key, value) => (value instanceof Set ? Array.from(value) : value),
-        reviver: (key, value) => (key === 'brokenImageUrls' ? new Set(value) : value),
-      }),
+      name: 'blacklist-storage-v2', // Using a new name to avoid conflicts with old data
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );
