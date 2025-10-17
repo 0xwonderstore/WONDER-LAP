@@ -22,7 +22,7 @@ interface DashboardPageProps {
   onNavigateWithFilter: (filter: { name?: string; store?: string; language?: string }) => void;
 }
 interface KpiCardProps { title: string; value: string | number; icon: React.ReactNode; }
-interface StoreRow { vendor: string; totalProducts: number; newProducts30d: number; lastProductAdded: string; firstProductAdded: string; }
+interface StoreRow { vendor: string; totalProducts: number; newProducts30d: number; lastProductAdded: string; firstProductAdded: string; language?: string; }
 interface LanguageItem { code: string; count: number; }
 type ActiveView = 'stores' | 'keywords' | 'languages';
 
@@ -94,6 +94,22 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
         return acc;
     }, {} as {[key: string]: string});
 
+    const storeLanguages = allProductsRaw.reduce((acc, product) => {
+        if (product.vendor && product.language) {
+            if (!acc[product.vendor]) {
+                acc[product.vendor] = {};
+            }
+            acc[product.vendor][product.language] = (acc[product.vendor][product.language] || 0) + 1;
+        }
+        return acc;
+    }, {} as { [vendor: string]: { [language: string]: number } });
+
+    const topStoreLanguage = Object.entries(storeLanguages).reduce((acc, [vendor, langCounts]) => {
+        acc[vendor] = Object.keys(langCounts).reduce((a, b) => langCounts[a] > langCounts[b] ? a : b);
+        return acc;
+    }, {} as { [vendor: string]: string });
+
+
     const keywordCounts = products.reduce((acc, product) => {
         (product.name || '').toLowerCase().split(/[\\s,،-]+/).forEach(word => {
             if (word && word.length > 3 && !new Set(['from', 'with', 'for']).has(word) && !/\\d/.test(word)) {
@@ -117,7 +133,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
             totalProducts: count,
             newProducts30d: storeNewProductCounts30d[vendor] || 0,
             lastProductAdded: lastProductAddedDates[vendor] ? format(parseISO(lastProductAddedDates[vendor]), 'yyyy-MM-dd') : 'N/A',
-            firstProductAdded: firstProductAddedDates[vendor] ? format(parseISO(firstProductAddedDates[vendor]), 'yyyy-MM-dd') : 'N/A'
+            firstProductAdded: firstProductAddedDates[vendor] ? format(parseISO(firstProductAddedDates[vendor]), 'yyyy-MM-dd') : 'N/A',
+            language: topStoreLanguage[vendor]
         })).sort((a, b) => b.totalProducts - a.totalProducts),
         keywordData: Array.from(keywordCounts.entries()).map(([text, value]) => ({ text, value })).sort((a,b) => b.value - a.value).slice(0, 20),
         languageData: Object.entries(languageCounts)
@@ -134,7 +151,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
   ];
 
   const handleExportStores = () => {
-    const headers = ['vendor', 'totalProducts', 'newProducts30d', 'lastProductAdded', 'firstProductAdded'];
+    const headers = ['vendor', 'totalProducts', 'newProducts30d', 'lastProductAdded', 'firstProductAdded', 'language'];
     exportToCsv(storeTableData, 'stores_data.csv', headers);
   };
 
@@ -194,6 +211,11 @@ const StoreTable: React.FC<{data: StoreRow[], t: any, onNavigateWithFilter: (f: 
         { 
             accessorKey: 'totalProducts', 
             header: t.totalProducts 
+        },
+        {
+            accessorKey: 'language',
+            header: t.language,
+            cell: ({ row }) => row.original.language ? t[row.original.language] || row.original.language.toUpperCase() : 'N/A'
         },
         {
             accessorKey: 'newProducts30d',
