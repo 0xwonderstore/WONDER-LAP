@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState } from "react";
 import InstagramCard from "./InstagramCard";
 import posts1 from "../data/instagram_posts_1.json";
 import posts2 from "../data/instagram_posts_2.json";
@@ -11,13 +11,16 @@ import { DateRange } from "react-day-picker";
 import { useInstagramBlacklistStore } from "../stores/instagramBlacklistStore";
 import { useInstagramPageStore } from "../stores/instagramPageStore";
 import { Eye } from "lucide-react";
+import { InstagramPost } from "../types";
+import InstagramPostModal from "./InstagramPostModal";
 
-const allPosts = [...posts1, ...posts2, ...posts3, ...posts4];
+const allPosts: InstagramPost[] = [...posts1, ...posts2, ...posts3, ...posts4] as InstagramPost[];
 
 const InstagramPage = () => {
   const { t } = useTranslation();
   const { blacklistedUsers, addUser, removeUser } = useInstagramBlacklistStore();
   const { currentPage, filters, dateRange, sort, setCurrentPage, setFilters, setDateRange, setSort, reset } = useInstagramPageStore();
+  const [selectedPost, setSelectedPost] = useState<InstagramPost | null>(null);
 
   const POSTS_PER_PAGE = 100;
 
@@ -95,9 +98,17 @@ const InstagramPage = () => {
       addUser(username);
     }
   };
+  
+  const openModal = (post: InstagramPost) => {
+    setSelectedPost(post);
+  };
+
+  const closeModal = () => {
+    setSelectedPost(null);
+  };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-2">
       <InstagramFilterComponent
         usernames={allUniqueUsernames}
         filters={filters}
@@ -122,14 +133,15 @@ const InstagramPage = () => {
           ))}
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
         {paginatedPosts.map((post) => (
-          <InstagramCard
-            key={post.permalink}
-            post={post}
-            onBlacklistToggle={handleBlacklistToggle}
-            isBlacklisted={blacklistedUsers.has(post.username)}
-          />
+           <div key={post.permalink} onClick={() => openModal(post)}>
+            <InstagramCard
+              post={post}
+              onBlacklistToggle={handleBlacklistToggle}
+              isBlacklisted={blacklistedUsers.has(post.username)}
+            />
+          </div>
         ))}
       </div>
       <div className="mt-8">
@@ -142,6 +154,7 @@ const InstagramPage = () => {
           t={t}
         />
       </div>
+       <InstagramPostModal post={selectedPost} onClose={closeModal} />
     </div>
   );
 };
