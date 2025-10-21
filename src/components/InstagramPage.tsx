@@ -1,6 +1,9 @@
 import { useMemo, useCallback } from "react";
 import InstagramCard from "./InstagramCard";
 import posts1 from "../data/instagram_posts_1.json";
+import posts2 from "../data/instagram_posts_2.json";
+import posts3 from "../data/instagram_posts_3.json";
+import posts4 from "../data/instagram_posts_4.json";
 import Pagination from "./Pagination";
 import { useTranslation } from "react-i18next";
 import InstagramFilterComponent from "./InstagramFilterComponent";
@@ -9,7 +12,7 @@ import { useInstagramBlacklistStore } from "../stores/instagramBlacklistStore";
 import { useInstagramPageStore } from "../stores/instagramPageStore";
 import { Eye } from "lucide-react";
 
-const allPosts = [...posts1];
+const allPosts = [...posts1, ...posts2, ...posts3, ...posts4];
 
 const InstagramPage = () => {
   const { t } = useTranslation();
