@@ -115,6 +115,16 @@ export const translations = {
     descending: 'تنازلي',
     ascending: 'تصاعدي',
     remove_duplicates: 'إزالة التكرار حسب الرابط',
+    select_language: 'اختر اللغة',
+    spanish: 'الإسبانية',
+    english: 'الإنجليزية',
+    italian: 'الإيطالية',
+    russian: 'الروسية',
+    chinese: 'الصينية',
+    arabic: 'العربية',
+    persian: 'الفارسية',
+    french: 'الفرنسية',
+    hindi: 'الهندية',
 
     // Language Codes
     en: 'الإنجليزية',
@@ -262,6 +272,16 @@ export const translations = {
     descending: 'Descending',
     ascending: 'Ascending',
     remove_duplicates: 'Remove duplicates by link',
+    select_language: 'Select Language',
+    spanish: 'Spanish',
+    english: 'English',
+    italian: 'Italian',
+    russian: 'Russian',
+    chinese: 'Chinese',
+    arabic: 'Arabic',
+    persian: 'Persian',
+    french: 'French',
+    hindi: 'Hindi',
 
     // Language Codes
     en: 'English',

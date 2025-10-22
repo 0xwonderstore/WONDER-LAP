@@ -10,6 +10,16 @@ import posts7 from "../data/instagram_posts_7.json";
 import posts8 from "../data/instagram_posts_8.json";
 import posts9 from "../data/instagram_posts_9.json";
 import posts10 from "../data/instagram_posts_10.json";
+import posts11 from "../data/instagram_posts_11.json";
+import posts12 from "../data/instagram_posts_12.json";
+import posts13 from "../data/instagram_posts_13.json";
+import posts14 from "../data/instagram_posts_14.json";
+import posts15 from "../data/instagram_posts_15.json";
+import posts16 from "../data/instagram_posts_16.json";
+import posts17 from "../data/instagram_posts_17.json";
+import posts18 from "../data/instagram_posts_18.json";
+import posts19 from "../data/instagram_posts_19.json";
+import posts20 from "../data/instagram_posts_20.json";
 import Pagination from "./Pagination";
 import { useTranslation } from "react-i18next";
 import InstagramFilterComponent from "./InstagramFilterComponent";
@@ -18,10 +28,13 @@ import { useInstagramBlacklistStore } from "../stores/instagramBlacklistStore";
 import { useInstagramPageStore } from "../stores/instagramPageStore";
 import { Eye } from "lucide-react";
 import { InstagramPost } from "../types";
+import { instagramLanguageMapping } from '../data/instagramLanguageMapping';
 
 const allPosts: InstagramPost[] = [
   ...posts1, ...posts2, ...posts3, ...posts4, ...posts5, 
-  ...posts6, ...posts7, ...posts8, ...posts9, ...posts10
+  ...posts6, ...posts7, ...posts8, ...posts9, ...posts10,
+  ...posts11, ...posts12, ...posts13, ...posts14, ...posts15,
+  ...posts16, ...posts17, ...posts18, ...posts19, ...posts20
 ] as InstagramPost[];
 
 const InstagramPage = () => {
@@ -52,6 +65,9 @@ const InstagramPage = () => {
     // Apply standard filters
     if (filters.username) {
       posts = posts.filter((p) => p.username === filters.username);
+    }
+    if (filters.language) {
+      posts = posts.filter((p) => instagramLanguageMapping[p.username] === filters.language);
     }
     if (filters.minLikes !== null) {
       posts = posts.filter((p) => p.likes >= filters.minLikes);

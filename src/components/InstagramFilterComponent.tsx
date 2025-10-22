@@ -3,6 +3,7 @@ import { DateRange } from 'react-day-picker';
 import { DateRangePicker } from './DateRangePicker';
 import Select from './Select';
 import { ArrowUp, ArrowDown } from 'lucide-react';
+import { instagramLanguageMapping } from '../data/instagramLanguageMapping';
 
 interface InstagramFilterComponentProps {
   usernames: string[];
@@ -10,6 +11,7 @@ interface InstagramFilterComponentProps {
     username: string;
     minLikes: number | null;
     maxLikes: number | null;
+    language: string;
   };
   onFilterChange: (filters: any) => void;
   onSortChange: (sort: 'asc' | 'desc' | null) => void;
@@ -47,13 +49,32 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
     ...usernames.sort().map(user => ({ value: user, label: user }))
   ];
 
+  const languageOptions = [
+    { value: '', label: t('all_languages') },
+    { value: 'es', label: t('spanish') },
+    { value: 'en', label: t('english') },
+    { value: 'it', label: t('italian') },
+    { value: 'ru', label: t('russian') },
+    { value: 'zh', label: t('chinese') },
+    { value: 'ar', label: t('arabic') },
+    { value: 'fa', label: t('persian') },
+    { value: 'fr', label: t('french') },
+    { value: 'hi', label: t('hindi') },
+  ];
+
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-8 border border-gray-200 dark:border-gray-700">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Username Filter */}
         <div>
           <label htmlFor="username" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('select_user')}</label>
           <Select id="username" name="username" value={filters.username} onChange={handleInputChange} options={usernameOptions} />
+        </div>
+
+        {/* Language Filter */}
+        <div>
+          <label htmlFor="language" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('select_language')}</label>
+          <Select id="language" name="language" value={filters.language} onChange={handleInputChange} options={languageOptions} />
         </div>
 
         {/* Date Picker */}

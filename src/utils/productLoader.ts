@@ -55,35 +55,22 @@ export async function loadProducts(): Promise<LoadProductsResult> {
 
     const totalBeforeFilter = allProducts.length;
 
-    // Ensure all products are unique by their name (case-insensitive) and image URLs.
-    const seenNames = new Set<string>();
-    const seenImageUrls = new Set<string>();
+    // Ensure all products are unique by their URL.
+    const seenUrls = new Set<string>();
     
     const uniqueProducts = allProducts.filter(product => {
         // Products must have a name and at least one image to be considered valid.
-        if (!product || !product.name || !product.images || !Array.isArray(product.images) || product.images.length === 0) {
+        if (!product || !product.url || !product.name || !product.images || !Array.isArray(product.images) || product.images.length === 0) {
             return false;
         }
 
-        const lowerCaseName = product.name.toLowerCase();
-        if (seenNames.has(lowerCaseName)) {
-            return false; // Duplicate name, so filter it out.
-        }
-
-        // Check if any of the product's image URLs have already been seen.
-        const hasDuplicateImage = product.images.some(image => image && image.src && seenImageUrls.has(image.src));
-        if (hasDuplicateImage) {
-            return false; // Duplicate image, so filter it out.
+        if (seenUrls.has(product.url)) {
+            return false; // Duplicate url, so filter it out.
         }
 
         // If we've reached this point, the product is unique.
         // Add its name and image URLs to the sets for future checks.
-        seenNames.add(lowerCaseName);
-        product.images.forEach(image => {
-            if (image && image.src) {
-                seenImageUrls.add(image.src);
-            }
-        });
+        seenUrls.add(product.url);
         
         return true; // Keep this product.
     });

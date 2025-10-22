@@ -8,6 +8,7 @@ interface InstagramPageState {
     username: string;
     minLikes: number | null;
     maxLikes: number | null;
+    language: string;
   };
   dateRange: DateRange | undefined;
   sort: 'asc' | 'desc' | null;
@@ -24,6 +25,7 @@ const initialState = {
     username: "",
     minLikes: null,
     maxLikes: null,
+    language: "",
   },
   dateRange: undefined,
   sort: null,
