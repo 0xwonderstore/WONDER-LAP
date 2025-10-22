@@ -1,9 +1,15 @@
-import { useMemo, useCallback, useState } from "react";
+import { useMemo, useCallback } from "react";
 import InstagramCard from "./InstagramCard";
 import posts1 from "../data/instagram_posts_1.json";
 import posts2 from "../data/instagram_posts_2.json";
 import posts3 from "../data/instagram_posts_3.json";
 import posts4 from "../data/instagram_posts_4.json";
+import posts5 from "../data/instagram_posts_5.json";
+import posts6 from "../data/instagram_posts_6.json";
+import posts7 from "../data/instagram_posts_7.json";
+import posts8 from "../data/instagram_posts_8.json";
+import posts9 from "../data/instagram_posts_9.json";
+import posts10 from "../data/instagram_posts_10.json";
 import Pagination from "./Pagination";
 import { useTranslation } from "react-i18next";
 import InstagramFilterComponent from "./InstagramFilterComponent";
@@ -12,15 +18,16 @@ import { useInstagramBlacklistStore } from "../stores/instagramBlacklistStore";
 import { useInstagramPageStore } from "../stores/instagramPageStore";
 import { Eye } from "lucide-react";
 import { InstagramPost } from "../types";
-import InstagramPostModal from "./InstagramPostModal";
 
-const allPosts: InstagramPost[] = [...posts1, ...posts2, ...posts3, ...posts4] as InstagramPost[];
+const allPosts: InstagramPost[] = [
+  ...posts1, ...posts2, ...posts3, ...posts4, ...posts5, 
+  ...posts6, ...posts7, ...posts8, ...posts9, ...posts10
+] as InstagramPost[];
 
 const InstagramPage = () => {
   const { t } = useTranslation();
   const { blacklistedUsers, addUser, removeUser } = useInstagramBlacklistStore();
   const { currentPage, filters, dateRange, sort, setCurrentPage, setFilters, setDateRange, setSort, reset } = useInstagramPageStore();
-  const [selectedPost, setSelectedPost] = useState<InstagramPost | null>(null);
 
   const POSTS_PER_PAGE = 100;
 
@@ -98,14 +105,6 @@ const InstagramPage = () => {
       addUser(username);
     }
   };
-  
-  const openModal = (post: InstagramPost) => {
-    setSelectedPost(post);
-  };
-
-  const closeModal = () => {
-    setSelectedPost(null);
-  };
 
   return (
     <div className="container mx-auto p-2">
@@ -133,15 +132,14 @@ const InstagramPage = () => {
           ))}
         </div>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1">
         {paginatedPosts.map((post) => (
-           <div key={post.permalink} onClick={() => openModal(post)}>
-            <InstagramCard
-              post={post}
-              onBlacklistToggle={handleBlacklistToggle}
-              isBlacklisted={blacklistedUsers.has(post.username)}
-            />
-          </div>
+          <InstagramCard
+            key={post.permalink}
+            post={post}
+            onBlacklistToggle={handleBlacklistToggle}
+            isBlacklisted={blacklistedUsers.has(post.username)}
+          />
         ))}
       </div>
       <div className="mt-8">
@@ -154,7 +152,6 @@ const InstagramPage = () => {
           t={t}
         />
       </div>
-       <InstagramPostModal post={selectedPost} onClose={closeModal} />
     </div>
   );
 };

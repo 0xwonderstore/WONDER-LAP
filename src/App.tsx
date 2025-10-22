@@ -1,4 +1,4 @@
-import React, { useState, useMemo, Suspense, useCallback, useEffect } from 'react';
+import React, { useMemo, Suspense, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Moon, Sun, Sparkles, Heart, LayoutDashboard, EyeOff, Instagram } from 'lucide-react';
 import { Product } from './types';
@@ -8,6 +8,7 @@ import { useFavoritesStore } from './stores/favoritesStore';
 import { useLanguageStore } from './stores/languageStore';
 import { useBlacklistStore } from './stores/blacklistStore';
 import { translations } from './translations';
+import { useLocalStorage } from './hooks/useLocalStorage';
 
 // --- Lazy Imports ---
 const ProductView = React.lazy(() => import('./components/ProductView'));
@@ -30,10 +31,12 @@ const LoadingFallback: React.FC = () => (
 
 const App: React.FC = () => {
   // --- State Hooks ---
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useLocalStorage('darkMode', false);
   const { language } = useLanguageStore();
   const { favoriteUrls } = useFavoritesStore();
   const { keywords: blacklistedKeywords, blockedStores } = useBlacklistStore();
+  const [currentPage, setCurrentPage] = useLocalStorage<Page>('currentPage', 'home');
+  const [initialFilters, setInitialFilters] = useLocalStorage<InitialFilter | null>('initialFilters', null);
   
   const { data: productData, isLoading } = useQuery<LoadProductsResult>({
     queryKey: ['products'],
@@ -44,9 +47,6 @@ const App: React.FC = () => {
   const uniqueProducts = productData?.uniqueProducts || [];
   const allProductsRaw = productData?.allProducts || [];
   const totalBeforeFilter = productData?.totalBeforeFilter || 0;
-  
-  const [currentPage, setCurrentPage] = useState<Page>('home');
-  const [initialFilters, setInitialFilters] = useState<InitialFilter | null>(null);
 
   const t = translations[language];
 
@@ -74,11 +74,11 @@ const App: React.FC = () => {
   const navigateToHomeWithFilter = useCallback((filter: InitialFilter) => {
     setInitialFilters(filter);
     setCurrentPage('home');
-  }, []);
+  }, [setInitialFilters, setCurrentPage]);
 
   const clearInitialFilters = useCallback(() => {
     setInitialFilters(null);
-  }, []);
+  }, [setInitialFilters]);
   
   const HeaderButton: React.FC<{ onClick: () => void; className?: string; tooltip: string; 'aria-label': string; children?: React.ReactNode; }> = 
     ({ onClick, className, tooltip, children, ...props }) => (
