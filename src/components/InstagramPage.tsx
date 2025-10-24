@@ -66,8 +66,8 @@ const InstagramPage = () => {
     if (filters.username) {
       posts = posts.filter((p) => p.username === filters.username);
     }
-    if (filters.language) {
-      posts = posts.filter((p) => instagramLanguageMapping[p.username] === filters.language);
+    if (filters.languages && filters.languages.length > 0) {
+      posts = posts.filter((p) => filters.languages.includes(instagramLanguageMapping[p.username]));
     }
     if (filters.minLikes !== null) {
       posts = posts.filter((p) => p.likes >= filters.minLikes);

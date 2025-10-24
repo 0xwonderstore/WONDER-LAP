@@ -8,7 +8,7 @@ interface InstagramPageState {
     username: string;
     minLikes: number | null;
     maxLikes: number | null;
-    language: string;
+    languages: string[];
   };
   dateRange: DateRange | undefined;
   sort: 'asc' | 'desc' | null;
@@ -25,7 +25,7 @@ const initialState = {
     username: "",
     minLikes: null,
     maxLikes: null,
-    language: "",
+    languages: [],
   },
   dateRange: undefined,
   sort: null,
@@ -43,6 +43,21 @@ export const useInstagramPageStore = create<InstagramPageState>()(
     }),
     {
       name: 'instagram-page-storage',
+      version: 1, // Versioning the storage is a good practice for migrations.
+      migrate: (persistedState: any, version: number) => {
+        if (version === 0 && persistedState && persistedState.filters) {
+          // If the old 'language' (string) exists, convert it to 'languages' (array)
+          if (typeof persistedState.filters.language === 'string') {
+            persistedState.filters.languages = persistedState.filters.language ? [persistedState.filters.language] : [];
+            delete persistedState.filters.language; // remove the old key
+          }
+          // Ensure 'languages' is always an array, even if hydration fails unexpectedly.
+          if (!Array.isArray(persistedState.filters.languages)) {
+            persistedState.filters.languages = [];
+          }
+        }
+        return persistedState as InstagramPageState;
+      },
     }
   )
 );

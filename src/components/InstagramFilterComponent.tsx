@@ -2,8 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { DateRange } from 'react-day-picker';
 import { DateRangePicker } from './DateRangePicker';
 import Select from './Select';
+import MultiSelect from './MultiSelect';
 import { ArrowUp, ArrowDown } from 'lucide-react';
-import { instagramLanguageMapping } from '../data/instagramLanguageMapping';
 
 interface InstagramFilterComponentProps {
   usernames: string[];
@@ -11,7 +11,7 @@ interface InstagramFilterComponentProps {
     username: string;
     minLikes: number | null;
     maxLikes: number | null;
-    language: string;
+    languages: string[];
   };
   onFilterChange: (filters: any) => void;
   onSortChange: (sort: 'asc' | 'desc' | null) => void;
@@ -43,6 +43,10 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
     const { name, value } = e.target;
     onFilterChange({ [name]: value === '' ? null : Number(value) });
   };
+
+  const handleLanguagesChange = (selectedLanguages: string[]) => {
+    onFilterChange({ languages: selectedLanguages });
+  };
   
   const usernameOptions = [
     { value: '', label: `${t('all_users')} (${usernames.length})` },
@@ -50,7 +54,6 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
   ];
 
   const languageOptions = [
-    { value: '', label: t('all_languages') },
     { value: 'es', label: t('spanish') },
     { value: 'en', label: t('english') },
     { value: 'it', label: t('italian') },
@@ -73,8 +76,13 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
 
         {/* Language Filter */}
         <div>
-          <label htmlFor="language" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('select_language')}</label>
-          <Select id="language" name="language" value={filters.language} onChange={handleInputChange} options={languageOptions} />
+          <label htmlFor="languages" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('select_language')}</label>
+          <MultiSelect 
+            options={languageOptions} 
+            selected={filters.languages}
+            onChange={handleLanguagesChange}
+            label={t('select_language')}
+          />
         </div>
 
         {/* Date Picker */}
