@@ -24,6 +24,7 @@ const Pagination: React.FC<PaginationProps> = ({
 
     useEffect(() => {
         setPageInput(currentPage.toString());
+        window.scrollTo(0, 0);
     }, [currentPage]);
 
     const handleFirst = () => onPageChange(1);
