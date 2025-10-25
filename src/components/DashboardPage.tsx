@@ -13,6 +13,9 @@ import {
 import SegmentedControl from './SegmentedControl';
 import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
+import ProductCardSkeleton from './ProductCardSkeleton';
+import InstagramCardSkeleton from './InstagramCardSkeleton';
+
 
 // --- Type Definitions ---
 interface DashboardPageProps {
@@ -20,6 +23,7 @@ interface DashboardPageProps {
   allProductsRaw: Product[]; // All products, unfiltered
   totalBeforeFilter: number;
   onNavigateWithFilter: (filter: { name?: string; store?: string; language?: string }) => void;
+  isLoading: boolean;
 }
 interface KpiCardProps { title: string; value: string | number; icon: React.ReactNode; }
 interface StoreRow { vendor: string; totalProducts: number; newProducts30d: number; lastProductAdded: string; firstProductAdded: string; language?: string; }
@@ -46,32 +50,67 @@ const exportToCsv = (data: any[], filename: string, headers: string[]) => {
   document.body.removeChild(link);
 };
 
+// --- Skeleton Components ---
+const KpiCardSkeleton: React.FC = () => (
+    <div className="bg-light-surface dark:bg-dark-surface p-6 rounded-2xl shadow flex items-center gap-6 animate-pulse">
+        <div className="bg-gray-300 dark:bg-gray-700 p-4 rounded-full w-16 h-16"></div>
+        <div className='flex-1'>
+            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+            <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-1/2"></div>
+        </div>
+    </div>
+);
+
+const TableSkeleton: React.FC = () => (
+    <div className="overflow-x-auto p-4 animate-pulse">
+        <div className="w-full">
+            {/* Header */}
+            <div className="flex bg-gray-200 dark:bg-gray-700 p-4 rounded-t-lg">
+                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-1/4 mr-4"></div>
+                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-1/4 mr-4"></div>
+                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-1/4 mr-4"></div>
+                <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-1/4"></div>
+            </div>
+            {/* Body */}
+            <div className="space-y-2 pt-2">
+                {[...Array(10)].map((_, i) => (
+                    <div key={i} className="flex bg-light-surface dark:bg-dark-surface p-4">
+                        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-1/4 mr-4"></div>
+                        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-1/4 mr-4"></div>
+                        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-1/4 mr-4"></div>
+                        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-1/4"></div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    </div>
+);
+
+
 // --- Main Component ---
-const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw, totalBeforeFilter, onNavigateWithFilter }) => {
+const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw, totalBeforeFilter, onNavigateWithFilter, isLoading }) => {
   const { language } = useLanguageStore();
   const t = translations[language];
   const [activeView, setActiveView] = useState<ActiveView>('stores');
 
   const { kpiData, storeTableData, keywordData, languageData } = useMemo(() => {
+    // Return empty/default data if products are not there yet to avoid crashing
+    if (!products || !allProductsRaw) {
+        return { kpiData: { totalProducts: 0, totalStores: 0, newProducts30d: 0, newStores30d: 0 }, storeTableData: [], keywordData: [], languageData: [] };
+    }
     const now = new Date();
     const thirtyDaysAgo = subDays(now, 30);
-    // Use the unique 'products' list for time-sensitive and unique-based stats
     const recentProducts = products.filter(p => p.created_at && parseISO(p.created_at) >= thirtyDaysAgo);
     const uniqueStores = new Set(products.map(p => p.vendor).filter(Boolean));
     const recentUniqueStores = new Set(recentProducts.map(p => p.vendor).filter(Boolean));
-
-    // Use the 'allProductsRaw' list for total counts per store
     const storeProductCounts = allProductsRaw.reduce((acc, product) => {
         if(product.vendor) acc[product.vendor] = (acc[product.vendor] || 0) + 1;
         return acc;
     }, {} as {[key: string]: number});
-
     const storeNewProductCounts30d = recentProducts.reduce((acc, product) => {
         if(product.vendor) acc[product.vendor] = (acc[product.vendor] || 0) + 1;
         return acc;
     }, {} as {[key: string]: number});
-
-    // Dates can be derived from the unique list to be consistent
     const lastProductAddedDates = products.reduce((acc, product) => {
         if (product.vendor && product.created_at) {
             const currentLastDate = acc[product.vendor] ? parseISO(acc[product.vendor]) : null;
@@ -82,7 +121,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
         }
         return acc;
     }, {} as {[key: string]: string});
-
     const firstProductAddedDates = products.reduce((acc, product) => {
         if (product.vendor && product.created_at) {
             const currentFirstDate = acc[product.vendor] ? parseISO(acc[product.vendor]) : null;
@@ -93,7 +131,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
         }
         return acc;
     }, {} as {[key: string]: string});
-
     const storeLanguages = allProductsRaw.reduce((acc, product) => {
         if (product.vendor && product.language) {
             if (!acc[product.vendor]) {
@@ -103,13 +140,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
         }
         return acc;
     }, {} as { [vendor: string]: { [language: string]: number } });
-
     const topStoreLanguage = Object.entries(storeLanguages).reduce((acc, [vendor, langCounts]) => {
         acc[vendor] = Object.keys(langCounts).reduce((a, b) => langCounts[a] > langCounts[b] ? a : b);
         return acc;
     }, {} as { [vendor: string]: string });
-
-
     const keywordCounts = products.reduce((acc, product) => {
         (product.name || '').toLowerCase().split(/[\\s,،-]+/).forEach(word => {
             if (word && word.length > 3 && !new Set(['from', 'with', 'for']).has(word) && !/\\d/.test(word)) {
@@ -118,7 +152,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
         });
         return acc;
     }, new Map<string, number>());
-
     const languageCounts = products.reduce((acc, product) => {
         if (product.language) {
             acc[product.language] = (acc[product.language] || 0) + 1;
@@ -144,17 +177,31 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
     };
   }, [products, allProductsRaw]);
 
+  if (isLoading) {
+      return (
+          <div className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <KpiCardSkeleton />
+                  <KpiCardSkeleton />
+                  <KpiCardSkeleton />
+                  <KpiCardSkeleton />
+              </div>
+              <div className="bg-light-surface dark:bg-dark-surface rounded-2xl shadow">
+                 <TableSkeleton />
+              </div>
+          </div>
+      );
+  }
+
   const tabs = [
       { id: 'stores' as ActiveView, label: t.dashboard_topStores, icon: <Store size={16} /> },
       { id: 'keywords' as ActiveView, label: t.dashboard_topKeywords, icon: <Tag size={16} /> },
       { id: 'languages' as ActiveView, label: t.dashboard_topLanguages, icon: <Globe size={16} /> },
   ];
-
   const handleExportStores = () => {
     const headers = ['vendor', 'totalProducts', 'newProducts30d', 'lastProductAdded', 'firstProductAdded', 'language'];
     exportToCsv(storeTableData, 'stores_data.csv', headers);
   };
-
   return (
     <div className="animate-fade-in-up space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
