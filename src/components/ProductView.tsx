@@ -52,6 +52,8 @@ const ProductView: React.FC<ProductViewProps> = ({
         store: initialFilters.store || '',
         language: initialFilters.language || '',
       });
+      // Reset date when applying new filters from another page
+      setDate(undefined); 
       setCurrentPage(1);
       onClearInitialFilters();
     }
@@ -113,8 +115,13 @@ const ProductView: React.FC<ProductViewProps> = ({
       const to = date.to ? endOfDay(date.to) : endOfDay(date.from);
       filtered = filtered.filter(p => {
         if (!p.created_at) return false;
-        const productDate = parseISO(p.created_at);
-        return productDate >= from && productDate <= to;
+        try {
+          const productDate = parseISO(p.created_at);
+          return productDate >= from && productDate <= to;
+        } catch (error) {
+          // In case of invalid date string
+          return false;
+        }
       });
     }
 
@@ -126,7 +133,7 @@ const ProductView: React.FC<ProductViewProps> = ({
 
   const totalPages = Math.ceil(processedProducts.length / productsPerPage);
   const currentProducts = processedProducts.slice((currentPage - 1) * productsPerPage, currentPage * productsPerPage);
-  const handlePageChange = (page: number) => { setCurrentPage(page); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  const handlePageChange = (page: number) => { setCurrentPage(page); };
   
   return (
     <div className="animate-fade-in-up">
@@ -147,7 +154,24 @@ const ProductView: React.FC<ProductViewProps> = ({
       />
 
       {isLoading ? (
-        <div className="flex justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-primary border-t-transparent"></div></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="animate-pulse rounded-lg border border-light-border dark:border-dark-border bg-light-surface dark:bg-dark-surface overflow-hidden shadow-lg h-full flex flex-col">
+              <div className="w-full h-48 bg-gray-300 dark:bg-gray-700"></div>
+              <div className="p-4 flex-grow flex flex-col justify-between">
+                  <div>
+                      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-1/2 mb-4"></div>
+                      <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded w-1/4"></div>
+                  </div>
+                  <div className="flex justify-between items-center mt-4">
+                      <div className="h-10 w-24 bg-gray-300 dark:bg-gray-700 rounded"></div>
+                      <div className="h-8 w-8 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+                  </div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : currentProducts.length > 0 ? (
         <>
           {viewMode === 'grid' ? (
@@ -165,7 +189,6 @@ const ProductView: React.FC<ProductViewProps> = ({
             onPageChange={handlePageChange}
             totalItems={processedProducts.length}
             itemsPerPage={productsPerPage}
-            t={t}
           />
         </>
       ) : (
