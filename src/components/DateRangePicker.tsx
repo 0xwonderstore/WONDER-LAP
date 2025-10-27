@@ -15,26 +15,38 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate 
   const { language } = useLanguageStore();
   const t = translations[language];
   const [isOpen, setIsOpen] = useState(false);
+  // Internal state to hold the selection before applying
+  const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(date);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Sync internal state if the parent prop changes
+    setSelectedRange(date);
+  }, [date]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+        // Reset selection to the applied one when closing
+        setSelectedRange(date); 
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [wrapperRef]);
+  }, [wrapperRef, date]);
 
   const handleApply = () => {
+    setDate(selectedRange);
     setIsOpen(false);
   }
 
   const handleReset = () => {
+    setSelectedRange(undefined);
     setDate(undefined);
+    setIsOpen(false);
   }
 
   const handleLastYearPeriodClick = () => {
@@ -44,8 +56,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate 
     const from = startOfMonth(lastYearToday);
     const to = endOfMonth(addMonths(lastYearToday, 3));
 
-    setDate({ from, to });
-    setIsOpen(false);
+    setSelectedRange({ from, to });
   };
 
   const suggestionRanges = [
@@ -67,18 +78,8 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate 
       from = subYears(to, suggestion.years);
     }
     
-    setDate({ from, to });
-    setIsOpen(false); 
+    setSelectedRange({ from, to });
   }
-
-  const handleDayPickerSelect = (range: DateRange | undefined) => {
-    if (range?.from && !range.to) {
-      // If only 'from' is selected, set 'to' to be the same as 'from' for a single-day range
-      setDate({ from: range.from, to: range.from });
-    } else {
-      setDate(range);
-    }
-  };
 
   const footer = (
     <div className="p-2 flex justify-end gap-2 border-t border-light-border dark:border-dark-border mt-2">
@@ -114,7 +115,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate 
                         format(date.from, 'LLL dd, y')
                     )
                 ) : (
-                    <span>{t.pickADate}</span>
+                    <span>{t.all_time || 'All Time'}</span>
                 )}
             </span>
         </button>
@@ -138,8 +139,8 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate 
             <DayPicker
               dir={language === 'ar' ? 'rtl' : 'ltr'}
               mode="range"
-              selected={date}
-              onSelect={handleDayPickerSelect}
+              selected={selectedRange}
+              onSelect={setSelectedRange}
               footer={footer}
               classNames={{
                 caption: 'flex justify-center items-center h-10',
