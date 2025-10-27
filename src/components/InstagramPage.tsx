@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useEffect } from "react";
 import InstagramCard from "./InstagramCard";
 import posts1 from "../data/instagram_posts_1.json";
 import posts2 from "../data/instagram_posts_2.json";
@@ -41,6 +41,11 @@ const InstagramPage = () => {
   const { t } = useTranslation();
   const { blacklistedUsers, addUser, removeUser } = useInstagramBlacklistStore();
   const { currentPage, filters, dateRange, sort, setCurrentPage, setFilters, setDateRange, setSort, reset } = useInstagramPageStore();
+
+  useEffect(() => {
+    // Always reset date range to "All Time" on component mount
+    setDateRange(undefined);
+  }, [setDateRange]);
 
   const POSTS_PER_PAGE = 100;
 

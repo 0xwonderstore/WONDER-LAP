@@ -43,7 +43,13 @@ export const useInstagramPageStore = create<InstagramPageState>()(
     }),
     {
       name: 'instagram-page-storage',
-      version: 1, // Versioning the storage is a good practice for migrations.
+      version: 1,
+      // By using partialize, we can omit `dateRange` from being persisted to storage.
+      // This ensures it will always start with its `initialState` value (`undefined`).
+      partialize: (state) => {
+        const { dateRange, ...rest } = state;
+        return rest;
+      },
       migrate: (persistedState: any, version: number) => {
         if (version === 0 && persistedState && persistedState.filters) {
           // If the old 'language' (string) exists, convert it to 'languages' (array)
