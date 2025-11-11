@@ -42,11 +42,6 @@ const InstagramPage = () => {
   const { blacklistedUsers, addUser, removeUser } = useInstagramBlacklistStore();
   const { currentPage, filters, dateRange, sort, setCurrentPage, setFilters, setDateRange, setSort, reset } = useInstagramPageStore();
 
-  useEffect(() => {
-    // Always reset date range to "All Time" on component mount
-    setDateRange(undefined);
-  }, [setDateRange]);
-
   const POSTS_PER_PAGE = 100;
 
   const allUniqueUsernames = useMemo(() => {

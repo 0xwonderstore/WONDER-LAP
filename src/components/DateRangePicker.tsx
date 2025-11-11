@@ -15,7 +15,7 @@ import {
   startOfYear,
   endOfYear,
   isSameDay,
-  isWithinInterval,
+  addMonths,
 } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
 
@@ -94,6 +94,13 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate 
         const today = new Date();
         const lastYear = subYears(today, 1);
         return { from: startOfYear(lastYear), to: endOfYear(lastYear) };
+    }},
+    { label: t.lastSeason, getRange: () => {
+        const today = new Date();
+        const lastYearSameMonth = subYears(today, 1);
+        const from = startOfMonth(lastYearSameMonth);
+        const to = endOfMonth(addMonths(lastYearSameMonth, 3)); // Current month of last year + 3 months
+        return { from: startOfDay(from), to: endOfDay(to) };
     }},
   ];
 

@@ -1,9 +1,10 @@
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { DateRange } from 'react-day-picker';
 import { DateRangePicker } from './DateRangePicker';
 import Select from './Select';
 import MultiSelect from './MultiSelect';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, X } from 'lucide-react';
 
 interface InstagramFilterComponentProps {
   usernames: string[];
@@ -13,13 +14,12 @@ interface InstagramFilterComponentProps {
     maxLikes: number | null;
     languages: string[];
   };
-  onFilterChange: (filters: any) => void;
+  onFilterChange: (filters: Partial<InstagramFilterComponentProps['filters']>) => void;
   onSortChange: (sort: 'asc' | 'desc' | null) => void;
-  onDateChange: (dateRange: DateRange | undefined) => void;
   onReset: () => void;
   currentSort: 'asc' | 'desc' | null;
   date: DateRange | undefined;
-  setDate: (date: DateRange | undefined) => void;
+  onDateChange: (date: DateRange | undefined) => void;
 }
 
 const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
@@ -30,7 +30,7 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
   onReset,
   currentSort,
   date,
-  setDate,
+  onDateChange,
 }) => {
   const { t } = useTranslation();
 
@@ -64,85 +64,85 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
     { value: 'fr', label: t('french') },
     { value: 'hi', label: t('hindi') },
   ];
+  
+  const isFilterActive = filters.username !== '' || filters.minLikes !== null || filters.maxLikes !== null || filters.languages.length > 0 || date !== undefined || currentSort !== null;
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-8 border border-gray-200 dark:border-gray-700">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Username Filter */}
-        <div>
-          <label htmlFor="username" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('select_user')}</label>
-          <Select id="username" name="username" value={filters.username} onChange={handleInputChange} options={usernameOptions} />
-        </div>
+    <div className="bg-light-surface dark:bg-dark-surface p-4 rounded-2xl mb-6 shadow-md">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Username Filter */}
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1 px-2">{t('select_user')}</label>
+              <Select id="username" name="username" value={filters.username} onChange={handleInputChange} options={usernameOptions} />
+            </div>
 
-        {/* Language Filter */}
-        <div>
-          <label htmlFor="languages" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('select_language')}</label>
-          <MultiSelect 
-            options={languageOptions} 
-            selected={filters.languages}
-            onChange={handleLanguagesChange}
-            label={t('select_language')}
-          />
-        </div>
+            {/* Language Filter */}
+            <div>
+              <label htmlFor="languages" className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1 px-2">{t('select_language')}</label>
+              <MultiSelect 
+                options={languageOptions} 
+                selected={filters.languages}
+                onChange={handleLanguagesChange}
+                label={t('select_language')}
+              />
+            </div>
 
-        {/* Date Picker */}
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('date_posted')}</label>
-          <DateRangePicker date={date} setDate={setDate} />
-        </div>
+            {/* Date Picker */}
+            <div>
+              <label className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1 px-2">{t('date_posted')}</label>
+              <DateRangePicker date={date} setDate={onDateChange} />
+            </div>
 
-        {/* Likes Range Filter */}
-        <div>
-           <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('likes_range')}</label>
-           <div className="flex items-center gap-2">
-            <input
-              type="number"
-              name="minLikes"
-              placeholder={t('min_likes')}
-              value={filters.minLikes ?? ''}
-              onChange={handleLikesChange}
-              className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-            <span className="text-gray-500 dark:text-gray-400">-</span>
-            <input
-              type="number"
-              name="maxLikes"
-              placeholder={t('max_likes')}
-              value={filters.maxLikes ?? ''}
-              onChange={handleLikesChange}
-              className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-        </div>
-      </div>
+            {/* Likes Range Filter */}
+            <div>
+              <label className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1 px-2">{t('likes_range')}</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  name="minLikes"
+                  placeholder={t('min_likes')}
+                  value={filters.minLikes ?? ''}
+                  onChange={handleLikesChange}
+                  className="w-full p-2.5 border border-light-border dark:border-dark-border rounded-xl bg-light-background dark:bg-dark-background focus:ring-2 focus:ring-brand-primary"
+                />
+                <span className="text-light-text-secondary dark:text-dark-text-secondary">-</span>
+                <input
+                  type="number"
+                  name="maxLikes"
+                  placeholder={t('max_likes')}
+                  value={filters.maxLikes ?? ''}
+                  onChange={handleLikesChange}
+                  className="w-full p-2.5 border border-light-border dark:border-dark-border rounded-xl bg-light-background dark:bg-dark-background focus:ring-2 focus:ring-brand-primary"
+                />
+              </div>
+            </div>
 
-      <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-6 flex justify-between items-center">
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('sort_by_likes')}</label>
-          <div className="flex gap-2">
-            <button
-              onClick={() => onSortChange('desc')}
-              className={`px-4 py-2 rounded-md flex items-center gap-1 transition-colors ${currentSort === 'desc' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
-            >
-              <ArrowDown size={16} /> {t('descending')}
-            </button>
-            <button
-              onClick={() => onSortChange('asc')}
-              className={`px-4 py-2 rounded-md flex items-center gap-1 transition-colors ${currentSort === 'asc' ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
-            >
-              <ArrowUp size={16} /> {t('ascending')}
-            </button>
-          </div>
+            {/* Action Buttons */}
+            <div className="flex items-end gap-2">
+                <div className='flex-grow'>
+                    <label className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1 px-2">{t('sort_by_likes')}</label>
+                    <div className="flex rounded-xl border border-light-border dark:border-dark-border overflow-hidden h-[46px]">
+                        <button
+                          onClick={() => onSortChange('desc')}
+                          className={`w-full flex items-center justify-center gap-1 transition-colors ${currentSort === 'desc' ? 'bg-brand-primary text-white' : 'bg-light-background dark:bg-dark-background hover:bg-light-border dark:hover:bg-dark-border'}`}
+                        >
+                          <ArrowDown size={16} /> {t('descending')}
+                        </button>
+                        <button
+                          onClick={() => onSortChange('asc')}
+                          className={`w-full flex items-center justify-center gap-1 transition-colors ${currentSort === 'asc' ? 'bg-brand-primary text-white' : 'bg-light-background dark:bg-dark-background hover:bg-light-border dark:hover:bg-dark-border'}`}
+                        >
+                          <ArrowUp size={16} /> {t('ascending')}
+                        </button>
+                    </div>
+                </div>
+                 {isFilterActive && (
+                    <button onClick={onReset} className="p-2.5 bg-red-500/10 text-red-500 rounded-xl border border-red-500/20 hover:bg-red-500/20 transition-colors h-[46px]" aria-label={t.resetFilters}>
+                        <X className="h-5 w-5" />
+                    </button>
+                )}
+            </div>
         </div>
-        <div className="self-end">
-            <button
-            onClick={onReset}
-            className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors shadow-md"
-            >
-            {t('resetFilters')}
-            </button>
-        </div>
-      </div>
     </div>
   );
 };
