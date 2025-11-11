@@ -17,7 +17,7 @@ export async function loadProducts(): Promise<LoadProductsResult> {
     const allProducts: Product[] = [];
 
     // Use Vite's glob import to find all product files automatically.
-    const modules = import.meta.glob('/src/data/products_*.json');
+    const modules = import.meta.glob('/src/data/products/*.json');
 
     for (const path in modules) {
         try {
