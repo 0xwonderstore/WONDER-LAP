@@ -1,7 +1,5 @@
 import React from 'react';
 import { LayoutGrid, List, X } from 'lucide-react';
-import { DateRange } from 'react-day-picker';
-import { DateRangePicker } from './DateRangePicker';
 import Select from './Select';
 
 interface FilterComponentProps {
@@ -14,8 +12,6 @@ interface FilterComponentProps {
     store: string;
     language: string;
   };
-  date: DateRange | undefined;
-  setDate: (date: DateRange | undefined) => void;
   onFilterChange: (filterName: string, value: string) => void;
   onResetFilters: () => void;
   viewMode: 'grid' | 'table';
@@ -25,9 +21,9 @@ interface FilterComponentProps {
 }
 
 const FilterComponent: React.FC<FilterComponentProps> = ({
-  t, stores, languages, languageCounts, filters, date, setDate, onFilterChange, onResetFilters, viewMode, onViewModeChange, productsPerPage, onProductsPerPageChange
+  t, stores, languages, languageCounts, filters, onFilterChange, onResetFilters, viewMode, onViewModeChange, productsPerPage, onProductsPerPageChange
 }) => {
-  const isFilterActive = filters.name !== '' || filters.store !== '' || filters.language !== '' || date !== undefined;
+  const isFilterActive = filters.name !== '' || filters.store !== '' || filters.language !== '';
 
   const storeOptions = [
     { value: '', label: t.allStores },
@@ -45,7 +41,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
   const perPageOptions = [24, 48, 100, 160].map(v => ({ value: String(v), label: `${v} ${t.product}` }));
 
   return (
-    <div className="bg-light-surface dark:bg-dark-surface p-4 rounded-2xl mb-6 shadow-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="bg-light-surface dark:bg-dark-surface p-4 rounded-2xl mb-6 shadow-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Search Input */}
       <div>
         <label htmlFor="name-search" className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1 px-2">{t.searchByName}</label>
@@ -65,12 +61,6 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
         <Select id="language-select" value={filters.language} onChange={(e) => onFilterChange('language', e.target.value)} options={languageOptions} />
       </div>
       
-      {/* Date Range Picker */}
-      <div>
-         <label className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1 px-2">{t.dateAdded}</label>
-        <DateRangePicker date={date} setDate={setDate} />
-      </div>
-
       {/* Action Buttons & Per Page */}
       <div className="flex items-end gap-2">
         <div className="flex-grow">

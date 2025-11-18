@@ -1,25 +1,5 @@
-import { useMemo, useCallback, useEffect } from "react";
+import { useMemo, useCallback, useEffect, useState } from "react";
 import InstagramCard from "./InstagramCard";
-import posts1 from "../data/instagram_posts_1.json";
-import posts2 from "../data/instagram_posts_2.json";
-import posts3 from "../data/instagram_posts_3.json";
-import posts4 from "../data/instagram_posts_4.json";
-import posts5 from "../data/instagram_posts_5.json";
-import posts6 from "../data/instagram_posts_6.json";
-import posts7 from "../data/instagram_posts_7.json";
-import posts8 from "../data/instagram_posts_8.json";
-import posts9 from "../data/instagram_posts_9.json";
-import posts10 from "../data/instagram_posts_10.json";
-import posts11 from "../data/instagram_posts_11.json";
-import posts12 from "../data/instagram_posts_12.json";
-import posts13 from "../data/instagram_posts_13.json";
-import posts14 from "../data/instagram_posts_14.json";
-import posts15 from "../data/instagram_posts_15.json";
-import posts16 from "../data/instagram_posts_16.json";
-import posts17 from "../data/instagram_posts_17.json";
-import posts18 from "../data/instagram_posts_18.json";
-import posts19 from "../data/instagram_posts_19.json";
-import posts20 from "../data/instagram_posts_20.json";
 import Pagination from "./Pagination";
 import { useTranslation } from "react-i18next";
 import InstagramFilterComponent from "./InstagramFilterComponent";
@@ -29,13 +9,7 @@ import { useInstagramPageStore } from "../stores/instagramPageStore";
 import { Eye } from "lucide-react";
 import { InstagramPost } from "../types";
 import { instagramLanguageMapping } from '../data/instagramLanguageMapping';
-
-const allPosts: InstagramPost[] = [
-  ...posts1, ...posts2, ...posts3, ...posts4, ...posts5, 
-  ...posts6, ...posts7, ...posts8, ...posts9, ...posts10,
-  ...posts11, ...posts12, ...posts13, ...posts14, ...posts15,
-  ...posts16, ...posts17, ...posts18, ...posts19, ...posts20
-] as InstagramPost[];
+import LoadingSpinner from "./LoadingSpinner"; // Import the new component
 
 const InstagramPage = () => {
   const { t } = useTranslation();
@@ -44,9 +18,34 @@ const InstagramPage = () => {
 
   const POSTS_PER_PAGE = 100;
 
+  const [allPosts, setAllPosts] = useState<InstagramPost[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+
+  useEffect(() => {
+    const loadInstagramPosts = async () => {
+      const modules = import.meta.glob('/src/data/instagram/*.json');
+      const loadedPosts: InstagramPost[] = [];
+      for (const path in modules) {
+        try {
+          const module: any = await modules[path]();
+          const postsPage = Array.isArray(module.default) ? module.default : module.default?.posts;
+          if (postsPage && Array.isArray(postsPage)) {
+            loadedPosts.push(...postsPage);
+          }
+        } catch (error) {
+          console.error(`Error loading or processing ${path}:`, error);
+        }
+      }
+      setAllPosts(loadedPosts);
+      setLoadingPosts(false);
+    };
+
+    loadInstagramPosts();
+  }, []);
+
   const allUniqueUsernames = useMemo(() => {
     return [...new Set(allPosts.map((p) => p.username).filter(Boolean))];
-  }, []);
+  }, [allPosts]);
 
   const filteredAndSortedPosts = useMemo(() => {
     let posts = [...allPosts];
@@ -74,7 +73,7 @@ const InstagramPage = () => {
     }
     if (filters.maxLikes !== null) {
       posts = posts.filter((p) => p.likes <= filters.maxLikes);
-    }
+    };
     if (dateRange?.from) {
       posts = posts.filter((p) => new Date(p.timestamp) >= dateRange.from);
     }
@@ -90,7 +89,7 @@ const InstagramPage = () => {
     }
 
     return posts;
-  }, [filters, dateRange, sort, blacklistedUsers]);
+  }, [filters, dateRange, sort, blacklistedUsers, allPosts]);
 
   const totalPages = Math.ceil(filteredAndSortedPosts.length / POSTS_PER_PAGE);
   const paginatedPosts = filteredAndSortedPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
@@ -121,6 +120,14 @@ const InstagramPage = () => {
       addUser(username);
     }
   };
+
+  if (loadingPosts) {
+    return (
+      <div className="container mx-auto p-2 flex justify-center items-center h-96">
+        <LoadingSpinner message={t('loading_instagram_posts')} />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-2">

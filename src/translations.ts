@@ -34,7 +34,6 @@ export const translations = {
     allStores: 'جميع المتاجر',
     show: 'عرض',
     product: 'المنتج',
-    dateAdded: 'تاريخ الإضافة',
     language_filter: 'اللغة',
     all_languages: 'جميع اللغات',
 
@@ -66,6 +65,11 @@ export const translations = {
     dashboard_filterByStore: 'تصفية حسب المتجر',
     dashboard_searchForKeyword: 'البحث عن الكلمة الرئيسية',
     dashboard_filterByLanguage: 'تصفية حسب اللغة',
+    dashboard_settings_label: 'إعدادات لوحة التحكم',
+    dashboard_settings_title: 'تخصيص لوحة التحكم',
+    dashboard_settings_description: 'اختر العناصر التي تريد عرضها.',
+    dashboard_settings_modules: 'الوحدات الرئيسية',
+    dashboard_settings_columns: 'أعمدة جدول المتاجر',
     
     // BlacklistPage.tsx
     blacklist_title: 'إدارة القائمة السوداء',
@@ -157,6 +161,7 @@ export const translations = {
     unblock_user: 'إلغاء حظر المستخدم',
     block_user: 'حظر المستخدم',
     video_error: 'حدث خطأ أثناء تشغيل الفيديو. قد يكون الرابط منتهي الصلاحية.',
+    loading_posts: 'جاري تحميل منشورات Instagram...',
   },
   en: {
     rtl: false,
@@ -193,7 +198,6 @@ export const translations = {
     allStores: 'All stores',
     show: 'Show',
     product: 'Product',
-    dateAdded: 'Date Added',
     language_filter: 'Language',
     all_languages: 'All languages',
 
@@ -225,6 +229,11 @@ export const translations = {
     dashboard_filterByStore: 'Filter by store',
     dashboard_searchForKeyword: 'Search for keyword',
     dashboard_filterByLanguage: 'Filter by language',
+    dashboard_settings_label: 'Dashboard Settings',
+    dashboard_settings_title: 'Customize Dashboard',
+    dashboard_settings_description: 'Choose which items to display.',
+    dashboard_settings_modules: 'Main Modules',
+    dashboard_settings_columns: 'Store Table Columns',
 
     // BlacklistPage.tsx
     blacklist_title: 'Manage Blacklist',
@@ -316,5 +325,6 @@ export const translations = {
     unblock_user: 'Unblock User',
     block_user: 'Block User',
     video_error: 'Error playing video. The link may have expired.',
+    loading_posts: 'Loading Instagram posts...',
   },
 };

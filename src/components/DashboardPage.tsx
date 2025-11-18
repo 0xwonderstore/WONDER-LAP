@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Product } from '../types';
 import { TrendingUp, Package, Store, Clock, ChevronsUpDown, ChevronDown, Tag, Download, Globe, Filter } from 'lucide-react';
 import { subDays, format, parseISO } from 'date-fns';
@@ -15,6 +15,8 @@ import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
 import ProductCardSkeleton from './ProductCardSkeleton';
 import InstagramCardSkeleton from './InstagramCardSkeleton';
+import { useDashboardStore } from '../stores/dashboardStore';
+import DashboardSettings from './DashboardSettings';
 
 
 // --- Type Definitions ---
@@ -90,8 +92,26 @@ const TableSkeleton: React.FC = () => (
 // --- Main Component ---
 const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw, totalBeforeFilter, onNavigateWithFilter, isLoading }) => {
   const { language } = useLanguageStore();
+  const { tabVisibility } = useDashboardStore();
   const t = translations[language];
-  const [activeView, setActiveView] = useState<ActiveView>('stores');
+
+  const availableTabs = useMemo(() => {
+    const allTabs = [
+      { id: 'stores' as ActiveView, label: t.dashboard_topStores, icon: <Store size={16} /> },
+      { id: 'keywords' as ActiveView, label: t.dashboard_topKeywords, icon: <Tag size={16} /> },
+      { id: 'languages' as ActiveView, label: t.dashboard_topLanguages, icon: <Globe size={16} /> },
+    ];
+    return allTabs.filter(tab => tabVisibility[tab.id as keyof typeof tabVisibility]);
+  }, [t, tabVisibility]);
+
+  const [activeView, setActiveView] = useState<ActiveView>(availableTabs.length > 0 ? availableTabs[0].id : 'stores');
+
+  useEffect(() => {
+    // If the currently active view is hidden, switch to the first available one.
+    if (!availableTabs.some(tab => tab.id === activeView) && availableTabs.length > 0) {
+      setActiveView(availableTabs[0].id);
+    }
+  }, [availableTabs, activeView]);
 
   const { kpiData, storeTableData, keywordData, languageData } = useMemo(() => {
     // Return empty/default data if products are not there yet to avoid crashing
@@ -193,15 +213,27 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
       );
   }
 
-  const tabs = [
-      { id: 'stores' as ActiveView, label: t.dashboard_topStores, icon: <Store size={16} /> },
-      { id: 'keywords' as ActiveView, label: t.dashboard_topKeywords, icon: <Tag size={16} /> },
-      { id: 'languages' as ActiveView, label: t.dashboard_topLanguages, icon: <Globe size={16} /> },
-  ];
   const handleExportStores = () => {
     const headers = ['vendor', 'totalProducts', 'newProducts30d', 'lastProductAdded', 'firstProductAdded', 'language'];
     exportToCsv(storeTableData, 'stores_data.csv', headers);
   };
+
+  const renderActiveView = () => {
+      if (availableTabs.length === 0) {
+          return <div className="p-8 text-center text-light-text-secondary dark:text-dark-text-secondary">{t.dashboard_settings_description}</div>;
+      }
+      switch (activeView) {
+          case 'stores':
+              return <StoreTable data={storeTableData} t={t} onNavigateWithFilter={onNavigateWithFilter} />;
+          case 'keywords':
+              return <KeywordList data={keywordData} t={t} onNavigateWithFilter={onNavigateWithFilter} />;
+          case 'languages':
+              return <LanguageList data={languageData} t={t} onNavigateWithFilter={onNavigateWithFilter} />;
+          default:
+              return null;
+      }
+  };
+
   return (
     <div className="animate-fade-in-up space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -213,24 +245,26 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
 
       
       <div className="bg-light-surface dark:bg-dark-surface rounded-2xl shadow">
-        <div className="p-4 flex justify-between items-center">
-          <SegmentedControl tabs={tabs} activeTab={activeView} onTabChange={setActiveView} />
-          {activeView === 'stores' && (
-            <button
-              onClick={handleExportStores}
-              className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white rounded-lg shadow hover:bg-brand-secondary transition-colors duration-200"
-            >
-              <Download size={18} />
-              {t.exportData}
-            </button>
-          )}
+        <div className="p-4 flex justify-between items-center border-b border-light-border dark:border-dark-border">
+          <div className="flex-1">
+            {availableTabs.length > 0 && (
+                <SegmentedControl tabs={availableTabs} activeTab={activeView} onTabChange={setActiveView} />
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {activeView === 'stores' && availableTabs.some(t => t.id === 'stores') && (
+              <button
+                onClick={handleExportStores}
+                className="flex items-center gap-2 px-3 py-1.5 bg-brand-primary text-white rounded-lg shadow hover:bg-brand-secondary transition-colors duration-200"
+              >
+                <Download size={16} />
+                <span className="hidden sm:inline">{t.exportData}</span>
+              </button>
+            )}
+            <DashboardSettings />
+          </div>
         </div>
-        {activeView === 'stores' ? 
-            <StoreTable data={storeTableData} t={t} onNavigateWithFilter={onNavigateWithFilter} /> : 
-            activeView === 'keywords' ? 
-                <KeywordList data={keywordData} t={t} onNavigateWithFilter={onNavigateWithFilter} /> : 
-                <LanguageList data={languageData} t={t} onNavigateWithFilter={onNavigateWithFilter} />
-        }
+        {renderActiveView()}
       </div>
     </div>
   );
@@ -240,51 +274,74 @@ const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon }) => ( <div class
 
 const StoreTable: React.FC<{data: StoreRow[], t: any, onNavigateWithFilter: (f: any) => void}> = ({ data, t, onNavigateWithFilter }) => {
     const [sorting, setSorting] = useState<SortingState>([]);
+    const { storeColumnsVisibility } = useDashboardStore();
     
-    const columns = useMemo<ColumnDef<StoreRow>[]>(() => [
-        { 
-            accessorKey: 'vendor', 
-            header: t.storeName,
-            cell: ({ row }) => (
-                <span 
-                    onClick={() => onNavigateWithFilter({ store: row.original.vendor })}
-                    className="cursor-pointer hover:underline text-brand-primary"
-                    title={t.dashboard_filterByStore}
-                >
-                    {row.original.vendor}
-                </span>
-            )
-        }, 
-        { 
-            accessorKey: 'totalProducts', 
-            header: t.totalProducts 
-        },
-        {
-            accessorKey: 'language',
-            header: t.language,
-            cell: ({ row }) => row.original.language ? t[row.original.language] || row.original.language.toUpperCase() : 'N/A'
-        },
-        {
-            accessorKey: 'newProducts30d',
-            header: t.dashboard_newProducts30d_store,
-            cell: ({ row }) => row.original.newProducts30d
-        },
-        {
-            accessorKey: 'lastProductAdded',
-            header: t.dashboard_lastProductAdded,
-            cell: ({ row }) => row.original.lastProductAdded
-        },
-        {
-            accessorKey: 'firstProductAdded',
-            header: t.dashboard_firstProductAdded,
-            cell: ({ row }) => row.original.firstProductAdded
-        },
-        { 
-            id: 'metaAdLibrary',
-            header: () => <div className="text-center">{t.searchInMeta}</div>,
-            cell: ({ row }) => (<div className="flex justify-center items-center"><MetaAdLibraryLink vendor={row.original.vendor} t={t} /></div>) 
+    const columns = useMemo<ColumnDef<StoreRow>[]>(() => {
+        const cols: ColumnDef<StoreRow>[] = [
+            { 
+                accessorKey: 'vendor', 
+                header: t.storeName,
+                cell: ({ row }) => (
+                    <span 
+                        onClick={() => onNavigateWithFilter({ store: row.original.vendor })}
+                        className="cursor-pointer hover:underline text-brand-primary"
+                        title={t.dashboard_filterByStore}
+                    >
+                        {row.original.vendor}
+                    </span>
+                )
+            }
+        ];
+
+        if (storeColumnsVisibility.totalProducts) {
+            cols.push({ 
+                accessorKey: 'totalProducts', 
+                header: t.totalProducts 
+            });
         }
-    ], [t, onNavigateWithFilter]);
+
+        if (storeColumnsVisibility.language) {
+            cols.push({
+                accessorKey: 'language',
+                header: t.language,
+                cell: ({ row }) => row.original.language ? t[row.original.language] || row.original.language.toUpperCase() : 'N/A'
+            });
+        }
+
+        if (storeColumnsVisibility.newProducts30d) {
+            cols.push({
+                accessorKey: 'newProducts30d',
+                header: t.dashboard_newProducts30d_store,
+                cell: ({ row }) => row.original.newProducts30d
+            });
+        }
+
+        if (storeColumnsVisibility.lastProductAdded) {
+            cols.push({
+                accessorKey: 'lastProductAdded',
+                header: t.dashboard_lastProductAdded,
+                cell: ({ row }) => row.original.lastProductAdded
+            });
+        }
+
+        if (storeColumnsVisibility.firstProductAdded) {
+            cols.push({
+                accessorKey: 'firstProductAdded',
+                header: t.dashboard_firstProductAdded,
+                cell: ({ row }) => row.original.firstProductAdded
+            });
+        }
+
+        if (storeColumnsVisibility.metaAdLibrary) {
+            cols.push({ 
+                id: 'metaAdLibrary',
+                header: () => <div className="text-center">{t.searchInMeta}</div>,
+                cell: ({ row }) => (<div className="flex justify-center items-center"><MetaAdLibraryLink vendor={row.original.vendor} t={t} /></div>) 
+            });
+        }
+
+        return cols;
+    }, [t, onNavigateWithFilter, storeColumnsVisibility]);
 
     const table = useReactTable({ data, columns, state: { sorting }, onSortingChange: setSorting, getCoreRowModel: getCoreRowModel(), getSortedRowModel: getSortedRowModel() });
     
