@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
 
 export default function ScrollButtons() {
   const [isVisible, setIsVisible] = useState(false);
@@ -19,39 +19,22 @@ export default function ScrollButtons() {
     });
   };
 
-  const scrollToBottom = () => {
-    window.scrollTo({
-      top: document.documentElement.scrollHeight,
-      behavior: 'smooth',
-    });
-  };
-
   useEffect(() => {
     window.addEventListener('scroll', toggleVisibility);
-
     return () => {
       window.removeEventListener('scroll', toggleVisibility);
     };
   }, []);
 
   return (
-    <div className={`fixed bottom-6 right-6 z-50 transition-opacity duration-300 ${isVisible ? 'opacity-80 hover:opacity-100' : 'opacity-0 pointer-events-none'}`}>
-      <div className="flex flex-col gap-3">
+    <div className={`fixed bottom-8 right-8 z-50 transition-all duration-500 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none'}`}>
         <button
           onClick={scrollToTop}
           aria-label="Scroll to top"
-          className="p-3 rounded-full bg-dark-surface text-dark-text-primary shadow-lg hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-opacity-50 transition-all transform hover:scale-110"
+          className="p-3.5 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-md text-gray-800 dark:text-white shadow-2xl border border-gray-200 dark:border-gray-700 hover:bg-brand-primary hover:text-white dark:hover:bg-brand-primary dark:hover:text-white focus:outline-none transition-all duration-300 group"
         >
-          <ArrowUp className="w-6 h-6" />
+          <ArrowUp className="w-6 h-6 group-hover:-translate-y-1 transition-transform duration-300" />
         </button>
-        <button
-          onClick={scrollToBottom}
-          aria-label="Scroll to bottom"
-          className="p-3 rounded-full bg-dark-surface text-dark-text-primary shadow-lg hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-opacity-50 transition-all transform hover:scale-110"
-        >
-          <ArrowDown className="w-6 h-6" />
-        </button>
-      </div>
     </div>
   );
 }

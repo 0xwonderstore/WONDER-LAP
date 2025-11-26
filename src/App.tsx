@@ -16,6 +16,7 @@ import { EmptyState } from './components/EmptyState';
 import FilterComponent from './components/FilterComponent';
 import Toast from './components/Toast';
 import { DateRange } from 'react-day-picker';
+import ProductCardSkeleton from './components/ProductCardSkeleton';
 
 // --- Lazy Imports ---
 const FavoritesPage = React.lazy(() => import('./components/FavoritesPage'));
@@ -211,7 +212,11 @@ const App: React.FC = () => {
                  />
 
                 {isLoading ? (
-                    <LoadingFallback />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {Array.from({ length: 8 }).map((_, i) => (
+                            <ProductCardSkeleton key={i} />
+                        ))}
+                    </div>
                 ) : currentProducts.length > 0 ? (
                     <>
                         {viewMode === 'grid' ? (
