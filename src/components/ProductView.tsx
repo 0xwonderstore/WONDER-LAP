@@ -3,13 +3,10 @@ import { Product } from '../types';
 import ProductTable from './ProductTable';
 import { EmptyState } from './EmptyState';
 import Pagination from './Pagination';
-import FilterComponent from './FilterComponent';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import ProductCard from './ProductCard';
 import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
-import { parseISO, startOfDay, endOfDay } from 'date-fns';
-import { DateRange } from 'react-day-picker';
 import { searchProducts } from '../utils/productUtils';
 
 interface ProductViewProps {
@@ -34,7 +31,7 @@ const ProductView: React.FC<ProductViewProps> = ({
   const [viewMode, setViewMode] = useLocalStorage<'grid' | 'table'>('viewMode', 'grid');
   const [currentPage, setCurrentPage] = useLocalStorage('currentPage', 1);
   const [productsPerPage, setProductsPerPage] = useLocalStorage('productsPerPage', 24);
-  const [date, setDate] = useState<DateRange | undefined>(undefined);
+  
   const [filters, setFilters] = useState<{
     name: string;
     store: string;
@@ -52,48 +49,10 @@ const ProductView: React.FC<ProductViewProps> = ({
         store: initialFilters.store || '',
         language: initialFilters.language || '',
       });
-      // Reset date when applying new filters from another page
-      setDate(undefined); 
       setCurrentPage(1);
       onClearInitialFilters();
     }
   }, [initialFilters, onClearInitialFilters, setCurrentPage]);
-
-  const handleFilterChange = useCallback((filterName: string, value: string) => {
-    setFilters(prev => ({ ...prev, [filterName]: value }));
-    setCurrentPage(1);
-  }, [setCurrentPage]);
-  
-  const handleProductsPerPageChange = useCallback((value: number) => {
-    setProductsPerPage(value);
-    setCurrentPage(1);
-  }, [setProductsPerPage, setCurrentPage]);
-
-  const handleResetFilters = useCallback(() => {
-    setFilters({ name: '', store: '', language: '' });
-    setDate(undefined);
-    setCurrentPage(1);
-  }, [setCurrentPage]);
-
-  const availableLanguages = useMemo(() => {
-    const langs = new Set<string>();
-    products.forEach(p => {
-      if (p.language) {
-        langs.add(p.language);
-      }
-    });
-    return Array.from(langs);
-  }, [products]);
-  
-  const languageCounts = useMemo(() => {
-      const counts: { [key: string]: number } = {};
-      products.forEach(p => {
-        if (p.language) {
-          counts[p.language] = (counts[p.language] || 0) + 1;
-        }
-      });
-      return counts;
-  }, [products]);
 
   const processedProducts = useMemo(() => {
     let filtered = products;
@@ -110,26 +69,11 @@ const ProductView: React.FC<ProductViewProps> = ({
       filtered = filtered.filter(p => p.language === filters.language);
     }
     
-    if (date?.from) {
-      const from = startOfDay(date.from);
-      const to = date.to ? endOfDay(date.to) : endOfDay(date.from);
-      filtered = filtered.filter(p => {
-        if (!p.created_at) return false;
-        try {
-          const productDate = parseISO(p.created_at);
-          return productDate >= from && productDate <= to;
-        } catch (error) {
-          // In case of invalid date string
-          return false;
-        }
-      });
-    }
-
     return filtered.sort((a, b) => {
         if (!a.created_at || !b.created_at) return 0;
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     });
-  }, [products, filters, date]);
+  }, [products, filters]);
 
   const totalPages = Math.ceil(processedProducts.length / productsPerPage);
   const currentProducts = processedProducts.slice((currentPage - 1) * productsPerPage, currentPage * productsPerPage);
@@ -137,21 +81,7 @@ const ProductView: React.FC<ProductViewProps> = ({
   
   return (
     <div className="animate-fade-in-up">
-       <FilterComponent
-        t={t}
-        stores={stores}
-        languages={availableLanguages}
-        languageCounts={languageCounts}
-        filters={filters}
-        date={date}
-        setDate={setDate}
-        onFilterChange={handleFilterChange}
-        onResetFilters={handleResetFilters}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        productsPerPage={productsPerPage}
-        onProductsPerPageChange={handleProductsPerPageChange}
-      />
+      {/* FilterComponent Removed as requested */}
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

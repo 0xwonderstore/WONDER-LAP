@@ -3,20 +3,16 @@ import { normalizeUrl } from './urlUtils';
 
 export interface LoadProductsResult {
     uniqueProducts: Product[];
-    allProducts: Product[]; // <-- Add this to return all products
+    allProducts: Product[];
     totalBeforeFilter: number;
     uniqueCount: number;
 }
 
-
-/**
- * Modern product loader using Vite's dynamic import.
- * This is more robust than fetch() for local project files.
- */
 export async function loadProducts(): Promise<LoadProductsResult> {
     const allProducts: Product[] = [];
 
-    // Use Vite's glob import to find all product files automatically.
+    // Linking to product files in src/data/products
+    // Using explicit path pattern to ensure all files are picked up
     const modules = import.meta.glob('/src/data/products/*.json');
 
     for (const path in modules) {
@@ -26,26 +22,35 @@ export async function loadProducts(): Promise<LoadProductsResult> {
             // Handle both { "products": [...] } and direct [...] formats.
             const productsPage = Array.isArray(module.default) ? module.default : module.default?.products;
 
-
             if (productsPage && Array.isArray(productsPage)) {
-                const mappedProducts = productsPage.map((p: any) => ({
-                    id: p.id,
-                    name: p.title,
-                    url: normalizeUrl(p.url), // <-- Normalize URL here
-                    vendor: p.vendor,
-                    store: {
-                        name: p.vendor,
-                        url: normalizeUrl(p.vendor_url), // <-- Normalize store URL
-                        facebook_page_id: p.facebook_page_id,
-                    },
-                    images: p.images,
-                    price: p.price,
-                    currency: p.currency,
-                    language: p.language || 'en',
-                    country: p.country,
-                    created_at: p.created_at,
-                    description: p.description,
-                }));
+                const mappedProducts = productsPage.map((p: any, index: number) => {
+                    // Generate a fallback ID if missing. 
+                    // Many json files might not have 'id', so we use 'url' or generate one.
+                    const productId = p.id || p.url || `product-${Date.now()}-${Math.random()}`;
+
+                    return {
+                        id: productId,
+                        name: p.title || 'Untitled Product',
+                        url: normalizeUrl(p.url),
+                        vendor: p.vendor || 'Unknown',
+                        store: {
+                            name: p.vendor || 'Unknown',
+                            url: normalizeUrl(p.vendor_url || (p.vendor && p.vendor.includes('.') ? `https://${p.vendor}` : '')), 
+                            facebook_page_id: p.facebook_page_id,
+                        },
+                        // Ensure images have the required structure with ID
+                        images: Array.isArray(p.images) ? p.images.map((img: any, imgIndex: number) => ({
+                            id: img.id || `${productId}-img-${imgIndex}`,
+                            src: img.src || img // Handle case where img might be just a string, though sample showed object
+                        })) : [],
+                        price: p.price || '0',
+                        currency: p.currency || 'USD',
+                        language: p.language || 'en',
+                        country: p.country,
+                        created_at: p.created_at || new Date().toISOString(),
+                        description: p.description || '',
+                    };
+                });
                 allProducts.push(...mappedProducts);
             }
         } catch (error) {
@@ -77,7 +82,7 @@ export async function loadProducts(): Promise<LoadProductsResult> {
 
     return {
         uniqueProducts,
-        allProducts, // <-- Return the full list
+        allProducts,
         totalBeforeFilter,
         uniqueCount: uniqueProducts.length,
     };

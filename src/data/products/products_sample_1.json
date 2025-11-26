@@ -1,0 +1,84 @@
+{
+  "products": [
+    {
+      "title": "Rice Peel Shot",
+      "url": "https://cashymart.com/products/rice-peel-shot",
+      "vendor": "cashymart.com",
+      "created_at": "2025-09-22T12:09:06Z",
+      "images": [{ "src": "https://cdn.shopify.com/s/files/1/0756/8556/0598/files/Rice-Peel-Shot-cashymart-42205673029910.jpg?v=1758753316" }],
+      "language": "en"
+    },
+    {
+      "title": "Lip Balm Ball",
+      "url": "https://cashymart.com/products/lip-balm-ball",
+      "vendor": "cashymart.com",
+      "created_at": "2025-09-17T11:59:47Z",
+      "images": [{ "src": "https://cdn.shopify.com/s/files/1/0756/8556/0598/files/Lip-Balm-Ball-cashymart-42172108472598.webp?v=1758140538" }],
+      "language": "en"
+    },
+    {
+      "title": "Breakfast Sandwich Machine",
+      "url": "https://cashymart.com/products/breakfast-sandwich-machine",
+      "vendor": "cashymart.com",
+      "created_at": "2025-09-17T11:34:11Z",
+      "images": [{ "src": "https://cdn.shopify.com/s/files/1/0756/8556/0598/files/Breakfast-Sandwich-Machine-cashymart-42171817656598.webp?v=1758109457" }],
+      "language": "en"
+    },
+    {
+      "title": "Wireless Earbuds",
+      "url": "https://techstore.com/products/wireless-earbuds",
+      "vendor": "techstore.com",
+      "created_at": "2025-09-16T10:00:00Z",
+      "images": [{ "src": "https://example.com/earbuds.jpg" }],
+      "language": "en"
+    },
+    {
+      "title": "Smart Watch Series 5",
+      "url": "https://techstore.com/products/smart-watch-series-5",
+      "vendor": "techstore.com",
+      "created_at": "2025-09-15T09:30:00Z",
+      "images": [{ "src": "https://example.com/watch.jpg" }],
+      "language": "en"
+    },
+    {
+      "title": "Gaming Keyboard",
+      "url": "https://techstore.com/products/gaming-keyboard",
+      "vendor": "techstore.com",
+      "created_at": "2025-09-14T14:20:00Z",
+      "images": [{ "src": "https://example.com/keyboard.jpg" }],
+      "language": "en"
+    },
+    {
+      "title": "Ergonomic Mouse",
+      "url": "https://techstore.com/products/ergonomic-mouse",
+      "vendor": "techstore.com",
+      "created_at": "2025-09-13T16:45:00Z",
+      "images": [{ "src": "https://example.com/mouse.jpg" }],
+      "language": "en"
+    },
+    {
+      "title": "Laptop Stand",
+      "url": "https://techstore.com/products/laptop-stand",
+      "vendor": "techstore.com",
+      "created_at": "2025-09-12T11:15:00Z",
+      "images": [{ "src": "https://example.com/stand.jpg" }],
+      "language": "en"
+    },
+    {
+      "title": "USB-C Hub",
+      "url": "https://techstore.com/products/usb-c-hub",
+      "vendor": "techstore.com",
+      "created_at": "2025-09-11T08:50:00Z",
+      "images": [{ "src": "https://example.com/hub.jpg" }],
+      "language": "en"
+    },
+    {
+      "title": "Portable Charger",
+      "url": "https://techstore.com/products/portable-charger",
+      "vendor": "techstore.com",
+      "created_at": "2025-09-10T13:10:00Z",
+      "images": [{ "src": "https://example.com/charger.jpg" }],
+      "language": "en"
+    }
+  ]
+}

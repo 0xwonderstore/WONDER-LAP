@@ -1,6 +1,11 @@
 export const translations = {
   ar: {
     rtl: true,
+    filter: 'فلتر',
+    filters: 'فلاتر',
+    search: 'بحث',
+    store: 'المتجر',
+    date: 'التاريخ',
     // App.tsx
     dashboard: 'لوحة التحكم',
     favorites: 'المفضلة',
@@ -167,6 +172,11 @@ export const translations = {
   },
   en: {
     rtl: false,
+    filter: 'Filter',
+    filters: 'Filters',
+    search: 'Search',
+    store: 'Store',
+    date: 'Date',
     // App.tsx
     dashboard: 'Dashboard',
     favorites: 'Favorites',

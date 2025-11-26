@@ -1,17 +1,21 @@
-import React, { useMemo, Suspense, useCallback, useEffect } from 'react';
+import React, { useMemo, Suspense, useCallback, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Moon, Sun, Sparkles, Heart, LayoutDashboard, EyeOff, Instagram } from 'lucide-react';
-import { Product } from './types';
 import { loadProducts, LoadProductsResult } from './utils/productLoader';
-import { filterProducts } from './utils/productUtils';
+import { filterProducts, searchProducts } from './utils/productUtils';
 import { useFavoritesStore } from './stores/favoritesStore';
 import { useLanguageStore } from './stores/languageStore';
 import { useBlacklistStore } from './stores/blacklistStore';
 import { translations } from './translations';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import ProductCard from './components/ProductCard';
+import ProductTable from './components/ProductTable';
+import Pagination from './components/Pagination';
+import { EmptyState } from './components/EmptyState';
+import FilterComponent from './components/FilterComponent';
+import { DateRange } from 'react-day-picker';
 
 // --- Lazy Imports ---
-const ProductView = React.lazy(() => import('./components/ProductView'));
 const FavoritesPage = React.lazy(() => import('./components/FavoritesPage'));
 const DashboardPage = React.lazy(() => import('./components/DashboardPage'));
 const BlacklistPage = React.lazy(() => import('./components/BlacklistPage'));
@@ -38,6 +42,7 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useLocalStorage<Page>('currentPage', 'home');
   const [initialFilters, setInitialFilters] = useLocalStorage<InitialFilter | null>('initialFilters', null);
   
+  // Data loading
   const { data: productData, isLoading } = useQuery<LoadProductsResult>({
     queryKey: ['products'],
     queryFn: loadProducts,
@@ -57,16 +62,91 @@ const App: React.FC = () => {
     document.documentElement.lang = language;
   }, [darkMode, language]);
 
-  // --- Memoized Data ---
-  const filteredProducts = useMemo(() => {
-    return filterProducts(uniqueProducts, blacklistedKeywords, blockedStores);
-  }, [uniqueProducts, blacklistedKeywords, blockedStores]);
 
+  // --- Filter State ---
+  const [viewMode, setViewMode] = useLocalStorage<'grid' | 'table'>('viewMode', 'grid');
+  const [productsPage, setProductsPage] = useLocalStorage('productsPage', 1);
+  const [productsPerPage, setProductsPerPage] = useLocalStorage('productsPerPage', 24);
+  const [filters, setFilters] = useState<{
+    name: string;
+    store: string;
+    language: string;
+  }>({
+    name: '',
+    store: '',
+    language: '',
+  });
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
+  // Apply initial filters
+  useEffect(() => {
+    if (initialFilters) {
+      setFilters({
+        name: initialFilters.name || '',
+        store: initialFilters.store || '',
+        language: initialFilters.language || '',
+      });
+      setProductsPage(1);
+      setInitialFilters(null); // Clear after applying
+    }
+  }, [initialFilters, setInitialFilters, setProductsPage]);
+
+  // --- Memoized Data for Filters ---
   const uniqueStores = useMemo(() => {
-    return [...new Set(filteredProducts.map(p => p.vendor).filter(Boolean))];
-  }, [filteredProducts]);
+    return [...new Set(uniqueProducts.map(p => p.vendor).filter(Boolean))];
+  }, [uniqueProducts]);
 
-  const favoritesCount = favoriteUrls.size;
+  const availableLanguages = useMemo(() => {
+    return [...new Set(uniqueProducts.map(p => p.language).filter(Boolean))];
+  }, [uniqueProducts]);
+
+  const languageCounts = useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    uniqueProducts.forEach(p => {
+      if (p.language) {
+        counts[p.language] = (counts[p.language] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [uniqueProducts]);
+
+
+  // --- Filtering Logic ---
+  const filteredProducts = useMemo(() => {
+    let products = uniqueProducts;
+
+    // 1. Blacklist
+    products = filterProducts(products, blacklistedKeywords, blockedStores);
+
+    // 2. User Filters
+    if (filters.name) {
+        products = searchProducts(products, filters.name);
+    }
+    if (filters.store) {
+        products = products.filter(p => p.vendor === filters.store);
+    }
+    if (filters.language) {
+        products = products.filter(p => p.language === filters.language);
+    }
+    if (dateRange?.from) {
+        products = products.filter(p => new Date(p.created_at) >= dateRange.from!);
+    }
+    if (dateRange?.to) {
+        products = products.filter(p => new Date(p.created_at) <= dateRange.to!);
+    }
+    
+    // Default sorting: Newest first
+    return products.sort((a, b) => {
+         if (!a.created_at || !b.created_at) return 0;
+         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  }, [uniqueProducts, blacklistedKeywords, blockedStores, filters, dateRange]);
+
+
+  // --- Pagination Logic ---
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+  const currentProducts = filteredProducts.slice((productsPage - 1) * productsPerPage, productsPage * productsPerPage);
+
 
   // --- Handlers ---
   const navigateTo = (page: Page) => setCurrentPage(prev => (prev === page ? 'home' : page));
@@ -76,10 +156,18 @@ const App: React.FC = () => {
     setCurrentPage('home');
   }, [setInitialFilters, setCurrentPage]);
 
-  const clearInitialFilters = useCallback(() => {
-    setInitialFilters(null);
-  }, [setInitialFilters]);
+  const handleFilterChange = (key: string, value: string) => {
+      setFilters(prev => ({ ...prev, [key]: value }));
+      setProductsPage(1);
+  };
   
+  const handleResetFilters = () => {
+      setFilters({ name: '', store: '', language: '' });
+      setDateRange(undefined);
+      setProductsPage(1);
+  };
+
+
   const HeaderButton: React.FC<{ onClick: () => void; className?: string; tooltip: string; 'aria-label': string; children?: React.ReactNode; }> = 
     ({ onClick, className, tooltip, children, ...props }) => (
     <div className="relative group">
@@ -94,7 +182,52 @@ const App: React.FC = () => {
       case 'dashboard': return <DashboardPage products={filteredProducts} allProductsRaw={allProductsRaw} totalBeforeFilter={totalBeforeFilter} onNavigateWithFilter={navigateToHomeWithFilter} />;
       case 'blacklist': return <BlacklistPage />;
       case 'instagram': return <InstagramPage />;
-      default: return <ProductView products={filteredProducts} isLoading={isLoading} stores={uniqueStores} onClearInitialFilters={clearInitialFilters} initialFilters={initialFilters} onNavigateWithFilter={navigateToHomeWithFilter} />;
+      default: 
+        return (
+            <div className="animate-fade-in-up">
+                 {/* Re-integrated Filter Component */}
+                 <FilterComponent 
+                    t={t}
+                    stores={uniqueStores}
+                    languages={availableLanguages}
+                    languageCounts={languageCounts}
+                    filters={filters}
+                    date={dateRange}
+                    setDate={setDateRange}
+                    onFilterChange={handleFilterChange}
+                    onResetFilters={handleResetFilters}
+                    viewMode={viewMode}
+                    onViewModeChange={setViewMode}
+                    productsPerPage={productsPerPage}
+                    onProductsPerPageChange={setProductsPerPage}
+                 />
+
+                {isLoading ? (
+                    <LoadingFallback />
+                ) : currentProducts.length > 0 ? (
+                    <>
+                        {viewMode === 'grid' ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                {currentProducts.map(p => (
+                                    <ProductCard key={p.url} product={p} t={t} onNavigateWithFilter={navigateToHomeWithFilter} />
+                                ))}
+                            </div>
+                        ) : (
+                             <ProductTable products={currentProducts} t={t} onNavigateWithFilter={navigateToHomeWithFilter} />
+                        )}
+                        <Pagination 
+                            currentPage={productsPage} 
+                            totalPages={totalPages} 
+                            onPageChange={setProductsPage}
+                            totalItems={filteredProducts.length}
+                            itemsPerPage={productsPerPage}
+                        />
+                    </>
+                ) : (
+                    <EmptyState title={t.noResults} hint={t.noResultsHint} />
+                )}
+            </div>
+        );
     }
   };
 
@@ -102,6 +235,8 @@ const App: React.FC = () => {
   const isDashboardActive = currentPage === 'dashboard';
   const isBlacklistActive = currentPage === 'blacklist';
   const isInstagramActive = currentPage === 'instagram';
+
+  const favoritesCount = favoriteUrls.size;
 
   return (
     <div className="min-h-screen">
