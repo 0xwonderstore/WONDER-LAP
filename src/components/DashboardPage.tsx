@@ -92,7 +92,7 @@ const TableSkeleton: React.FC = () => (
 // --- Main Component ---
 const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw, totalBeforeFilter, onNavigateWithFilter, isLoading }) => {
   const { language } = useLanguageStore();
-  const { tabVisibility } = useDashboardStore();
+  const { tabVisibility, storeColumnsVisibility } = useDashboardStore();
   const t = translations[language];
 
   const availableTabs = useMemo(() => {
@@ -214,7 +214,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
   }
 
   const handleExportStores = () => {
-    const headers = ['vendor', 'totalProducts', 'newProducts30d', 'lastProductAdded', 'firstProductAdded', 'language'];
+    const headers = ['vendor'];
+    if (storeColumnsVisibility.totalProducts) headers.push('totalProducts');
+    if (storeColumnsVisibility.language) headers.push('language');
+    if (storeColumnsVisibility.newProducts30d) headers.push('newProducts30d');
+    if (storeColumnsVisibility.lastProductAdded) headers.push('lastProductAdded');
+    if (storeColumnsVisibility.firstProductAdded) headers.push('firstProductAdded');
+    
     exportToCsv(storeTableData, 'stores_data.csv', headers);
   };
 
