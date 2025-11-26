@@ -7,6 +7,9 @@ module.exports = {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Tajawal', 'sans-serif'],
+      },
       colors: {
         // Light Theme Colors
         light: {
