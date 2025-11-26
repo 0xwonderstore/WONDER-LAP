@@ -23,9 +23,78 @@
     }
   }
 
+  @keyframes text-shimmer {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 100% 50%;
+    }
+  }
+
+  @keyframes blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
+  }
+
   .animate-fade-in-up {
     animation: fade-in-up 0.4s ease-out forwards;
   }
+
+  .animate-text-shimmer {
+    animation: text-shimmer 3s linear infinite;
+  }
+
+  .animate-blob {
+    animation: blob 7s infinite;
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+}
+
+/* Background Patterns */
+.bg-grid-pattern {
+  background-image: linear-gradient(to right, rgba(229, 231, 235, 0.5) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(229, 231, 235, 0.5) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+}
+
+.dark .bg-grid-pattern {
+  background-image: linear-gradient(to right, rgba(55, 65, 81, 0.5) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(55, 65, 81, 0.5) 1px, transparent 1px);
+}
+
+/* Button Glow Effect */
+.glow-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.glow-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.glow-effect:hover::after {
+  opacity: 1;
 }
 
 /* Custom style to fix the date input placeholder in RTL */
@@ -44,4 +113,3 @@ html[dir="rtl"] .custom-date-input::-webkit-calendar-picker-indicator {
   left: 0.75rem; /* Adjust as needed */
   right: auto;
 }
-

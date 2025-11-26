@@ -6,6 +6,7 @@ import { filterProducts, searchProducts } from './utils/productUtils';
 import { useFavoritesStore } from './stores/favoritesStore';
 import { useLanguageStore } from './stores/languageStore';
 import { useBlacklistStore } from './stores/blacklistStore';
+import { useToastStore } from './stores/toastStore';
 import { translations } from './translations';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import ProductCard from './components/ProductCard';
@@ -13,6 +14,7 @@ import ProductTable from './components/ProductTable';
 import Pagination from './components/Pagination';
 import { EmptyState } from './components/EmptyState';
 import FilterComponent from './components/FilterComponent';
+import Toast from './components/Toast';
 import { DateRange } from 'react-day-picker';
 
 // --- Lazy Imports ---
@@ -39,6 +41,7 @@ const App: React.FC = () => {
   const { language } = useLanguageStore();
   const { favoriteUrls } = useFavoritesStore();
   const { keywords: blacklistedKeywords, blockedStores } = useBlacklistStore();
+  const { message, type, hideToast } = useToastStore(); // Toast state
   const [currentPage, setCurrentPage] = useLocalStorage<Page>('currentPage', 'home');
   const [initialFilters, setInitialFilters] = useLocalStorage<InitialFilter | null>('initialFilters', null);
   
@@ -168,10 +171,15 @@ const App: React.FC = () => {
   };
 
 
-  const HeaderButton: React.FC<{ onClick: () => void; className?: string; tooltip: string; 'aria-label': string; children?: React.ReactNode; }> = 
-    ({ onClick, className, tooltip, children, ...props }) => (
+  const HeaderButton: React.FC<{ onClick: () => void; className?: string; tooltip: string; 'aria-label': string; children?: React.ReactNode; count?: number }> = 
+    ({ onClick, className, tooltip, children, count, ...props }) => (
     <div className="relative group">
-      <button onClick={onClick} className={`relative rounded-full transition-all duration-300 flex items-center gap-2 ${className}`} {...props}>{children}</button>
+      <button onClick={onClick} className={`relative glow-effect rounded-full transition-all duration-300 flex items-center gap-2 ${className}`} {...props}>{children}</button>
+      {count !== undefined && count > 0 && (
+        <span className="absolute top-0 right-0 flex items-center justify-center min-w-[1rem] h-4 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold pointer-events-none z-10 shadow-sm" style={{transform: 'translate(30%, -30%)'}}>
+          {count}
+        </span>
+      )}
       <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-max bg-gray-800 text-white text-xs rounded-lg py-1 px-3 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none z-10 scale-95 group-hover/tooltip:scale-100">{tooltip}</div>
     </div>
   );
@@ -184,7 +192,7 @@ const App: React.FC = () => {
       case 'instagram': return <InstagramPage />;
       default: 
         return (
-            <div className="animate-fade-in-up">
+            <div className="animate-fade-in-up relative z-10">
                  {/* Re-integrated Filter Component */}
                  <FilterComponent 
                     t={t}
@@ -239,10 +247,39 @@ const App: React.FC = () => {
   const favoritesCount = favoriteUrls.size;
 
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto py-8 px-4">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Toast Notification */}
+      {message && type && <Toast message={message} type={type} onClose={hideToast} />}
+
+      {/* Animated Background Blobs */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
+         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-300/30 dark:bg-purple-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+         <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-yellow-300/30 dark:bg-yellow-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+         <div className="absolute bottom-[-20%] left-[20%] w-[40%] h-[40%] bg-pink-300/30 dark:bg-pink-900/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
+         {/* Grid Pattern Overlay */}
+         <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] dark:opacity-[0.05]"></div>
+      </div>
+
+      <div className="container mx-auto py-8 px-4 relative z-10">
         <header className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-3"><Sparkles className="w-8 h-8 text-yellow-500" /><h1 dir="ltr" className="text-3xl font-bold bg-gradient-to-r from-brand-primary to-purple-600 bg-clip-text text-transparent" onClick={() => setCurrentPage('home')} style={{cursor: 'pointer'}}>WONDER LAB</h1></div>
+          <div className="flex items-center gap-3 relative group cursor-pointer" onClick={() => setCurrentPage('home')}>
+             {/* Animated Sparkles */}
+             <div className="absolute -left-4 -top-2 animate-pulse">
+                <Sparkles className="w-6 h-6 text-yellow-400 opacity-80" />
+             </div>
+             <div className="absolute left-10 bottom-0 animate-ping">
+                <Sparkles className="w-3 h-3 text-pink-400 opacity-50" />
+             </div>
+             
+             {/* Logo Text with Gradient Animation */}
+             <h1 className="text-4xl font-black tracking-tighter bg-gradient-to-r from-brand-primary via-purple-500 to-pink-500 bg-clip-text text-transparent animate-text-shimmer bg-[length:200%_auto]" dir="ltr">
+                WONDER LAB
+             </h1>
+             
+             {/* Underline effect */}
+             <div className="absolute -bottom-1 left-0 w-0 h-1 bg-gradient-to-r from-brand-primary to-pink-500 transition-all duration-300 group-hover:w-full rounded-full"></div>
+          </div>
+          
           <div className="flex items-center gap-2 sm:gap-4">
             <Suspense fallback={<div className="w-24 h-10 rounded-full bg-gray-200 animate-pulse" />}>
               <LanguageSwitcher />
@@ -250,15 +287,13 @@ const App: React.FC = () => {
             <HeaderButton onClick={() => navigateTo('dashboard')} className={isDashboardActive ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.dashboard} aria-label="Dashboard"><LayoutDashboard className={`w-5 h-5 transition-transform duration-200 ${isDashboardActive ? 'rotate-6' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isDashboardActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.dashboard}</span></HeaderButton>
             <HeaderButton onClick={() => navigateTo('instagram')} className={isInstagramActive ? 'bg-pink-100 dark:bg-pink-900/50 text-pink-600 dark:text-pink-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.instagram_feature} aria-label="Instagram"><Instagram className={`w-5 h-5 transition-transform duration-200 ${isInstagramActive ? 'rotate-6' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isInstagramActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.instagram_feature}</span></HeaderButton>
             <HeaderButton onClick={() => navigateTo('blacklist')} className={isBlacklistActive ? 'bg-gray-200 dark:bg-gray-700 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.blacklist} aria-label="Blacklist"><EyeOff className={`w-5 h-5 transition-transform duration-200 ${isBlacklistActive ? 'text-gray-800 dark:text-gray-200' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isBlacklistActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.blacklist}</span></HeaderButton>
-            <HeaderButton onClick={() => navigateTo('favorites')} className={isFavoritesActive ? 'bg-red-100 dark:bg-red-900/50 text-red-500 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.favorites} aria-label="Favorites">
+            
+            {/* Favorites Button with count prop */}
+            <HeaderButton onClick={() => navigateTo('favorites')} className={isFavoritesActive ? 'bg-red-100 dark:bg-red-900/50 text-red-500 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.favorites} aria-label="Favorites" count={favoritesCount}>
               <Heart className={`w-5 h-5 transition-all duration-200 ${isFavoritesActive ? 'fill-red-500 text-red-500 rotate-0' : 'text-current -rotate-12'}`} />
               <span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isFavoritesActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.favorites}</span>
-              {favoritesCount > 0 && 
-                <span className="absolute top-0 right-0 flex items-center justify-center min-w-[1rem] h-4 px-1.5 rounded-full bg-red-500 text-white text-xs font-bold" style={{transform: 'translate(40%, -40%)'}}>
-                  {favoritesCount}
-                </span>
-              }
             </HeaderButton>
+            
             <HeaderButton onClick={() => setDarkMode(d => !d)} className="p-2 bg-light-surface dark:bg-dark-surface" tooltip={t.theme} aria-label="Toggle Dark Mode">{darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5" />}</HeaderButton>
           </div>
         </header>

@@ -37,7 +37,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
   const languageOptions = [{ value: '', label: t.allLanguages }, ...languages.map(l => ({ value: l, label: `${l.toUpperCase()} (${languageCounts[l] || 0})` }))];
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg mb-8 border border-gray-100 dark:border-gray-700 overflow-hidden transition-all duration-300">
+    <div className={`bg-white dark:bg-gray-800 rounded-3xl shadow-lg mb-8 border border-gray-100 dark:border-gray-700 transition-all duration-300 ${isExpanded ? 'overflow-visible' : 'overflow-hidden'}`}>
       {/* Header / Toggle Bar */}
       <div 
         className="px-6 py-4 flex justify-between items-center cursor-pointer bg-gray-50/50 dark:bg-gray-700/30 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
@@ -56,7 +56,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
       </div>
 
       {/* Expanded Content */}
-      <div className={`px-6 transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[500px] py-6 opacity-100' : 'max-h-0 py-0 opacity-0 overflow-hidden'}`}>
+      <div className={`px-6 transition-all duration-500 ease-in-out ${isExpanded ? 'max-h-[800px] py-6 opacity-100 overflow-visible' : 'max-h-0 py-0 opacity-0 overflow-hidden'}`}>
         <div className="flex flex-col gap-6">
             
             {/* Top Row: Search and Key Filters */}
@@ -87,7 +87,15 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                     />
                 </div>
 
-                {/* Language Filter */}
+                {/* Date Picker (Moved before Language) */}
+                {setDate && (
+                    <div className="col-span-1">
+                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider flex items-center gap-1"><CalendarIcon className="w-3 h-3" /> {t.date}</label>
+                    <DateRangePicker date={date} setDate={setDate} />
+                    </div>
+                )}
+
+                {/* Language Filter (Moved after Date) */}
                 <div className="col-span-1">
                     <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider flex items-center gap-1"><Globe className="w-3 h-3" /> {t.language}</label>
                     <Select 
@@ -97,14 +105,6 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                         className="w-full py-2.5 rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm focus:ring-brand-primary/50 shadow-sm"
                     />
                 </div>
-
-                {/* Date Picker */}
-                {setDate && (
-                    <div className="col-span-1">
-                    <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider flex items-center gap-1"><CalendarIcon className="w-3 h-3" /> {t.date}</label>
-                    <DateRangePicker date={date} setDate={setDate} />
-                    </div>
-                )}
             </div>
 
 

@@ -6,6 +6,8 @@ export const translations = {
     search: 'بحث',
     store: 'المتجر',
     date: 'التاريخ',
+    added_to_favorites: 'تمت الإضافة للمفضلة',
+    removed_from_favorites: 'تم الحذف من المفضلة',
     // App.tsx
     dashboard: 'لوحة التحكم',
     favorites: 'المفضلة',
@@ -138,6 +140,7 @@ export const translations = {
     persian: 'الفارسية',
     french: 'الفرنسية',
     hindi: 'الهندية',
+    no_users_blacklisted: 'لم يتم حظر أي مستخدم حتى الآن.',
 
     // Language Codes
     en: 'الإنجليزية',
@@ -177,6 +180,8 @@ export const translations = {
     search: 'Search',
     store: 'Store',
     date: 'Date',
+    added_to_favorites: 'Added to favorites',
+    removed_from_favorites: 'Removed from favorites',
     // App.tsx
     dashboard: 'Dashboard',
     favorites: 'Favorites',
@@ -309,6 +314,7 @@ export const translations = {
     persian: 'Persian',
     french: 'French',
     hindi: 'Hindi',
+    no_users_blacklisted: 'No users have been blacklisted yet.',
 
     // Language Codes
     en: 'English',

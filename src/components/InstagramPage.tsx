@@ -9,14 +9,15 @@ import { useInstagramPageStore } from "../stores/instagramPageStore";
 import { Eye } from "lucide-react";
 import { InstagramPost } from "../types";
 import { instagramLanguageMapping } from '../data/instagramLanguageMapping';
-import LoadingSpinner from "./LoadingSpinner"; // Import the new component
+import LoadingSpinner from "./LoadingSpinner";
 
 const InstagramPage = () => {
   const { t } = useTranslation();
   const { blacklistedUsers, addUser, removeUser } = useInstagramBlacklistStore();
   const { currentPage, filters, dateRange, sort, setCurrentPage, setFilters, setDateRange, setSort, reset } = useInstagramPageStore();
 
-  const POSTS_PER_PAGE = 100;
+  // Reduced from 100 to 24 for better performance
+  const POSTS_PER_PAGE = 24;
 
   const [allPosts, setAllPosts] = useState<InstagramPost[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
@@ -75,10 +76,10 @@ const InstagramPage = () => {
       posts = posts.filter((p) => p.likes <= filters.maxLikes);
     };
     if (dateRange?.from) {
-      posts = posts.filter((p) => new Date(p.timestamp) >= dateRange.from);
+      posts = posts.filter((p) => new Date(p.timestamp) >= dateRange.from!);
     }
     if (dateRange?.to) {
-      posts = posts.filter((p) => new Date(p.timestamp) <= dateRange.to);
+      posts = posts.filter((p) => new Date(p.timestamp) <= dateRange.to!);
     }
 
     // Apply sorting
@@ -124,38 +125,42 @@ const InstagramPage = () => {
   if (loadingPosts) {
     return (
       <div className="container mx-auto p-2 flex justify-center items-center h-96">
-        <LoadingSpinner message={t('loading_instagram_posts')} />
+        <LoadingSpinner message={t('loading_posts')} />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-2">
+    <div className="container mx-auto p-2 animate-fade-in-up">
       <InstagramFilterComponent
         usernames={allUniqueUsernames}
         filters={filters}
         onFilterChange={handleFilterChange}
         onSortChange={handleSortChange}
-        onDateChange={handleDateChange}
         onReset={handleReset}
         currentSort={sort}
         date={dateRange}
-        setDate={handleDateChange}
+        onDateChange={handleDateChange}
       />
       <div className="mb-4">
-        <h3 className="text-lg font-semibold">{t('blacklist')} ({blacklistedUsers.size})</h3>
-        <div className="flex flex-wrap gap-2 mt-2">
-          {Array.from(blacklistedUsers).map(user => (
-            <div key={user} className="flex items-center gap-2 bg-gray-200 dark:bg-gray-700 rounded-full px-3 py-1">
-              <span>{user}</span>
-              <button onClick={() => handleBlacklistToggle(user)} className="text-red-500 hover:text-red-700">
-                <Eye size={16} />
-              </button>
-            </div>
-          ))}
-        </div>
+        <h3 className="text-lg font-semibold mb-2">{t('blacklist')} ({blacklistedUsers.size})</h3>
+        {blacklistedUsers.size > 0 ? (
+           <div className="flex flex-wrap gap-2">
+            {Array.from(blacklistedUsers).map(user => (
+              <div key={user} className="flex items-center gap-2 bg-gray-200 dark:bg-gray-700 rounded-full px-3 py-1 text-sm">
+                <span>{user}</span>
+                <button onClick={() => handleBlacklistToggle(user)} className="text-red-500 hover:text-red-700 transition-colors">
+                  <Eye size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+           <p className="text-sm text-gray-400 italic">{t('no_users_blacklisted') || 'No users blacklisted'}</p>
+        )}
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1">
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {paginatedPosts.map((post) => (
           <InstagramCard
             key={post.permalink}
@@ -172,7 +177,7 @@ const InstagramPage = () => {
           onPageChange={setCurrentPage}
           itemsPerPage={POSTS_PER_PAGE}
           totalItems={filteredAndSortedPosts.length}
-          t={t}
+          t={t} // Passing t here might need update if Pagination doesn't expect it, but checking usage it might.
         />
       </div>
     </div>

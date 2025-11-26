@@ -4,6 +4,7 @@ import { Product } from '../types';
 import { formatDate } from '../utils/productUtils';
 import { useFavoritesStore } from '../stores/favoritesStore';
 import { useBlacklistStore } from '../stores/blacklistStore';
+import { useToastStore } from '../stores/toastStore';
 import MetaIcon from './MetaIcon';
 
 interface ProductCardProps {
@@ -15,12 +16,19 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFilter }) => {
   const { toggleFavorite, isFavorite } = useFavoritesStore();
   const { addStore } = useBlacklistStore();
+  const { showToast } = useToastStore();
   const favorite = isFavorite(product.url);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     toggleFavorite(product.url);
+    
+    if (!favorite) {
+        showToast(t.added_to_favorites, 'added');
+    } else {
+        showToast(t.removed_from_favorites, 'removed');
+    }
   };
 
   const handleBlockStore = (e: React.MouseEvent) => {
@@ -85,7 +93,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
                 </a>
             )}
         </div>
-        {/* Date Badge removed from here */}
       </div>
 
       {/* Content */}
