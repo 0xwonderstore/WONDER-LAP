@@ -17,6 +17,7 @@ export const translations = {
     suggestions: 'اقتراحات',
     pickADate: 'اختر تاريخًا',
     today: 'اليوم',
+    yesterday: 'أمس',
     last7days: 'آخر 7 أيام',
     last30days: 'آخر 30 يومًا',
     thisMonth: 'هذا الشهر',
@@ -70,6 +71,7 @@ export const translations = {
     dashboard_settings_description: 'اختر العناصر التي تريد عرضها.',
     dashboard_settings_modules: 'الوحدات الرئيسية',
     dashboard_settings_columns: 'أعمدة جدول المتاجر',
+    products_added_over_time: 'المنتجات المضافة عبر الزمن',
     
     // BlacklistPage.tsx
     blacklist_title: 'إدارة القائمة السوداء',
@@ -181,6 +183,7 @@ export const translations = {
     suggestions: 'Suggestions',
     pickADate: 'Pick a date',
     today: 'Today',
+    yesterday: 'Yesterday',
     last7days: 'Last 7 days',
     last30days: 'Last 30 days',
     thisMonth: 'This Month',
@@ -234,6 +237,7 @@ export const translations = {
     dashboard_settings_description: 'Choose which items to display.',
     dashboard_settings_modules: 'Main Modules',
     dashboard_settings_columns: 'Store Table Columns',
+    products_added_over_time: 'Products Added Over Time',
 
     // BlacklistPage.tsx
     blacklist_title: 'Manage Blacklist',

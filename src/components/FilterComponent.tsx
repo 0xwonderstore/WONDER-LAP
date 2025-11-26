@@ -1,6 +1,8 @@
 import React from 'react';
 import { LayoutGrid, List, X } from 'lucide-react';
 import Select from './Select';
+import { DateRangePicker } from './DateRangePicker';
+import { DateRange } from 'react-day-picker';
 
 interface FilterComponentProps {
   t: any;
@@ -12,6 +14,8 @@ interface FilterComponentProps {
     store: string;
     language: string;
   };
+  date?: DateRange | undefined;
+  setDate?: (date: DateRange | undefined) => void;
   onFilterChange: (filterName: string, value: string) => void;
   onResetFilters: () => void;
   viewMode: 'grid' | 'table';
@@ -21,9 +25,9 @@ interface FilterComponentProps {
 }
 
 const FilterComponent: React.FC<FilterComponentProps> = ({
-  t, stores, languages, languageCounts, filters, onFilterChange, onResetFilters, viewMode, onViewModeChange, productsPerPage, onProductsPerPageChange
+  t, stores, languages, languageCounts, filters, date, setDate, onFilterChange, onResetFilters, viewMode, onViewModeChange, productsPerPage, onProductsPerPageChange
 }) => {
-  const isFilterActive = filters.name !== '' || filters.store !== '' || filters.language !== '';
+  const isFilterActive = filters.name !== '' || filters.store !== '' || filters.language !== '' || (date?.from !== undefined);
 
   const storeOptions = [
     { value: '', label: t.allStores },
@@ -41,13 +45,21 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
   const perPageOptions = [24, 48, 100, 160].map(v => ({ value: String(v), label: `${v} ${t.product}` }));
 
   return (
-    <div className="bg-light-surface dark:bg-dark-surface p-4 rounded-2xl mb-6 shadow-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="bg-light-surface dark:bg-dark-surface p-4 rounded-2xl mb-6 shadow-md grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
       {/* Search Input */}
       <div>
         <label htmlFor="name-search" className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1 px-2">{t.searchByName}</label>
         <input type="text" id="name-search" placeholder={t.searchPlaceholder} value={filters.name} onChange={(e) => onFilterChange('name', e.target.value)}
           className="w-full p-2.5 border border-light-border dark:border-dark-border rounded-xl bg-light-background dark:bg-dark-background focus:ring-2 focus:ring-brand-primary" />
       </div>
+
+      {/* Date Range Picker */}
+      {setDate && (
+        <div>
+          <label className="block text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary mb-1 px-2">{t.pickADate}</label>
+          <DateRangePicker date={date} setDate={setDate} />
+        </div>
+      )}
 
       {/* Store Select */}
       <div>

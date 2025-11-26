@@ -67,6 +67,11 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate 
         const today = new Date();
         return { from: startOfDay(today), to: endOfDay(today) };
     }},
+    { label: t.yesterday, getRange: () => {
+        const today = new Date();
+        const yesterday = subDays(today, 1);
+        return { from: startOfDay(yesterday), to: endOfDay(yesterday) };
+    }},
     { label: t.last7days, getRange: () => {
         const to = new Date();
         const from = subDays(to, 6);
