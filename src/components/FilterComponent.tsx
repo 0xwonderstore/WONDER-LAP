@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { LayoutGrid, List, X, Search, Store, Globe, Calendar as CalendarIcon, Filter, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { LayoutGrid, List, X, Search, Store, Globe, Calendar as CalendarIcon, Filter, ChevronDown, ChevronUp, Layers } from 'lucide-react';
 import Select from './Select';
 import { DateRange } from 'react-day-picker';
 import MultiSelect from './MultiSelect';
@@ -29,10 +29,35 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
   t, stores, languages, languageCounts, filters, date, setDate, onFilterChange, onResetFilters, viewMode, onViewModeChange, productsPerPage, onProductsPerPageChange
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  
+  // Updated placeholders for Dropshipping context
+  const placeholders = [
+    t.searchPlaceholder || "Search products...",
+    "3 in 1 Wireless Charger",
+    "Portable Neck Fan",
+    "Crystal Hair Eraser",
+    "Galaxy Projector",
+    "Multi-functional Cleaning Kit",
+    "Sunset Lamp",
+    "Posture Corrector",
+    "Smart LED Strip Lights",
+    "Portable Blender",
+    "Mini Thermal Printer"
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+        setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [placeholders.length]);
+
+  const currentPlaceholder = placeholders[placeholderIndex];
   
   const isFilterActive = filters.name !== '' || filters.store !== '' || filters.language !== '' || (date?.from !== undefined);
 
-  const perPageOptions = [24, 48, 100, 160].map(v => ({ value: String(v), label: `${v} ${t.product}` }));
+  const perPageOptions = [24, 50, 100, 200];
   const storeOptions = [{ value: '', label: t.allStores }, ...stores.map(s => ({ value: s, label: s }))];
   const languageOptions = [{ value: '', label: t.allLanguages }, ...languages.map(l => ({ value: l, label: `${l.toUpperCase()} (${languageCounts[l] || 0})` }))];
 
@@ -69,10 +94,20 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                             type="text" 
                             value={filters.name}
                             onChange={(e) => onFilterChange('name', e.target.value)}
-                            placeholder={t.searchPlaceholder}
-                            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary outline-none transition-all duration-200 placeholder-gray-400 text-sm shadow-sm"
+                            placeholder={currentPlaceholder}
+                            className="w-full py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary outline-none transition-all duration-200 placeholder-gray-400 text-sm shadow-sm ltr:pl-10 ltr:pr-10 rtl:pr-10 rtl:pl-10"
                         />
-                        <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-brand-primary transition-colors" />
+                        <Search className="w-4 h-4 text-gray-400 absolute top-1/2 -translate-y-1/2 ltr:left-3 rtl:right-3 group-focus-within:text-brand-primary transition-colors" />
+                        
+                        {filters.name && (
+                            <button
+                                onClick={() => onFilterChange('name', '')}
+                                className="absolute top-1/2 -translate-y-1/2 ltr:right-3 rtl:left-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
+                                aria-label="Clear search"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -110,16 +145,21 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
 
             {/* Bottom Row: Controls */}
             <div className="flex flex-col sm:flex-row justify-between items-center pt-4 border-t border-gray-100 dark:border-gray-700 gap-4">
-                {/* Left: Per Page */}
+                {/* Left: Per Page - Redesigned as Button Group */}
                 <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <span className="text-sm font-medium text-gray-500 whitespace-nowrap">{t.show}:</span>
-                    <div className="w-32">
-                        <Select 
-                            value={String(productsPerPage)} 
-                            onChange={(e) => onProductsPerPageChange(Number(e.target.value))} 
-                            options={perPageOptions}
-                            className="py-1.5 text-sm rounded-lg"
-                        />
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                        <Layers className="w-3 h-3" /> {t.show}:
+                    </span>
+                    <div className="flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                        {perPageOptions.map(size => (
+                            <button
+                                key={size}
+                                onClick={() => onProductsPerPageChange(size)}
+                                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${productsPerPage === size ? 'bg-white dark:bg-gray-600 text-brand-primary shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400'}`}
+                            >
+                                {size}
+                            </button>
+                        ))}
                     </div>
                 </div>
 

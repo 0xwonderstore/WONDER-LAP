@@ -252,7 +252,7 @@ const App: React.FC = () => {
   const favoritesCount = favoriteUrls.size;
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden flex flex-col">
       {/* Toast Notification */}
       {message && type && <Toast message={message} type={type} onClose={hideToast} />}
 
@@ -265,7 +265,7 @@ const App: React.FC = () => {
          <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] dark:opacity-[0.05]"></div>
       </div>
 
-      <div className="container mx-auto py-8 px-4 relative z-10">
+      <div className="container mx-auto py-8 px-4 relative z-10 flex-grow">
         <header className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3 relative group cursor-pointer" onClick={() => setCurrentPage('home')}>
              {/* Animated Sparkles */}
@@ -304,6 +304,7 @@ const App: React.FC = () => {
         </header>
         <Suspense fallback={<LoadingFallback />}>{renderContent()}</Suspense>
       </div>
+      
       <Suspense fallback={<></>}>
         <ScrollButtons />
       </Suspense>

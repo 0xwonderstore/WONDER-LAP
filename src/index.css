@@ -7,7 +7,17 @@
     @apply bg-light-background text-light-text-primary;
     @apply dark:bg-dark-background dark:text-dark-text-primary;
     @apply transition-colors duration-300;
-    font-family: 'Tajawal', sans-serif; /* Apply font globally */
+    font-family: 'Tajawal', sans-serif;
+    cursor: default; /* Prevent text selection cursor (I-beam) by default */
+  }
+  
+  /* Ensure links and inputs still have correct cursors */
+  a, button, [role="button"] {
+    cursor: pointer;
+  }
+  
+  input, textarea {
+    cursor: text;
   }
 }
 

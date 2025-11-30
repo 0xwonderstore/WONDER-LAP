@@ -1,0 +1,20 @@
+{
+  "products": [
+    {
+      "title": "Product 43 - A",
+      "url": "https://example.com/product-43-a",
+      "vendor": "store-43.com",
+      "created_at": "2025-11-28T23:28:03Z",
+      "images": [{ "src": "https://via.placeholder.com/400" }],
+      "language": "en"
+    },
+    {
+      "title": "Product 43 - B",
+      "url": "https://example.com/product-43-b",
+      "vendor": "store-43.com",
+      "created_at": "2025-11-28T23:28:03Z",
+      "images": [{ "src": "https://via.placeholder.com/400" }],
+      "language": "en"
+    }
+  ]
+}
