@@ -73,19 +73,31 @@ export async function loadProducts(): Promise<LoadProductsResult> {
 
     const totalBeforeFilter = allProducts.length;
 
-    // Ensure all products are unique by their URL.
+    // Advanced Deduplication
     const seenUrls = new Set<string>();
+    const seenTitles = new Set<string>(); // Key: vendor + title (lowercased)
     
     const uniqueProducts = allProducts.filter(product => {
+        // Validity Check
         if (!product || !product.url || !product.name || !product.images || !Array.isArray(product.images) || product.images.length === 0) {
             return false;
         }
 
+        // 1. Check Normalized URL
         if (seenUrls.has(product.url)) {
             return false; 
         }
 
+        // 2. Check Duplicate Title within same Store
+        // Normalize title: trim and lowercase
+        const titleKey = `${product.vendor}::${product.name.trim().toLowerCase()}`;
+        if (seenTitles.has(titleKey)) {
+            return false;
+        }
+
         seenUrls.add(product.url);
+        seenTitles.add(titleKey);
+        
         return true; 
     });
 

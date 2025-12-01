@@ -37,7 +37,7 @@ export const translations = {
 
     // FilterComponent.tsx
     searchByName: 'البحث بالاسم',
-    searchPlaceholder: 'مثال: "قميص"',
+    searchPlaceholder: 'ابحث عن المنتجات...',
     selectStore: 'اختر متجرًا',
     allStores: 'جميع المتاجر',
     show: 'عرض',
@@ -211,7 +211,7 @@ export const translations = {
 
     // FilterComponent.tsx
     searchByName: 'Search by name',
-    searchPlaceholder: 'e.g., T-shirt',
+    searchPlaceholder: 'Search products...',
     selectStore: 'Select store',
     allStores: 'All stores',
     show: 'Show',
