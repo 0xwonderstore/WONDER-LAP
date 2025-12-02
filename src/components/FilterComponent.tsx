@@ -29,31 +29,64 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
   t, stores, languages, languageCounts, filters, date, setDate, onFilterChange, onResetFilters, viewMode, onViewModeChange, productsPerPage, onProductsPerPageChange
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   
-  // Updated placeholders for Dropshipping context
+  // Typewriter Effect State
+  const [displayText, setDisplayText] = useState('');
+  const [index, setIndex] = useState(0);
+  const [subIndex, setSubIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [blink, setBlink] = useState(true);
+
   const placeholders = [
     t.searchPlaceholder || "Search products...",
-    "3 in 1 Wireless Charger",
-    "Portable Neck Fan",
-    "Crystal Hair Eraser",
-    "Galaxy Projector",
-    "Multi-functional Cleaning Kit",
-    "Sunset Lamp",
-    "Posture Corrector",
-    "Smart LED Strip Lights",
-    "Portable Blender",
-    "Mini Thermal Printer"
+    "iPhone 15 Pro",
+    "Nike Air Max",
+    "PlayStation 5",
+    "Samsung Galaxy",
+    "MacBook Air",
+    "Gaming Laptop",
+    "Wireless Headphones"
   ];
 
+  // Blinking cursor effect
   useEffect(() => {
-    const interval = setInterval(() => {
-        setPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [placeholders.length]);
+    const timeout2 = setTimeout(() => {
+      setBlink((prev) => !prev);
+    }, 500);
+    return () => clearTimeout(timeout2);
+  }, [blink]);
 
-  const currentPlaceholder = placeholders[placeholderIndex];
+  // Typewriter logic
+  useEffect(() => {
+    if (index === placeholders.length) {
+        setIndex(0);
+        return;
+    }
+
+    if (subIndex === placeholders[index].length + 1 && !isDeleting) {
+      const timeout = setTimeout(() => {
+        setIsDeleting(true);
+      }, 2000); // Wait before deleting
+      return () => clearTimeout(timeout);
+    }
+
+    if (subIndex === 0 && isDeleting) {
+      setIsDeleting(false);
+      setIndex((prev) => (prev + 1) % placeholders.length);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setSubIndex((prev) => prev + (isDeleting ? -1 : 1));
+    }, isDeleting ? 75 : 150); // Typing speed vs deleting speed
+
+    return () => clearTimeout(timeout);
+  }, [subIndex, index, isDeleting, placeholders]);
+
+  useEffect(() => {
+      setDisplayText(placeholders[index].substring(0, subIndex));
+  }, [subIndex, index, placeholders]);
+
   
   const isFilterActive = filters.name !== '' || filters.store !== '' || filters.language !== '' || (date?.from !== undefined);
 
@@ -94,7 +127,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                             type="text" 
                             value={filters.name}
                             onChange={(e) => onFilterChange('name', e.target.value)}
-                            placeholder={currentPlaceholder}
+                            placeholder={`${displayText}${blink && !filters.name ? '|' : ''}`}
                             className="w-full py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary outline-none transition-all duration-200 placeholder-gray-400 text-sm shadow-sm ltr:pl-10 ltr:pr-10 rtl:pr-10 rtl:pl-10"
                         />
                         <Search className="w-4 h-4 text-gray-400 absolute top-1/2 -translate-y-1/2 ltr:left-3 rtl:right-3 group-focus-within:text-brand-primary transition-colors" />

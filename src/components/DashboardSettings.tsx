@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Settings, Check } from 'lucide-react';
+import { Settings, Layout, Columns } from 'lucide-react';
 import { useDashboardStore } from '../stores/dashboardStore';
 import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
@@ -47,75 +47,73 @@ const DashboardSettings = () => {
     };
   }, [wrapperRef]);
 
+  const ToggleSwitch = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
+    <div 
+        onClick={(e) => { e.preventDefault(); onChange(); }}
+        className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${checked ? 'bg-brand-primary' : 'bg-gray-300 dark:bg-gray-600'}`}
+    >
+        <div className={`bg-white w-4 h-4 rounded-full shadow-md transform duration-300 ease-in-out ${checked ? 'translate-x-5 rtl:-translate-x-5' : 'translate-x-0'}`}></div>
+    </div>
+  );
+
   return (
     <div className="relative" ref={wrapperRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-full hover:bg-light-background-hover dark:hover:bg-dark-background-hover"
+        className={`p-2.5 rounded-xl transition-all duration-200 ${isOpen ? 'bg-brand-primary text-white shadow-lg shadow-brand-primary/30' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
         aria-label={t.dashboard_settings_label}
       >
-        <Settings size={20} />
+        <Settings size={20} className={isOpen ? 'animate-spin-slow' : ''} />
       </button>
+      
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-light-surface dark:bg-dark-surface rounded-lg shadow-xl z-10 border border-light-border dark:border-dark-border max-h-[80vh] overflow-y-auto">
-          <div className="p-3">
-            <p className="text-sm font-semibold text-light-text-primary dark:text-dark-text-primary">{t.dashboard_settings_title}</p>
-            <p className="text-xs text-light-text-secondary dark:text-dark-text-secondary">{t.dashboard_settings_description}</p>
+        <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl z-50 border border-gray-100 dark:border-gray-700 overflow-hidden ring-1 ring-black/5 animate-fade-in-up">
+          <div className="p-5 bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
+            <h3 className="font-bold text-gray-800 dark:text-gray-100">{t.dashboard_settings_title}</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t.dashboard_settings_description}</p>
           </div>
           
-          {/* Main Modules Section */}
-          <div className="border-t border-light-border dark:border-dark-border py-2">
-            <div className="px-3 pb-1">
-                <p className="text-xs font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase">{t.dashboard_settings_modules}</p>
-            </div>
-            {tabs.map((tab) => (
-              <label
-                key={tab}
-                htmlFor={`vis-${tab}`}
-                className="flex items-center justify-between w-full px-3 py-2 text-sm cursor-pointer hover:bg-light-background-hover dark:hover:bg-dark-background-hover"
-              >
-                <span>{tabLabels[tab]}</span>
-                <input
-                    id={`vis-${tab}`}
-                    type="checkbox"
-                    className="sr-only"
-                    checked={tabVisibility[tab]}
-                    onChange={() => toggleTabVisibility(tab)}
-                />
-                <div className={`w-5 h-5 flex items-center justify-center rounded border ${tabVisibility[tab] ? 'bg-brand-primary border-brand-primary' : 'border-gray-400'}`}>
-                  {tabVisibility[tab] && <Check size={16} className="text-white" />}
+          <div className="max-h-[60vh] overflow-y-auto p-2">
+            {/* Main Modules Section */}
+            <div className="mb-4">
+                <div className="px-4 py-2 flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    <Layout size={14} />
+                    {t.dashboard_settings_modules}
                 </div>
-              </label>
-            ))}
-          </div>
-
-          {/* Store Table Columns Section - Only show if Stores tab is enabled */}
-          {tabVisibility.stores && (
-            <div className="border-t border-light-border dark:border-dark-border py-2">
-                <div className="px-3 pb-1">
-                    <p className="text-xs font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase">{t.dashboard_settings_columns}</p>
-                </div>
-                {columns.map((col) => (
-                <label
-                    key={col}
-                    htmlFor={`col-${col}`}
-                    className="flex items-center justify-between w-full px-3 py-2 text-sm cursor-pointer hover:bg-light-background-hover dark:hover:bg-dark-background-hover"
-                >
-                    <span>{columnLabels[col]}</span>
-                    <input
-                        id={`col-${col}`}
-                        type="checkbox"
-                        className="sr-only"
-                        checked={storeColumnsVisibility[col]}
-                        onChange={() => toggleStoreColumnVisibility(col)}
-                    />
-                    <div className={`w-5 h-5 flex items-center justify-center rounded border ${storeColumnsVisibility[col] ? 'bg-brand-primary border-brand-primary' : 'border-gray-400'}`}>
-                    {storeColumnsVisibility[col] && <Check size={16} className="text-white" />}
+                <div className="space-y-1">
+                    {tabs.map((tab) => (
+                    <div
+                        key={tab}
+                        className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                    >
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{tabLabels[tab]}</span>
+                        <ToggleSwitch checked={tabVisibility[tab]} onChange={() => toggleTabVisibility(tab)} />
                     </div>
-                </label>
-                ))}
+                    ))}
+                </div>
             </div>
-          )}
+
+            {/* Store Table Columns Section */}
+            {tabVisibility.stores && (
+                <div>
+                    <div className="px-4 py-2 flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider border-t border-gray-100 dark:border-gray-700 pt-4 mt-2">
+                        <Columns size={14} />
+                        {t.dashboard_settings_columns}
+                    </div>
+                    <div className="space-y-1">
+                        {columns.map((col) => (
+                        <div
+                            key={col}
+                            className="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                        >
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{columnLabels[col]}</span>
+                            <ToggleSwitch checked={storeColumnsVisibility[col]} onChange={() => toggleStoreColumnVisibility(col)} />
+                        </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -222,7 +222,9 @@ const App: React.FC = () => {
                         {viewMode === 'grid' ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {currentProducts.map(p => (
-                                    <ProductCard key={p.url} product={p} t={t} onNavigateWithFilter={navigateToHomeWithFilter} />
+                                    <div key={p.url} className="animate-fade-in-up" style={{ animationDelay: `${Math.random() * 0.3}s`, animationFillMode: 'both' }}>
+                                        <ProductCard product={p} t={t} onNavigateWithFilter={navigateToHomeWithFilter} />
+                                    </div>
                                 ))}
                             </div>
                         ) : (
