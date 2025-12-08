@@ -12,10 +12,12 @@ interface InstagramPageState {
   };
   dateRange: DateRange | undefined;
   sort: 'asc' | 'desc' | null;
+  sortBy: 'likes' | 'comments'; // New field to determine what to sort by
   setCurrentPage: (page: number) => void;
   setFilters: (newFilters: Partial<InstagramPageState['filters']>) => void;
   setDateRange: (dateRange: DateRange | undefined) => void;
   setSort: (sort: 'asc' | 'desc' | null) => void;
+  setSortBy: (sortBy: 'likes' | 'comments') => void; // New action
   reset: () => void;
 }
 
@@ -29,6 +31,7 @@ const initialState = {
   },
   dateRange: undefined,
   sort: null,
+  sortBy: 'likes' as const, // Default to likes
 };
 
 export const useInstagramPageStore = create<InstagramPageState>()(
@@ -39,25 +42,27 @@ export const useInstagramPageStore = create<InstagramPageState>()(
       setFilters: (newFilters) => set((state) => ({ filters: { ...state.filters, ...newFilters } })),
       setDateRange: (dateRange) => set({ dateRange }),
       setSort: (sort) => set({ sort }),
+      setSortBy: (sortBy) => set({ sortBy }),
       reset: () => set(initialState),
     }),
     {
       name: 'instagram-page-storage',
-      version: 1,
-      // By using partialize, we can omit `dateRange` from being persisted to storage.
-      // This ensures it will always start with its `initialState` value (`undefined`).
+      version: 2, // Increment version for migration
       partialize: (state) => {
         const { dateRange, ...rest } = state;
         return rest;
       },
       migrate: (persistedState: any, version: number) => {
+        if (version < 2) {
+            // Default sortBy to 'likes' for older versions
+            persistedState.sortBy = 'likes';
+        }
+        
         if (version === 0 && persistedState && persistedState.filters) {
-          // If the old 'language' (string) exists, convert it to 'languages' (array)
           if (typeof persistedState.filters.language === 'string') {
             persistedState.filters.languages = persistedState.filters.language ? [persistedState.filters.language] : [];
-            delete persistedState.filters.language; // remove the old key
+            delete persistedState.filters.language;
           }
-          // Ensure 'languages' is always an array, even if hydration fails unexpectedly.
           if (!Array.isArray(persistedState.filters.languages)) {
             persistedState.filters.languages = [];
           }
