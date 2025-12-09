@@ -15,6 +15,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import Select from './Select';
+import MultiSelect, { ColorVariant } from './MultiSelect';
 import { DateRange } from 'react-day-picker';
 import { DateRangePicker } from './DateRangePicker';
 import { format } from 'date-fns';
@@ -26,12 +27,12 @@ interface FilterComponentProps {
   languageCounts: { [key: string]: number };
   filters: {
     name: string;
-    store: string;
-    language: string;
+    store: string[];
+    language: string[];
   };
   date?: DateRange | undefined;
   setDate?: (date: DateRange | undefined) => void;
-  onFilterChange: (filterName: string, value: string) => void;
+  onFilterChange: (filterName: string, value: any) => void;
   onResetFilters: () => void;
   viewMode: 'grid' | 'table';
   onViewModeChange: (mode: 'grid' | 'table') => void;
@@ -48,6 +49,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
   const [subIndex, setSubIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [blink, setBlink] = useState(true);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const placeholders = [
     t.searchPlaceholder || "Search products...",
@@ -100,44 +102,44 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
   }, [subIndex, index, placeholders]);
 
   
-  const isFilterActive = filters.name !== '' || filters.store !== '' || filters.language !== '' || (date?.from !== undefined);
+  const isFilterActive = filters.name !== '' || filters.store.length > 0 || filters.language.length > 0 || (date?.from !== undefined);
 
   const perPageOptions = [24, 50, 100, 200];
-  const storeOptions = [{ value: '', label: t.allStores }, ...stores.map(s => ({ value: s, label: s }))];
-  const languageOptions = [{ value: '', label: t.allLanguages }, ...languages.map(l => ({ value: l, label: `${l.toUpperCase()} (${languageCounts[l] || 0})` }))];
+  const storeOptions = stores.map(s => ({ value: s, label: s }));
+  const languageOptions = languages.map(l => ({ value: l, label: `${l.toUpperCase()} (${languageCounts[l] || 0})` }));
 
   // Helper to render active filter badges
   const renderActiveFilterBadges = () => {
     const badges = [];
     if (filters.name) {
       badges.push(
-        <span key="search" className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200 border border-blue-200 dark:border-blue-800 animate-scale-in shadow-sm">
+        <span key="search" className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-blue-500 text-white animate-scale-in shadow-md cursor-default">
           "{filters.name}"
-          <button onClick={(e) => { e.stopPropagation(); onFilterChange('name', ''); }} className="ml-2 p-0.5 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 text-blue-600 dark:text-blue-300 transition-colors"><X className="w-3 h-3" /></button>
+          <button onClick={(e) => { e.stopPropagation(); onFilterChange('name', ''); }} className="ml-2 p-0.5 rounded-full hover:bg-white/20 transition-colors"><X className="w-3.5 h-3.5" /></button>
         </span>
       );
     }
-    if (filters.store) {
+    if (filters.store.length > 0) {
       badges.push(
-        <span key="store" className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200 border border-purple-200 dark:border-purple-800 animate-scale-in shadow-sm">
-          {filters.store}
-          <button onClick={(e) => { e.stopPropagation(); onFilterChange('store', ''); }} className="ml-2 p-0.5 rounded-full hover:bg-purple-200 dark:hover:bg-purple-800 text-purple-600 dark:text-purple-300 transition-colors"><X className="w-3 h-3" /></button>
+        <span key="store" className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-purple-500 text-white animate-scale-in shadow-md cursor-default">
+          {filters.store.length > 1 ? `${filters.store.length} Stores` : filters.store[0]}
+          <button onClick={(e) => { e.stopPropagation(); onFilterChange('store', []); }} className="ml-2 p-0.5 rounded-full hover:bg-white/20 transition-colors"><X className="w-3.5 h-3.5" /></button>
         </span>
       );
     }
-    if (filters.language) {
+    if (filters.language.length > 0) {
        badges.push(
-        <span key="lang" className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200 border border-orange-200 dark:border-orange-800 animate-scale-in shadow-sm">
-          {filters.language.toUpperCase()}
-          <button onClick={(e) => { e.stopPropagation(); onFilterChange('language', ''); }} className="ml-2 p-0.5 rounded-full hover:bg-orange-200 dark:hover:bg-orange-800 text-orange-600 dark:text-orange-300 transition-colors"><X className="w-3 h-3" /></button>
+        <span key="lang" className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-orange-500 text-white animate-scale-in shadow-md cursor-default">
+          {filters.language.length > 1 ? `${filters.language.length} Languages` : filters.language[0].toUpperCase()}
+          <button onClick={(e) => { e.stopPropagation(); onFilterChange('language', []); }} className="ml-2 p-0.5 rounded-full hover:bg-white/20 transition-colors"><X className="w-3.5 h-3.5" /></button>
         </span>
       );
     }
     if (date?.from) {
        badges.push(
-        <span key="date" className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200 border border-green-200 dark:border-green-800 animate-scale-in shadow-sm">
+        <span key="date" className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-green-500 text-white animate-scale-in shadow-md cursor-default">
           {format(date.from, 'MMM d')} {date.to ? `- ${format(date.to, 'MMM d')}` : ''}
-           <button onClick={(e) => { e.stopPropagation(); setDate?.(undefined); }} className="ml-2 p-0.5 rounded-full hover:bg-green-200 dark:hover:bg-green-800 text-green-600 dark:text-green-300 transition-colors"><X className="w-3 h-3" /></button>
+           <button onClick={(e) => { e.stopPropagation(); setDate?.(undefined); }} className="ml-2 p-0.5 rounded-full hover:bg-white/20 transition-colors"><X className="w-3.5 h-3.5" /></button>
         </span>
       );
     }
@@ -148,33 +150,32 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
     <div className="w-full mb-8">
       <Disclosure defaultOpen={true}>
         {({ open }) => (
-          <div className={`bg-white dark:bg-gray-800 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-black/20 border border-gray-100 dark:border-gray-700 transition-all duration-500 ease-in-out ${open ? 'ring-1 ring-brand-primary/10' : ''} ${!open ? 'overflow-hidden' : ''}`}>
+          <div className={`bg-white dark:bg-gray-800 rounded-[2rem] shadow-xl shadow-gray-200/50 dark:shadow-black/20 border border-gray-100 dark:border-gray-700 transition-all duration-500 ease-in-out ${open ? 'ring-1 ring-brand-primary/10' : ''} ${!open ? 'overflow-hidden' : ''}`}>
             
             {/* Header */}
-            <Disclosure.Button className="w-full px-6 py-5 flex justify-between items-center bg-white dark:bg-gray-800 hover:bg-gray-50/80 dark:hover:bg-gray-700/30 transition-all duration-300 outline-none group rounded-3xl z-10 relative">
-              <div className="flex items-center gap-4">
-                 <div className={`p-3 rounded-2xl transition-all duration-500 ${open ? 'bg-gradient-to-tr from-brand-primary to-purple-500 text-white shadow-lg shadow-brand-primary/30 rotate-3' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-gray-600'}`}>
-                   <Filter className="w-5 h-5" />
+            <Disclosure.Button className="w-full px-8 py-6 flex justify-between items-center bg-white dark:bg-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-all duration-300 outline-none group z-10 relative">
+              <div className="flex items-center gap-5">
+                 <div className={`p-3.5 rounded-2xl transition-all duration-500 ${open ? 'bg-gradient-to-tr from-brand-primary to-purple-600 text-white shadow-lg shadow-brand-primary/30 rotate-3 scale-110' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-gray-600'}`}>
+                   <Filter className="w-6 h-6" />
                  </div>
                  <div className="flex flex-col items-start gap-1">
-                    <span className="text-lg font-bold text-gray-800 dark:text-gray-100 tracking-tight group-hover:text-brand-primary transition-colors">{t.filters}</span>
-                    {/* Active Filter Summary */}
+                    <span className="text-2xl font-bold text-gray-800 dark:text-gray-100 tracking-tight group-hover:text-brand-primary transition-colors">{t.filters}</span>
                     <div className="h-5 flex items-center">
                         {!open && isFilterActive ? (
-                             <span className="text-xs font-medium text-brand-primary flex items-center gap-1 animate-fade-in">
+                             <span className="text-xs font-bold text-brand-primary flex items-center gap-1.5 animate-fade-in bg-brand-primary/10 px-2.5 py-1 rounded-full border border-brand-primary/20">
                                 <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"/>
-                                Filters active
+                                Active Filters
                              </span>
                         ) : (
-                            <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">
+                            <span className="text-sm text-gray-400 dark:text-gray-500 font-medium group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors">
                                 {t.refineSearchResults || "Refine your search results"}
                             </span>
                         )}
                     </div>
                  </div>
               </div>
-              <div className={`w-10 h-10 flex items-center justify-center rounded-full border border-gray-100 dark:border-gray-700 text-gray-400 transition-all duration-500 ${open ? 'rotate-180 bg-gray-50 dark:bg-gray-700 text-brand-primary shadow-inner' : 'bg-white dark:bg-gray-800 shadow-sm group-hover:scale-110'}`}>
-                  <ChevronDown className="w-5 h-5" />
+              <div className={`w-12 h-12 flex items-center justify-center rounded-full border border-gray-100 dark:border-gray-700 text-gray-400 transition-all duration-500 ${open ? 'rotate-180 bg-gray-50 dark:bg-gray-700 text-brand-primary shadow-inner border-transparent' : 'bg-white dark:bg-gray-800 shadow-sm group-hover:scale-110 group-hover:shadow-md'}`}>
+                  <ChevronDown className="w-6 h-6" />
               </div>
             </Disclosure.Button>
 
@@ -187,113 +188,143 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
               leaveFrom="transform scale-100 opacity-100 max-h-[1000px]"
               leaveTo="transform scale-95 opacity-0 max-h-0"
             >
-              <Disclosure.Panel className="px-6 pb-8 pt-2 relative overflow-visible">
+              <Disclosure.Panel className="px-8 pb-10 pt-2 relative overflow-visible">
                 {/* Decorative Line */}
-                <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700 to-transparent opacity-50" />
+                <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700 to-transparent opacity-50" />
                 
-                {/* Filters Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 mt-4 relative z-20">
+                {/* Filters Grid - Completely rebuilt for visual consistency */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 mt-6 relative z-20">
                     
-                    {/* Search */}
-                    <div className="space-y-2.5">
-                        <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest flex items-center gap-1.5 ml-1">
-                            <Search className="w-3.5 h-3.5" /> {t.search}
-                        </label>
-                        <div className="relative group dynamic-border-focus rounded-xl">
-                            <input 
-                                type="text" 
-                                value={filters.name}
-                                onChange={(e) => onFilterChange('name', e.target.value)}
-                                placeholder={`${displayText}${blink && !filters.name ? '|' : ''}`}
-                                className="w-full pl-11 pr-10 py-3.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 focus:ring-0 focus:border-transparent outline-none transition-all text-sm font-medium shadow-sm h-[52px]"
-                            />
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-primary transition-colors">
-                                <Search className="w-4 h-4" />
-                            </div>
-                            {filters.name && (
+                    {/* Search - Blue Variant */}
+                    <div className="h-[72px] relative group z-40">
+                         <div className={`relative w-full h-full bg-white dark:bg-gray-800 border rounded-2xl px-4 py-3 flex items-center justify-between transition-all duration-300
+                             ${isSearchFocused 
+                                ? 'ring-4 ring-blue-500/20 border-blue-500 shadow-lg scale-[1.02]' 
+                                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md hover:-translate-y-0.5'
+                             }`}
+                         >
+                             <div className="flex items-center gap-3 overflow-hidden flex-1">
+                                <div className={`p-2 rounded-xl transition-colors duration-300 ${isSearchFocused ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-gray-100 dark:bg-gray-700 group-hover:bg-gray-200 dark:group-hover:bg-gray-600'}`}>
+                                    <Search className={`w-4 h-4 transition-colors duration-300 ${isSearchFocused ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400'}`} />
+                                </div>
+                                <div className="flex flex-col flex-1">
+                                     {filters.name && (
+                                         <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-0.5 animate-fade-in">
+                                            {t.search}
+                                         </span>
+                                     )}
+                                     <input 
+                                        type="text" 
+                                        value={filters.name}
+                                        onFocus={() => setIsSearchFocused(true)}
+                                        onBlur={() => setIsSearchFocused(false)}
+                                        onChange={(e) => onFilterChange('name', e.target.value)}
+                                        placeholder={isSearchFocused ? "" : `${displayText}${blink && !filters.name ? '|' : ''}`}
+                                        className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium text-gray-800 dark:text-gray-100 placeholder-gray-400"
+                                     />
+                                     {!filters.name && !isSearchFocused && (
+                                         <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 absolute top-3.5 left-[3.25rem] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                                             {t.search}
+                                         </span>
+                                     )}
+                                </div>
+                             </div>
+                             {filters.name && (
                                 <button
                                     onClick={() => onFilterChange('name', '')}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-all animate-scale-in"
+                                    className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-red-500 transition-colors"
                                 >
-                                    <X className="w-3.5 h-3.5" />
+                                    <X className="w-4 h-4" />
                                 </button>
-                            )}
-                        </div>
+                             )}
+                         </div>
+                         {/* Search Badge Pill */}
+                         {filters.name && (
+                            <div className="absolute top-full left-0 mt-3 w-full z-10 pointer-events-none">
+                                <div className="flex flex-wrap gap-2 pointer-events-auto">
+                                    <div className="flex items-center gap-1.5 bg-blue-500 text-white shadow-lg shadow-gray-200 dark:shadow-black/20 rounded-lg pl-2.5 pr-1 py-1 text-[10px] font-bold uppercase tracking-wider animate-pop-in border border-white/20">
+                                        <span className="max-w-[150px] truncate">{filters.name}</span>
+                                        <button onClick={() => onFilterChange('name', '')} className="hover:bg-white/20 text-white rounded-md p-0.5 transition-colors"><X size={10} strokeWidth={3} /></button>
+                                    </div>
+                                </div>
+                            </div>
+                         )}
                     </div>
 
-                    {/* Store */}
-                    <div className="space-y-2.5 relative z-30">
-                        <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest flex items-center gap-1.5 ml-1">
-                            <Store className="w-3.5 h-3.5" /> {t.store}
-                        </label>
-                        <Select 
+                    {/* Store - Purple Variant */}
+                    <div className="h-[72px] relative z-30">
+                        <MultiSelect 
                             options={storeOptions} 
-                            value={filters.store} 
-                            onChange={(e) => onFilterChange('store', e.target.value)} 
-                            className="h-[52px]" 
+                            selected={filters.store} 
+                            onChange={(selected) => onFilterChange('store', selected)} 
+                            label={t.allStores}
+                            icon={<Store className="w-4 h-4" />}
+                            variant="purple"
                         />
                     </div>
 
-                    {/* Date */}
+                    {/* Date - Green Variant */}
                     {setDate && (
-                        <div className="space-y-2.5 relative z-30">
-                            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest flex items-center gap-1.5 ml-1">
-                                <CalendarIcon className="w-3.5 h-3.5" /> {t.date}
-                            </label>
-                            <div className="h-[52px]">
-                                <DateRangePicker date={date} setDate={setDate} />
-                            </div>
+                        <div className="h-[72px] relative z-30">
+                            <DateRangePicker 
+                                date={date} 
+                                setDate={setDate} 
+                                icon={<CalendarIcon className="w-4 h-4" />}
+                                variant="green"
+                                label={t.date}
+                            />
                         </div>
                     )}
 
-                    {/* Language */}
-                    <div className="space-y-2.5 relative z-20">
-                        <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest flex items-center gap-1.5 ml-1">
-                            <Globe className="w-3.5 h-3.5" /> {t.language}
-                        </label>
-                        <Select 
+                    {/* Language - Orange Variant */}
+                    <div className="h-[72px] relative z-20">
+                        <MultiSelect 
                             options={languageOptions} 
-                            value={filters.language} 
-                            onChange={(e) => onFilterChange('language', e.target.value)} 
-                            className="h-[52px]"
+                            selected={filters.language} 
+                            onChange={(selected) => onFilterChange('language', selected)} 
+                            label={t.allLanguages}
+                            icon={<Globe className="w-4 h-4" />}
+                            variant="orange"
                         />
                     </div>
                 </div>
 
-                {/* Active Filters Row (Expanded) */}
+                {/* Active Filters Row */}
                 {isFilterActive && (
-                    <div className="flex flex-wrap items-center gap-3 mb-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-inner relative z-10">
-                        <span className="text-xs font-bold text-gray-500 dark:text-gray-400 mr-1 flex items-center gap-1.5 uppercase tracking-wider">
-                            <CheckCircle2 className="w-4 h-4 text-brand-primary" /> Active:
+                    <div className="flex flex-wrap items-center gap-3 mb-10 p-5 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-inner relative z-10 animate-fade-in-up">
+                        <span className="text-xs font-bold text-gray-500 dark:text-gray-400 mr-1 flex items-center gap-2 uppercase tracking-wider">
+                            <CheckCircle2 className="w-4 h-4 text-brand-primary" /> Active Filters:
                         </span>
-                        {renderActiveFilterBadges()}
+                        <div className="flex flex-wrap gap-2">
+                             {renderActiveFilterBadges()}
+                        </div>
                         <div className="flex-1" />
                         <button 
                             onClick={onResetFilters} 
-                            className="group flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-red-500 bg-white dark:bg-gray-800 border border-red-100 dark:border-red-900/30 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-200 transition-all shadow-sm hover:shadow"
+                            className="group flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-red-500 rounded-xl hover:bg-red-600 transition-all shadow-md hover:shadow-lg shadow-red-500/20 active:scale-95"
                         >
-                            <Trash2 className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
+                            <Trash2 className="w-3.5 h-3.5 transition-transform group-hover:rotate-12" />
                             {t.resetFilters}
                         </button>
                     </div>
                 )}
 
-                {/* Footer Controls */}
-                <div className="flex flex-col sm:flex-row justify-between items-center pt-6 border-t border-gray-100 dark:border-gray-700 gap-6 relative z-10">
+                {/* Footer Controls - Refined */}
+                <div className="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-gray-100 dark:border-gray-700 gap-8 relative z-10">
                     
                     {/* View Density */}
                     <div className="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-start">
-                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                             <Layers className="w-4 h-4" /> {t.show}:
                         </span>
-                        <div className="flex p-1.5 bg-gray-100 dark:bg-gray-800 rounded-xl shadow-inner">
+                        <div className="flex p-1.5 bg-gray-100 dark:bg-gray-800 rounded-xl shadow-inner border border-gray-200 dark:border-gray-700">
                             {perPageOptions.map(size => (
                                 <button
                                     key={size}
                                     onClick={() => onProductsPerPageChange(size)}
-                                    className={`relative px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 ${
+                                    className={`relative min-w-[3.5rem] h-9 rounded-lg text-xs font-bold transition-all duration-300 ${
                                         productsPerPage === size 
-                                        ? 'bg-white dark:bg-gray-700 text-brand-primary shadow-sm scale-105' 
+                                        ? 'bg-white dark:bg-gray-700 text-brand-primary shadow-sm scale-100 ring-1 ring-black/5 font-extrabold' 
                                         : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                                     }`}
                                 >
@@ -305,15 +336,15 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
 
                     {/* View Layout */}
                     <div className="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-end">
-                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:flex items-center gap-1.5">
+                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:flex items-center gap-2">
                             View:
                         </span>
-                        <div className="flex p-1.5 bg-gray-100 dark:bg-gray-800 rounded-xl shadow-inner">
+                        <div className="flex p-1.5 bg-gray-100 dark:bg-gray-800 rounded-xl shadow-inner border border-gray-200 dark:border-gray-700">
                             <button 
                                 onClick={() => onViewModeChange('grid')} 
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+                                className={`flex items-center justify-center gap-2 px-5 h-9 rounded-lg transition-all duration-300 ${
                                     viewMode === 'grid' 
-                                    ? 'bg-white dark:bg-gray-700 text-brand-primary shadow-sm scale-105' 
+                                    ? 'bg-white dark:bg-gray-700 text-brand-primary shadow-sm scale-100 ring-1 ring-black/5 font-extrabold' 
                                     : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                                 }`}
                             >
@@ -322,9 +353,9 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                             </button>
                             <button 
                                 onClick={() => onViewModeChange('table')} 
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+                                className={`flex items-center justify-center gap-2 px-5 h-9 rounded-lg transition-all duration-300 ${
                                     viewMode === 'table' 
-                                    ? 'bg-white dark:bg-gray-700 text-brand-primary shadow-sm scale-105' 
+                                    ? 'bg-white dark:bg-gray-700 text-brand-primary shadow-sm scale-100 ring-1 ring-black/5 font-extrabold' 
                                     : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-gray-700/50'
                                 }`}
                             >

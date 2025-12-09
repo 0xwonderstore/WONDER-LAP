@@ -28,7 +28,7 @@ const LanguageSwitcher = React.lazy(() => import('./components/LanguageSwitcher'
 
 // --- Type Definitions ---
 type Page = 'home' | 'favorites' | 'dashboard' | 'blacklist' | 'instagram';
-type InitialFilter = { name?: string; store?: string; language?: string };
+type InitialFilter = { name?: string; store?: string | string[]; language?: string | string[] };
 
 const LoadingFallback: React.FC = () => (
   <div className="flex justify-center items-center h-96">
@@ -73,12 +73,12 @@ const App: React.FC = () => {
   const [productsPerPage, setProductsPerPage] = useLocalStorage('productsPerPage', 24);
   const [filters, setFilters] = useState<{
     name: string;
-    store: string;
-    language: string;
+    store: string[];
+    language: string[];
   }>({
     name: '',
-    store: '',
-    language: '',
+    store: [],
+    language: [],
   });
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
@@ -87,8 +87,8 @@ const App: React.FC = () => {
     if (initialFilters) {
       setFilters({
         name: initialFilters.name || '',
-        store: initialFilters.store || '',
-        language: initialFilters.language || '',
+        store: Array.isArray(initialFilters.store) ? initialFilters.store : (initialFilters.store ? [initialFilters.store] : []),
+        language: Array.isArray(initialFilters.language) ? initialFilters.language : (initialFilters.language ? [initialFilters.language] : []),
       });
       setProductsPage(1);
       setInitialFilters(null); // Clear after applying
@@ -126,11 +126,11 @@ const App: React.FC = () => {
     if (filters.name) {
         products = searchProducts(products, filters.name);
     }
-    if (filters.store) {
-        products = products.filter(p => p.vendor === filters.store);
+    if (filters.store.length > 0) {
+        products = products.filter(p => filters.store.includes(p.vendor));
     }
-    if (filters.language) {
-        products = products.filter(p => p.language === filters.language);
+    if (filters.language.length > 0) {
+        products = products.filter(p => filters.language.includes(p.language));
     }
     if (dateRange?.from) {
         products = products.filter(p => new Date(p.created_at) >= dateRange.from!);
@@ -160,13 +160,13 @@ const App: React.FC = () => {
     setCurrentPage('home');
   }, [setInitialFilters, setCurrentPage]);
 
-  const handleFilterChange = (key: string, value: string) => {
+  const handleFilterChange = (key: string, value: any) => {
       setFilters(prev => ({ ...prev, [key]: value }));
       setProductsPage(1);
   };
   
   const handleResetFilters = () => {
-      setFilters({ name: '', store: '', language: '' });
+      setFilters({ name: '', store: [], language: [] });
       setDateRange(undefined);
       setProductsPage(1);
   };

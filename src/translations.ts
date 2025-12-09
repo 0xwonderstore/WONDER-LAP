@@ -6,6 +6,7 @@ export const translations = {
     search: 'بحث',
     store: 'المتجر',
     date: 'التاريخ',
+    refineSearchResults: 'تحسين نتائج البحث',
     added_to_favorites: 'تمت الإضافة للمفضلة',
     removed_from_favorites: 'تم الحذف من المفضلة',
     // App.tsx
@@ -189,6 +190,7 @@ export const translations = {
     search: 'Search',
     store: 'Store',
     date: 'Date',
+    refineSearchResults: 'Refine your search results',
     added_to_favorites: 'Added to favorites',
     removed_from_favorites: 'Removed from favorites',
     // App.tsx
