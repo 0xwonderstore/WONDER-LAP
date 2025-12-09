@@ -8,6 +8,8 @@ interface InstagramPageState {
     username: string;
     minLikes: number | null;
     maxLikes: number | null;
+    minComments: number | null;
+    maxComments: number | null;
     languages: string[];
   };
   dateRange: DateRange | undefined;
@@ -27,6 +29,8 @@ const initialState = {
     username: "",
     minLikes: null,
     maxLikes: null,
+    minComments: null,
+    maxComments: null,
     languages: [],
   },
   dateRange: undefined,
@@ -47,7 +51,7 @@ export const useInstagramPageStore = create<InstagramPageState>()(
     }),
     {
       name: 'instagram-page-storage',
-      version: 2, // Increment version for migration
+      version: 3, // Increment version for migration
       partialize: (state) => {
         const { dateRange, ...rest } = state;
         return rest;
@@ -67,6 +71,15 @@ export const useInstagramPageStore = create<InstagramPageState>()(
             persistedState.filters.languages = [];
           }
         }
+        
+        if (version < 3) {
+            // Initialize minComments and maxComments
+            if (persistedState.filters) {
+                persistedState.filters.minComments = null;
+                persistedState.filters.maxComments = null;
+            }
+        }
+        
         return persistedState as InstagramPageState;
       },
     }

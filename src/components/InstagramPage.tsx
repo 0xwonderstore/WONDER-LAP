@@ -14,7 +14,7 @@ import LoadingSpinner from "./LoadingSpinner";
 const InstagramPage = () => {
   const { t } = useTranslation();
   const { blacklistedUsers, addUser, removeUser } = useInstagramBlacklistStore();
-  const { currentPage, filters, dateRange, sort, setCurrentPage, setFilters, setDateRange, setSort, reset } = useInstagramPageStore();
+  const { currentPage, filters, dateRange, sort, sortBy, setCurrentPage, setFilters, setDateRange, setSort, setSortBy, reset } = useInstagramPageStore();
 
   // Reduced from 100 to 24 for better performance
   const POSTS_PER_PAGE = 24;
@@ -72,9 +72,16 @@ const InstagramPage = () => {
     if (filters.minLikes !== null) {
       posts = posts.filter((p) => p.likes >= filters.minLikes);
     }
-    if (filters.maxLikes !== null) {
+    // Removed Max Likes Filter Logic
+    /* if (filters.maxLikes !== null) {
       posts = posts.filter((p) => p.likes <= filters.maxLikes);
-    };
+    }; */
+    
+    if (filters.minComments !== null) {
+        posts = posts.filter((p) => p.comments >= filters.minComments!);
+    }
+    // Only Min Comments logic requested
+    
     if (dateRange?.from) {
       posts = posts.filter((p) => new Date(p.timestamp) >= dateRange.from!);
     }
@@ -84,13 +91,17 @@ const InstagramPage = () => {
 
     // Apply sorting
     if (sort) {
-      posts.sort((a, b) => sort === "asc" ? a.likes - b.likes : b.likes - a.likes);
+      posts.sort((a, b) => {
+          const valA = sortBy === 'comments' ? a.comments : a.likes;
+          const valB = sortBy === 'comments' ? b.comments : b.likes;
+          return sort === "asc" ? valA - valB : valB - valA;
+      });
     } else {
       posts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     }
 
     return posts;
-  }, [filters, dateRange, sort, blacklistedUsers, allPosts]);
+  }, [filters, dateRange, sort, sortBy, blacklistedUsers, allPosts]);
 
   const totalPages = Math.ceil(filteredAndSortedPosts.length / POSTS_PER_PAGE);
   const paginatedPosts = filteredAndSortedPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
@@ -109,6 +120,11 @@ const InstagramPage = () => {
     setSort(newSort);
     setCurrentPage(1);
   }, [setSort, setCurrentPage]);
+
+  const handleSortByChange = useCallback((newSortBy: "likes" | "comments") => {
+      setSortBy(newSortBy);
+      setCurrentPage(1);
+  }, [setSortBy, setCurrentPage]);
   
   const handleReset = useCallback(() => {
     reset();
@@ -137,8 +153,10 @@ const InstagramPage = () => {
         filters={filters}
         onFilterChange={handleFilterChange}
         onSortChange={handleSortChange}
+        onSortByChange={handleSortByChange}
         onReset={handleReset}
         currentSort={sort}
+        currentSortBy={sortBy}
         date={dateRange}
         onDateChange={handleDateChange}
       />
@@ -177,7 +195,7 @@ const InstagramPage = () => {
           onPageChange={setCurrentPage}
           itemsPerPage={POSTS_PER_PAGE}
           totalItems={filteredAndSortedPosts.length}
-          t={t} // Passing t here might need update if Pagination doesn't expect it, but checking usage it might.
+          t={t}
         />
       </div>
     </div>
