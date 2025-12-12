@@ -23,8 +23,8 @@
   .dark body {
     background-color: #000000;
     background-image: 
-        radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.2) 0%, transparent 50%), 
-        radial-gradient(circle at 85% 30%, rgba(37, 99, 235, 0.2) 0%, transparent 50%), 
+        radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.2) 0%, transparent 50%), 
+        radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.2) 0%, transparent 50%), 
         radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%);
     background-size: 150% 150%;
     animation: move-shapes 15s ease-in-out infinite alternate;
@@ -172,7 +172,7 @@
   content: '';
   position: absolute;
   top: -2px; left: -2px; right: -2px; bottom: -2px;
-  background: linear-gradient(45deg, #ec4899, #a855f7, #ec4899);
+  background: linear-gradient(45deg, #ec4899, #8b5cf6, #ec4899);
   background-size: 200% 200%;
   z-index: -1;
   border-radius: inherit;
