@@ -17,18 +17,18 @@ import { translations } from '../translations';
 import { useDashboardStore } from '../stores/dashboardStore';
 import DashboardSettings from './DashboardSettings';
 
-// --- Animation Variants ---
+// --- Animation Variants (Subtle) ---
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
 };
 
 const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100 } },
+  hidden: { y: 10, opacity: 0 },
+  visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 120, damping: 20 } },
 };
 
 // --- Type Definitions ---
@@ -60,7 +60,7 @@ const exportToCsv = (data: any[], filename: string, headers: string[]) => {
   document.body.removeChild(link);
 };
 
-const CountUp = ({ end, duration = 2000 }: { end: number, duration?: number }) => {
+const CountUp = ({ end, duration = 1500 }: { end: number, duration?: number }) => {
   const [count, setCount] = useState(0);
   useEffect(() => {
     let startTime: number;
@@ -81,7 +81,7 @@ const CountUp = ({ end, duration = 2000 }: { end: number, duration?: number }) =
 
 // --- Skeleton Components ---
 const KpiCardSkeleton: React.FC = () => (
-    <div className="bg-light-surface dark:bg-dark-surface p-6 rounded-3xl shadow-md flex items-center gap-6 animate-pulse border border-light-border dark:border-dark-border">
+    <div className="bg-light-surface dark:bg-dark-surface p-6 rounded-3xl shadow-sm flex items-center gap-6 animate-pulse border border-light-border dark:border-dark-border">
         <div className="bg-light-background dark:bg-dark-background p-4 rounded-2xl w-16 h-16"></div>
         <div className='flex-1'>
             <div className="h-4 bg-light-background dark:bg-dark-background rounded w-3/4 mb-2"></div>
@@ -177,7 +177,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
         <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => <motion.div variants={itemVariants} key={i}><KpiCardSkeleton /></motion.div>)}
         </motion.div>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.5 } }} className="bg-light-surface dark:bg-dark-surface rounded-3xl shadow-lg border border-light-border dark:border-dark-border p-6">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.2 } }} className="bg-light-surface dark:bg-dark-surface rounded-3xl shadow-lg border border-light-border dark:border-dark-border p-6">
           <TableSkeleton />
         </motion.div>
       </div>
@@ -193,7 +193,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
         <motion.div variants={itemVariants}><KpiCard title={t.dashboard_totalStores} value={kpiData.totalStores} icon={<Store />} iconBg="bg-purple-500" /></motion.div>
       </motion.div>
 
-      <motion.div variants={itemVariants} className="bg-light-surface dark:bg-dark-surface rounded-3xl shadow-2xl border border-light-border dark:border-dark-border overflow-hidden">
+      <motion.div variants={itemVariants} className="bg-light-surface dark:bg-dark-surface rounded-3xl shadow-md border border-light-border dark:border-dark-border overflow-hidden">
         <div className="p-6 flex flex-col sm:flex-row justify-between items-center border-b border-light-border dark:border-dark-border gap-4">
           {availableTabs.length > 0 && <SegmentedControl tabs={availableTabs} activeTab={activeView} onTabChange={setActiveView} />}
           <div className="flex items-center gap-3">
@@ -202,7 +202,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
           </div>
         </div>
         <AnimatePresence mode="wait">
-          <motion.div key={activeView} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.2 }}>
+          <motion.div key={activeView} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
             {activeView === 'stores' && <StoreTable data={storeTableData} t={t} onNavigateWithFilter={onNavigateWithFilter} totalProductsSum={totalBeforeFilter} />}
             {activeView === 'keywords' && <KeywordList data={keywordData} t={t} onNavigateWithFilter={onNavigateWithFilter} />}
             {activeView === 'languages' && <LanguageList data={languageData} t={t} onNavigateWithFilter={onNavigateWithFilter} />}
@@ -215,12 +215,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
 
 const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon, iconBg }) => (
     <motion.div 
-        className="relative bg-light-surface dark:bg-dark-surface p-6 rounded-3xl shadow-lg border border-light-border dark:border-dark-border overflow-hidden group"
-        whileHover={{ y: -5, boxShadow: '0px 15px 25px rgba(0,0,0,0.1)' }}
-        transition={{ type: 'spring', stiffness: 300 }}
+        className="relative bg-light-surface dark:bg-dark-surface p-6 rounded-3xl shadow-sm border border-light-border dark:border-dark-border overflow-hidden group"
+        whileHover={{ y: -3, boxShadow: '0px 8px 15px rgba(0,0,0,0.15)' }}
+        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
     >
       <div className="flex items-center gap-5 relative z-10">
-        <motion.div className={`p-4 rounded-2xl ${iconBg} text-white shadow-lg`} whileHover={{ scale: 1.1, rotate: 5}}>
+        <motion.div className={`p-4 rounded-2xl ${iconBg} text-white shadow-lg`} whileHover={{ scale: 1.05, rotate: 3}}>
             {React.cloneElement(icon as React.ReactElement, { size: 32 })}
         </motion.div>
         <div>
@@ -259,7 +259,7 @@ const StoreTable: React.FC<{data: StoreRow[], t: any, onNavigateWithFilter: (f: 
     return (
         <div className="overflow-x-auto"><table className="w-full text-left rtl:text-right border-collapse">
             <thead>{table.getHeaderGroups().map(hg => (<tr key={hg.id} className="border-b border-light-border dark:border-dark-border">{hg.headers.map(h => (<th key={h.id} className={`p-5 text-xs uppercase tracking-wider text-light-text-secondary dark:text-dark-text-secondary font-bold ${h.column.getCanSort() ? 'cursor-pointer select-none' : ''}`} onClick={h.column.getToggleSortingHandler()}><div className="flex items-center gap-2">{flexRender(h.column.columnDef.header, h.getContext())}{{ asc: <ChevronDown size={14} className="rotate-180"/>, desc: <ChevronDown size={14}/> }[h.column.getIsSorted() as string]}</div></th>))}</tr>))}</thead>
-            <tbody><AnimatePresence>{table.getRowModel().rows.map((row, i) => (<motion.tr custom={i} initial="hidden" animate="visible" variants={itemVariants} transition={{ delay: i * 0.05 }} key={row.id} className="border-t border-light-border dark:border-dark-border hover:bg-light-background dark:hover:bg-dark-background transition-colors">{row.getVisibleCells().map(cell => (<td key={cell.id} className="p-5 align-middle">{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>))}</motion.tr>))}</AnimatePresence></tbody>
+            <tbody><AnimatePresence>{table.getRowModel().rows.map((row, i) => (<motion.tr custom={i} initial="hidden" animate="visible" variants={itemVariants} transition={{ delay: i * 0.03 }} key={row.id} className="border-t border-light-border dark:border-dark-border hover:bg-light-background dark:hover:bg-dark-background transition-colors">{row.getVisibleCells().map(cell => (<td key={cell.id} className="p-5 align-middle">{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>))}</motion.tr>))}</AnimatePresence></tbody>
         </table></div>
     );
 };
@@ -270,7 +270,7 @@ const ListItem: React.FC<{ children: React.ReactNode; index: number }> = ({ chil
     initial="hidden"
     animate="visible"
     variants={itemVariants}
-    transition={{ delay: index * 0.05 }}
+    transition={{ delay: index * 0.03 }}
     className="p-5 flex justify-between items-center hover:bg-light-background dark:hover:bg-dark-background transition-colors group"
   >
     {children}

@@ -46,7 +46,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
   const imageSearchUrl = `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(product.images?.[0]?.src || '')}`;
 
   const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 10 },
     visible: { opacity: 1, y: 0 },
   };
 
@@ -55,11 +55,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
       variants={cardVariants}
       initial="hidden"
       animate="visible"
-      transition={{ duration: 0.5 }}
-      whileHover={{ y: -5, boxShadow: '0px 10px 20px rgba(0,0,0,0.1)' }}
-      className="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-md hover:shadow-2xl transition-shadow duration-300 overflow-hidden border border-gray-100 dark:border-gray-700 flex flex-col h-full">
+      transition={{ duration: 0.4 }}
+      whileHover={{ y: -2, boxShadow: '0px 5px 15px rgba(0,0,0,0.2)' }}
+      className="group relative bg-white dark:bg-[#111111] rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 dark:border-[#222] flex flex-col h-full">
       {/* Image Container */}
-      <div className="relative aspect-square overflow-hidden bg-gray-50 dark:bg-gray-700">
+      <div className="relative aspect-square overflow-hidden bg-gray-50 dark:bg-[#0a0a0a]">
         <a href={product.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
           <motion.img 
             src={product.images?.[0]?.src || 'https://via.placeholder.com/400'} 
@@ -67,8 +67,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
             className="w-full h-full object-cover" 
             loading="lazy"
             decoding="async" 
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.7 }}
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.5 }}
           />
         </a>
         
@@ -76,8 +76,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
         <div className="absolute top-3 right-3 flex flex-col gap-2 translate-x-12 group-hover:translate-x-0 transition-transform duration-300">
             <motion.button 
                 onClick={handleFavoriteClick} 
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 className={`p-2 rounded-full shadow-lg backdrop-blur-md transition-all duration-300 
                   ${favorite ? 'bg-red-500 text-white' : 'bg-white/90 dark:bg-black/60 text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-black/80'}`}
                 aria-label="Toggle Favorite"
@@ -87,8 +87,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
             
             {product.images?.[0]?.src && (
                 <motion.a 
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     href={imageSearchUrl} 
                     target="_blank" 
                     rel="noopener noreferrer" 
@@ -101,8 +101,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
             
             {storeUrl && (
                  <motion.a 
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     href={adLibraryUrl} 
                     target="_blank" 
                     rel="noopener noreferrer" 
@@ -116,7 +116,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
       </div>
 
       {/* Content */}
-      <div className="p-5 flex flex-col flex-grow relative z-10 bg-white dark:bg-gray-800">
+      <div className="p-5 flex flex-col flex-grow relative z-10 bg-white dark:bg-[#111111]">
         <div className="mb-auto">
             <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg leading-snug line-clamp-2 mb-3 group-hover:text-brand-primary transition-colors">
                 <a href={product.url} target="_blank" rel="noopener noreferrer">{product.name}</a>
@@ -145,7 +145,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
             </div>
         </div>
         
-        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
+        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-[#222] flex justify-between items-center">
              <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">{product.language?.toUpperCase()}</span>
              
              {/* Date replaced Show button */}

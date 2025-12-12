@@ -10,14 +10,26 @@
     font-family: 'Tajawal', sans-serif;
     cursor: default;
 
-    /* Add this for the moving background */
-    background-size: 200% auto;
-    background-image: linear-gradient(to right, #f3e8ff 0%, #e9d5ff 50%, #f3e8ff 100%);
-    animation: move-bg 10s ease-in-out infinite;
+    /* Base background settings */
+    background-attachment: fixed; 
+  }
+
+  /* Light Mode Background */
+  body:not(.dark) {
+     background-size: 200% 200%;
+     background-image: linear-gradient(to right bottom, #f3e8ff, #e9d5ff, #f3e8ff);
+     animation: move-bg 20s ease-in-out infinite;
   }
   
+  /* Dark Mode Background with Colored Shapes */
   .dark body {
-    background-image: linear-gradient(to right, #1a202c 0%, #2d3748 50%, #1a202c 100%);
+    background-color: #000000;
+    background-image: 
+        radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.2) 0%, transparent 50%), 
+        radial-gradient(circle at 85% 30%, rgba(37, 99, 235, 0.2) 0%, transparent 50%), 
+        radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%);
+    background-size: 150% 150%;
+    animation: move-shapes 15s ease-in-out infinite alternate;
   }
 
   a, button, [role="button"] {
@@ -40,11 +52,11 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 dark:bg-gray-600 rounded-full transition-colors;
+  @apply bg-gray-300 dark:bg-gray-800 rounded-full transition-colors;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400 dark:bg-gray-500;
+  @apply bg-gray-400 dark:bg-gray-700;
 }
 
 /* Animations */
@@ -99,6 +111,11 @@
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
+  }
+
+  @keyframes move-shapes {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 50% 50%; }
   }
 
   /* Utility Classes */
