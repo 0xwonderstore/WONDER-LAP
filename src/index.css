@@ -9,8 +9,6 @@
     @apply transition-colors duration-300;
     font-family: 'Tajawal', sans-serif;
     cursor: default;
-
-    /* Base background settings */
     background-attachment: fixed; 
   }
 
@@ -153,6 +151,15 @@
 }
 
 /* Component Specific Styles */
+
+/* Glassmorphism Card Style - NEW */
+.glass-card {
+  @apply bg-white dark:bg-black/40 backdrop-blur-xl border border-gray-100 dark:border-white/10 shadow-lg;
+}
+
+.glass-card-hover {
+  @apply hover:bg-white/90 dark:hover:bg-black/60 transition-all duration-300;
+}
 
 /* Dynamic Border for Inputs (when focused) */
 .dynamic-border-focus {

@@ -1,8 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product } from '../types';
-import { TrendingUp, TrendingDown, Package, Store, Clock, ChevronsUpDown, ChevronDown, Tag, Download, Globe, Filter } from 'lucide-react';
-import { subDays, format, parseISO } from 'date-fns';
+import { TrendingUp, TrendingDown, Package, Store, Clock, ChevronsUpDown, ChevronDown, Tag, Download, Globe, Filter, BarChart3 } from 'lucide-react';
+import { subDays, format, parseISO, startOfDay, eachDayOfInterval } from 'date-fns';
 import {
   useReactTable,
   getCoreRowModel,
@@ -11,6 +11,7 @@ import {
   SortingState,
   ColumnDef,
 } from '@tanstack/react-table';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import SegmentedControl from './SegmentedControl';
 import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
@@ -81,11 +82,21 @@ const CountUp = ({ end, duration = 1500 }: { end: number, duration?: number }) =
 
 // --- Skeleton Components ---
 const KpiCardSkeleton: React.FC = () => (
-    <div className="bg-light-surface dark:bg-dark-surface p-6 rounded-3xl shadow-sm flex items-center gap-6 animate-pulse border border-light-border dark:border-dark-border">
-        <div className="bg-light-background dark:bg-dark-background p-4 rounded-2xl w-16 h-16"></div>
+    <div className="glass-card p-6 rounded-3xl shadow-sm flex items-center gap-6 animate-pulse">
+        <div className="bg-gray-200 dark:bg-white/10 p-4 rounded-2xl w-16 h-16"></div>
         <div className='flex-1'>
-            <div className="h-4 bg-light-background dark:bg-dark-background rounded w-3/4 mb-2"></div>
-            <div className="h-8 bg-light-background dark:bg-dark-background rounded w-1/2"></div>
+            <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-3/4 mb-2"></div>
+            <div className="h-8 bg-gray-200 dark:bg-white/10 rounded w-1/2"></div>
+        </div>
+    </div>
+);
+
+const ChartSkeleton: React.FC = () => (
+    <div className="glass-card p-6 rounded-3xl h-80 animate-pulse flex flex-col justify-end">
+        <div className="flex items-end gap-4 h-full px-4">
+             {[...Array(12)].map((_, i) => (
+                 <div key={i} className="bg-gray-200 dark:bg-white/10 rounded-t-lg flex-1" style={{ height: `${Math.random() * 80 + 20}%` }}></div>
+             ))}
         </div>
     </div>
 );
@@ -95,11 +106,11 @@ const TableSkeleton: React.FC = () => (
         <div className="w-full">
             <div className="space-y-2">
                 {[...Array(5)].map((_, i) => (
-                    <div key={i} className="flex items-center bg-light-surface dark:bg-dark-surface p-4 rounded-xl border border-light-border dark:border-dark-border h-12">
-                        <div className="h-4 bg-light-background dark:bg-dark-background rounded w-1/4 mr-4"></div>
-                        <div className="h-4 bg-light-background dark:bg-dark-background rounded w-1/4 mr-4"></div>
-                        <div className="h-4 bg-light-background dark:bg-dark-background rounded w-1/4 mr-4"></div>
-                        <div className="h-4 bg-light-background dark:bg-dark-background rounded w-1/4"></div>
+                    <div key={i} className="flex items-center glass-card p-4 rounded-xl h-12">
+                        <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-1/4 mr-4"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-1/4 mr-4"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-1/4 mr-4"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-white/10 rounded w-1/4"></div>
                     </div>
                 ))}
             </div>
@@ -127,8 +138,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
     }
   }, [availableTabs, activeView]);
 
-  const { kpiData, storeTableData, keywordData, languageData } = useMemo(() => {
-    if (!products || !allProductsRaw) return { kpiData: {}, storeTableData: [], keywordData: [], languageData: [] };
+  const { kpiData, storeTableData, keywordData, languageData, chartData } = useMemo(() => {
+    if (!products || !allProductsRaw) return { kpiData: {}, storeTableData: [], keywordData: [], languageData: [], chartData: [] };
     const now = new Date();
     const thirtyDaysAgo = subDays(now, 30);
     const recentProducts = products.filter(p => p.created_at && parseISO(p.created_at) >= thirtyDaysAgo);
@@ -156,6 +167,23 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
       return acc;
     }, new Map<string, number>());
 
+    // Chart Data Preparation
+    const productsByDate = products.reduce((acc, product) => {
+        if (product.created_at) {
+            const date = format(parseISO(product.created_at), 'yyyy-MM-dd');
+            acc[date] = (acc[date] || 0) + 1;
+        }
+        return acc;
+    }, {} as {[key: string]: number});
+
+    const chartData = eachDayOfInterval({ start: thirtyDaysAgo, end: now }).map(date => {
+        const dateStr = format(date, 'yyyy-MM-dd');
+        return {
+            date: format(date, 'MMM dd'),
+            count: productsByDate[dateStr] || 0
+        };
+    });
+
     return {
         kpiData: { totalProducts: products.length, totalStores: uniqueStores.size, newProducts30d: recentProducts.length },
         storeTableData: Object.entries(storeProductCounts).map(([vendor, count]) => ({
@@ -168,6 +196,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
         keywordData: Array.from(keywordCounts.entries()).map(([text, value]) => ({ text, value })).sort((a,b) => b.value - a.value).slice(0, 20),
         languageData: Object.entries(products.reduce((acc, p) => { if(p.language) acc[p.language] = (acc[p.language] || 0) + 1; return acc; }, {} as {[k: string]: number}))
           .map(([code, count]) => ({ code, count })).sort((a, b) => b.count - a.count).slice(0, 20),
+        chartData
     };
   }, [products, allProductsRaw]);
 
@@ -177,7 +206,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
         <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => <motion.div variants={itemVariants} key={i}><KpiCardSkeleton /></motion.div>)}
         </motion.div>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.2 } }} className="bg-light-surface dark:bg-dark-surface rounded-3xl shadow-lg border border-light-border dark:border-dark-border p-6">
+        <motion.div variants={itemVariants}><ChartSkeleton /></motion.div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.2 } }} className="glass-card rounded-3xl p-6">
           <TableSkeleton />
         </motion.div>
       </div>
@@ -186,6 +216,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
   
   return (
     <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-8 pb-12">
+      {/* KPI Cards */}
       <motion.div variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <motion.div variants={itemVariants}><KpiCard title={t.dashboard_totalProductsAll} value={totalBeforeFilter} icon={<Package />} iconBg="bg-brand-primary" /></motion.div>
         <motion.div variants={itemVariants}><KpiCard title={t.dashboard_totalProductsUnique} value={kpiData.totalProducts} icon={<Filter />} iconBg="bg-cyan-500" /></motion.div>
@@ -193,11 +224,40 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
         <motion.div variants={itemVariants}><KpiCard title={t.dashboard_totalStores} value={kpiData.totalStores} icon={<Store />} iconBg="bg-purple-500" /></motion.div>
       </motion.div>
 
-      <motion.div variants={itemVariants} className="bg-light-surface dark:bg-dark-surface rounded-3xl shadow-md border border-light-border dark:border-dark-border overflow-hidden">
-        <div className="p-6 flex flex-col sm:flex-row justify-between items-center border-b border-light-border dark:border-dark-border gap-4">
+      {/* Chart Section */}
+      <motion.div variants={itemVariants} className="glass-card p-6 rounded-3xl">
+          <div className="flex items-center gap-2 mb-6">
+              <BarChart3 className="text-brand-primary" size={24} />
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white">{t.productsTrend || "Products Trend (30 Days)"}</h2>
+          </div>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData}>
+                    <defs>
+                        <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+                    <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+                    <Tooltip 
+                        contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
+                        itemStyle={{ color: '#fff' }}
+                    />
+                    <Area type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
+                </AreaChart>
+            </ResponsiveContainer>
+          </div>
+      </motion.div>
+
+      {/* Table Section */}
+      <motion.div variants={itemVariants} className="glass-card rounded-3xl overflow-hidden">
+        <div className="p-6 flex flex-col sm:flex-row justify-between items-center border-b border-gray-100 dark:border-white/10 gap-4">
           {availableTabs.length > 0 && <SegmentedControl tabs={availableTabs} activeTab={activeView} onTabChange={setActiveView} />}
           <div className="flex items-center gap-3">
-            {activeView === 'stores' && <button onClick={() => exportToCsv(storeTableData, 'stores_data.csv', Object.keys(storeTableData[0] || {}))} className="flex items-center gap-2 px-4 py-2 bg-light-background dark:bg-dark-background text-light-text-secondary dark:text-dark-text-secondary rounded-xl hover:bg-light-border dark:hover:bg-dark-border transition-colors font-medium text-sm"><Download size={18} /> <span className="hidden sm:inline">{t.exportData}</span></button>}
+            {activeView === 'stores' && <button onClick={() => exportToCsv(storeTableData, 'stores_data.csv', Object.keys(storeTableData[0] || {}))} className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-200 dark:hover:bg-white/20 transition-colors font-medium text-sm"><Download size={18} /> <span className="hidden sm:inline">{t.exportData}</span></button>}
             <DashboardSettings />
           </div>
         </div>
@@ -215,7 +275,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
 
 const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon, iconBg }) => (
     <motion.div 
-        className="relative bg-light-surface dark:bg-dark-surface p-6 rounded-3xl shadow-sm border border-light-border dark:border-dark-border overflow-hidden group"
+        className="relative glass-card p-6 rounded-3xl overflow-hidden group"
         whileHover={{ y: -3, boxShadow: '0px 8px 15px rgba(0,0,0,0.15)' }}
         transition={{ type: 'spring', stiffness: 200, damping: 20 }}
     >
@@ -224,8 +284,8 @@ const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon, iconBg }) => (
             {React.cloneElement(icon as React.ReactElement, { size: 32 })}
         </motion.div>
         <div>
-            <h3 className="text-sm font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">{title}</h3>
-            <p className="text-4xl font-black text-light-text-primary dark:text-dark-text-primary tracking-tight"><CountUp end={value} /></p>
+            <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{title}</h3>
+            <p className="text-4xl font-black text-gray-800 dark:text-white tracking-tight"><CountUp end={value} /></p>
         </div>
       </div>
     </motion.div>
@@ -238,19 +298,19 @@ const StoreTable: React.FC<{data: StoreRow[], t: any, onNavigateWithFilter: (f: 
     const columns = useMemo<ColumnDef<StoreRow>[]>(() => [
         { accessorKey: 'vendor', header: t.storeName, cell: ({ row }) => (
             <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-light-background dark:bg-dark-background flex items-center justify-center text-light-text-secondary font-bold text-sm">{row.original.vendor.substring(0, 2).toUpperCase()}</div>
-                <span onClick={() => onNavigateWithFilter({ store: row.original.vendor })} className="cursor-pointer font-bold text-light-text-primary dark:text-dark-text-primary hover:text-brand-primary transition-colors truncate max-w-[150px]">{row.original.vendor}</span>
+                <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-500 dark:text-gray-300 font-bold text-sm">{row.original.vendor.substring(0, 2).toUpperCase()}</div>
+                <span onClick={() => onNavigateWithFilter({ store: row.original.vendor })} className="cursor-pointer font-bold text-gray-800 dark:text-gray-100 hover:text-brand-primary transition-colors truncate max-w-[150px]">{row.original.vendor}</span>
             </div>
         ) },
         ...storeColumnsVisibility.totalProducts ? [{ accessorKey: 'totalProducts', header: t.totalProducts, cell: ({ row }) => (
             <div>
-                <span className="text-sm font-bold text-light-text-primary dark:text-dark-text-primary">{row.original.totalProducts}</span>
-                <div className="h-1.5 w-full bg-light-background dark:bg-dark-background rounded-full mt-1"><div className="h-full bg-gradient-to-r from-brand-primary to-purple-500 rounded-full" style={{ width: `${(row.original.totalProducts / totalProductsSum) * 100}%` }}></div></div>
+                <span className="text-sm font-bold text-gray-800 dark:text-gray-100">{row.original.totalProducts}</span>
+                <div className="h-1.5 w-full bg-gray-100 dark:bg-white/10 rounded-full mt-1"><div className="h-full bg-gradient-to-r from-brand-primary to-purple-500 rounded-full" style={{ width: `${(row.original.totalProducts / totalProductsSum) * 100}%` }}></div></div>
             </div>
         ) }] : [],
-        ...storeColumnsVisibility.newProducts30d ? [{ accessorKey: 'newProducts30d', header: t.dashboard_newProducts30d_store, cell: ({ row }) => <span className={`font-bold text-sm ${row.original.newProducts30d > 0 ? 'text-green-500' : 'text-light-text-secondary dark:text-dark-text-secondary'}`}>{row.original.newProducts30d > 0 ? `+${row.original.newProducts30d}` : '-'}</span> }] : [],
-        ...storeColumnsVisibility.lastProductAdded ? [{ accessorKey: 'lastProductAdded', header: t.dashboard_lastProductAdded, cell: ({ row }) => <span className="text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary font-mono">{row.original.lastProductAdded}</span> }] : [],
-        ...storeColumnsVisibility.firstProductAdded ? [{ accessorKey: 'firstProductAdded', header: t.dashboard_firstProductAdded, cell: ({ row }) => <span className="text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary font-mono">{row.original.firstProductAdded}</span> }] : [],
+        ...storeColumnsVisibility.newProducts30d ? [{ accessorKey: 'newProducts30d', header: t.dashboard_newProducts30d_store, cell: ({ row }) => <span className={`font-bold text-sm ${row.original.newProducts30d > 0 ? 'text-green-500' : 'text-gray-400 dark:text-gray-500'}`}>{row.original.newProducts30d > 0 ? `+${row.original.newProducts30d}` : '-'}</span> }] : [],
+        ...storeColumnsVisibility.lastProductAdded ? [{ accessorKey: 'lastProductAdded', header: t.dashboard_lastProductAdded, cell: ({ row }) => <span className="text-sm font-medium text-gray-500 dark:text-gray-400 font-mono">{row.original.lastProductAdded}</span> }] : [],
+        ...storeColumnsVisibility.firstProductAdded ? [{ accessorKey: 'firstProductAdded', header: t.dashboard_firstProductAdded, cell: ({ row }) => <span className="text-sm font-medium text-gray-500 dark:text-gray-400 font-mono">{row.original.firstProductAdded}</span> }] : [],
         ...storeColumnsVisibility.metaAdLibrary ? [{ id: 'metaAdLibrary', header: () => <div className="text-center">{t.searchInMeta}</div>, cell: ({ row }) => (<div className="flex justify-center items-center"><MetaAdLibraryLink vendor={row.original.vendor} t={t} /></div>) }] : [],
     ], [t, onNavigateWithFilter, storeColumnsVisibility, totalProductsSum]);
 
@@ -258,8 +318,8 @@ const StoreTable: React.FC<{data: StoreRow[], t: any, onNavigateWithFilter: (f: 
     
     return (
         <div className="overflow-x-auto"><table className="w-full text-left rtl:text-right border-collapse">
-            <thead>{table.getHeaderGroups().map(hg => (<tr key={hg.id} className="border-b border-light-border dark:border-dark-border">{hg.headers.map(h => (<th key={h.id} className={`p-5 text-xs uppercase tracking-wider text-light-text-secondary dark:text-dark-text-secondary font-bold ${h.column.getCanSort() ? 'cursor-pointer select-none' : ''}`} onClick={h.column.getToggleSortingHandler()}><div className="flex items-center gap-2">{flexRender(h.column.columnDef.header, h.getContext())}{{ asc: <ChevronDown size={14} className="rotate-180"/>, desc: <ChevronDown size={14}/> }[h.column.getIsSorted() as string]}</div></th>))}</tr>))}</thead>
-            <tbody><AnimatePresence>{table.getRowModel().rows.map((row, i) => (<motion.tr custom={i} initial="hidden" animate="visible" variants={itemVariants} transition={{ delay: i * 0.03 }} key={row.id} className="border-t border-light-border dark:border-dark-border hover:bg-light-background dark:hover:bg-dark-background transition-colors">{row.getVisibleCells().map(cell => (<td key={cell.id} className="p-5 align-middle">{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>))}</motion.tr>))}</AnimatePresence></tbody>
+            <thead>{table.getHeaderGroups().map(hg => (<tr key={hg.id} className="border-b border-gray-100 dark:border-white/10">{hg.headers.map(h => (<th key={h.id} className={`p-5 text-xs uppercase tracking-wider text-gray-400 dark:text-gray-500 font-bold ${h.column.getCanSort() ? 'cursor-pointer select-none' : ''}`} onClick={h.column.getToggleSortingHandler()}><div className="flex items-center gap-2">{flexRender(h.column.columnDef.header, h.getContext())}{{ asc: <ChevronDown size={14} className="rotate-180"/>, desc: <ChevronDown size={14}/> }[h.column.getIsSorted() as string]}</div></th>))}</tr>))}</thead>
+            <tbody><AnimatePresence>{table.getRowModel().rows.map((row, i) => (<motion.tr custom={i} initial="hidden" animate="visible" variants={itemVariants} transition={{ delay: i * 0.03 }} key={row.id} className="border-t border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">{row.getVisibleCells().map(cell => (<td key={cell.id} className="p-5 align-middle">{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>))}</motion.tr>))}</AnimatePresence></tbody>
         </table></div>
     );
 };
@@ -271,35 +331,35 @@ const ListItem: React.FC<{ children: React.ReactNode; index: number }> = ({ chil
     animate="visible"
     variants={itemVariants}
     transition={{ delay: index * 0.03 }}
-    className="p-5 flex justify-between items-center hover:bg-light-background dark:hover:bg-dark-background transition-colors group"
+    className="p-5 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group"
   >
     {children}
   </motion.div>
 );
 
 const KeywordList: React.FC<{data: {text: string, value: number}[], t: any, onNavigateWithFilter: (f: any) => void}> = ({data, t, onNavigateWithFilter}) => (
-    <div className="divide-y divide-light-border dark:divide-dark-border">
+    <div className="divide-y divide-gray-100 dark:divide-white/10">
         {data.map(({text, value}, index) => (
             <ListItem key={text} index={index}>
                 <div className="flex items-center gap-4">
-                    <span className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold ${index < 3 ? 'bg-yellow-400/20 text-yellow-500' : 'bg-light-background dark:bg-dark-background text-light-text-secondary dark:text-dark-text-secondary'}`}>#{index + 1}</span>
-                    <span onClick={() => onNavigateWithFilter({ name: text })} className="font-bold text-light-text-primary dark:text-dark-text-primary cursor-pointer hover:text-brand-primary transition-colors text-lg">{text}</span>
+                    <span className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold ${index < 3 ? 'bg-yellow-400/20 text-yellow-500' : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400'}`}>#{index + 1}</span>
+                    <span onClick={() => onNavigateWithFilter({ name: text })} className="font-bold text-gray-800 dark:text-gray-100 cursor-pointer hover:text-brand-primary transition-colors text-lg">{text}</span>
                 </div>
-                <span className="font-mono text-sm font-bold bg-light-background dark:bg-dark-background text-light-text-secondary dark:text-dark-text-primary px-3 py-1.5 rounded-lg border border-light-border dark:border-dark-border">{value}</span>
+                <span className="font-mono text-sm font-bold bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10">{value}</span>
             </ListItem>
         ))}
     </div>
 );
 
 const LanguageList: React.FC<{data: LanguageItem[], t: any, onNavigateWithFilter: (f: { language?: string }) => void}> = ({data, t, onNavigateWithFilter}) => (
-    <div className="divide-y divide-light-border dark:divide-dark-border">
+    <div className="divide-y divide-gray-100 dark:divide-white/10">
         {data.map(({code, count}, index) => (
             <ListItem key={code} index={index}>
                 <div className="flex items-center gap-4">
-                    <span className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold ${index < 3 ? 'bg-blue-400/20 text-blue-500' : 'bg-light-background dark:bg-dark-background text-light-text-secondary dark:text-dark-text-secondary'}`}>#{index + 1}</span>
-                    <span onClick={() => onNavigateWithFilter({ language: code })} className="font-bold text-light-text-primary dark:text-dark-text-primary cursor-pointer hover:text-brand-primary transition-colors text-lg uppercase">{t[code] || code}</span>
+                    <span className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold ${index < 3 ? 'bg-blue-400/20 text-blue-500' : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400'}`}>#{index + 1}</span>
+                    <span onClick={() => onNavigateWithFilter({ language: code })} className="font-bold text-gray-800 dark:text-gray-100 cursor-pointer hover:text-brand-primary transition-colors text-lg uppercase">{t[code] || code}</span>
                 </div>
-                 <span className="font-mono text-sm font-bold bg-light-background dark:bg-dark-background text-light-text-secondary dark:text-dark-text-primary px-3 py-1.5 rounded-lg border border-light-border dark:border-dark-border">{count}</span>
+                 <span className="font-mono text-sm font-bold bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-white/10">{count}</span>
             </ListItem>
         ))}
     </div>
