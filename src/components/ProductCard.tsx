@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { motion } from 'framer-motion';
 import { Calendar, Heart, Search, EyeOff, ExternalLink } from 'lucide-react';
 import { Product } from '../types';
 import { formatDate } from '../utils/productUtils';
@@ -44,33 +45,50 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
   const adLibraryUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&q=${encodeURIComponent(storeUrl)}&search_type=keyword_unordered&media_type=all`;
   const imageSearchUrl = `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(product.images?.[0]?.src || '')}`;
 
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
+
   return (
-    <div className="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden border border-gray-100 dark:border-gray-700 flex flex-col h-full">
+    <motion.div 
+      variants={cardVariants}
+      initial="hidden"
+      animate="visible"
+      transition={{ duration: 0.5 }}
+      whileHover={{ y: -5, boxShadow: '0px 10px 20px rgba(0,0,0,0.1)' }}
+      className="group relative bg-white dark:bg-gray-800 rounded-3xl shadow-md hover:shadow-2xl transition-shadow duration-300 overflow-hidden border border-gray-100 dark:border-gray-700 flex flex-col h-full">
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-gray-50 dark:bg-gray-700">
         <a href={product.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
-          <img 
+          <motion.img 
             src={product.images?.[0]?.src || 'https://via.placeholder.com/400'} 
             alt={product.name} 
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+            className="w-full h-full object-cover" 
             loading="lazy"
             decoding="async" 
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.7 }}
           />
         </a>
         
         {/* Overlay Buttons (Visible on Hover or when fav) */}
         <div className="absolute top-3 right-3 flex flex-col gap-2 translate-x-12 group-hover:translate-x-0 transition-transform duration-300">
-            <button 
+            <motion.button 
                 onClick={handleFavoriteClick} 
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 className={`p-2 rounded-full shadow-lg backdrop-blur-md transition-all duration-300 
                   ${favorite ? 'bg-red-500 text-white' : 'bg-white/90 dark:bg-black/60 text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-black/80'}`}
                 aria-label="Toggle Favorite"
             >
                 <Heart className={`w-5 h-5 ${favorite ? 'fill-current' : ''}`} />
-            </button>
+            </motion.button>
             
             {product.images?.[0]?.src && (
-                <a 
+                <motion.a 
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                     href={imageSearchUrl} 
                     target="_blank" 
                     rel="noopener noreferrer" 
@@ -78,11 +96,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
                     title={t.searchWithImage}
                 >
                     <Search className="w-5 h-5" />
-                </a>
+                </motion.a>
             )}
             
             {storeUrl && (
-                 <a 
+                 <motion.a 
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                     href={adLibraryUrl} 
                     target="_blank" 
                     rel="noopener noreferrer" 
@@ -90,7 +110,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
                     title={t.searchInAdLibrary}
                 >
                     <MetaIcon className="w-5 h-5" />
-                </a>
+                </motion.a>
             )}
         </div>
       </div>
@@ -135,7 +155,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
              </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

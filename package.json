@@ -20,6 +20,7 @@
     "@tanstack/react-table": "^8.21.3",
     "@types/papaparse": "^5.3.16",
     "date-fns": "^4.1.0",
+    "framer-motion": "^12.23.26",
     "i18next": "^25.5.3",
     "lucide-react": "^0.344.0",
     "middleware": "^1.0.0",

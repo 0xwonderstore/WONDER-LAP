@@ -9,8 +9,17 @@
     @apply transition-colors duration-300;
     font-family: 'Tajawal', sans-serif;
     cursor: default;
+
+    /* Add this for the moving background */
+    background-size: 200% auto;
+    background-image: linear-gradient(to right, #f3e8ff 0%, #e9d5ff 50%, #f3e8ff 100%);
+    animation: move-bg 10s ease-in-out infinite;
   }
   
+  .dark body {
+    background-image: linear-gradient(to right, #1a202c 0%, #2d3748 50%, #1a202c 100%);
+  }
+
   a, button, [role="button"] {
     cursor: pointer;
   }
@@ -81,6 +90,12 @@
   }
 
   @keyframes shimmer-border {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  @keyframes move-bg {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
