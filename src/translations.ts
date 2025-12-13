@@ -85,6 +85,7 @@ export const translations = {
     dashboard_settings_modules: 'الوحدات الرئيسية',
     dashboard_settings_columns: 'أعمدة جدول المتاجر',
     products_added_over_time: 'المنتجات المضافة عبر الزمن',
+    productsTrend: 'اتجاه المنتجات (آخر 30 يومًا)',
     
     // BlacklistPage.tsx
     blacklist_title: 'إدارة القائمة السوداء',
@@ -269,6 +270,7 @@ export const translations = {
     dashboard_settings_modules: 'Main Modules',
     dashboard_settings_columns: 'Store Table Columns',
     products_added_over_time: 'Products Added Over Time',
+    productsTrend: 'Products Trend (30 Days)',
 
     // BlacklistPage.tsx
     blacklist_title: 'Manage Blacklist',

@@ -17,6 +17,7 @@ import FilterComponent from './components/FilterComponent';
 import Toast from './components/Toast';
 import { DateRange } from 'react-day-picker';
 import ProductCardSkeleton from './components/ProductCardSkeleton';
+import { Product } from './types';
 
 // --- Lazy Imports ---
 const FavoritesPage = React.lazy(() => import('./components/FavoritesPage'));
@@ -53,8 +54,8 @@ const App: React.FC = () => {
     staleTime: 1000 * 60 * 5,
   });
 
-  const uniqueProducts = productData?.uniqueProducts || [];
-  const allProductsRaw = productData?.allProducts || [];
+  const uniqueProducts: Product[] = useMemo(() => productData?.uniqueProducts || [], [productData]);
+  const allProductsRaw: Product[] = useMemo(() => productData?.allProducts || [], [productData]);
   const totalBeforeFilter = productData?.totalBeforeFilter || 0;
 
   const t = translations[language];
@@ -160,7 +161,7 @@ const App: React.FC = () => {
     setCurrentPage('home');
   }, [setInitialFilters, setCurrentPage]);
 
-  const handleFilterChange = (key: string, value: any) => {
+  const handleFilterChange = (key: string, value: string | string[]) => {
       setFilters(prev => ({ ...prev, [key]: value }));
       setProductsPage(1);
   };
@@ -188,7 +189,7 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (currentPage) {
       case 'favorites': return <FavoritesPage allProducts={filteredProducts} onNavigateWithFilter={navigateToHomeWithFilter} />;
-      case 'dashboard': return <DashboardPage products={filteredProducts} allProductsRaw={allProductsRaw} totalBeforeFilter={totalBeforeFilter} onNavigateWithFilter={navigateToHomeWithFilter} />;
+      case 'dashboard': return <DashboardPage products={filteredProducts} allProductsRaw={allProductsRaw} totalBeforeFilter={totalBeforeFilter} onNavigateWithFilter={navigateToHomeWithFilter} isLoading={isLoading} />;
       case 'blacklist': return <BlacklistPage />;
       case 'instagram': return <InstagramPage />;
       default: 

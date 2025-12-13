@@ -1,47 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product } from '../types';
-import { TrendingUp, TrendingDown, Package, Store, Clock, ChevronsUpDown, ChevronDown, Tag, Download, Globe, Filter, BarChart3 } from 'lucide-react';
-import { subDays, format, parseISO, startOfDay, eachDayOfInterval } from 'date-fns';
-import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  flexRender,
-  SortingState,
-  ColumnDef,
-} from '@tanstack/react-table';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import SegmentedControl from './SegmentedControl';
-import { useLanguageStore } from '../stores/languageStore';
-import { translations } from '../translations';
-import { useDashboardStore } from '../stores/dashboardStore';
-import DashboardSettings from './DashboardSettings';
-
-// --- Animation Variants (Subtle) ---
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
-  },
-};
-
-const itemVariants = {
-  hidden: { y: 10, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 120, damping: 20 } },
-};
-
-// --- Type Definitions ---
-interface DashboardPageProps {
-  products: Product[];
-  allProductsRaw: Product[];
-  totalBeforeFilter: number;
-  onNavigateWithFilter: (filter: { name?: string; store?: string; language?: string }) from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Product } from '../types';
-import { TrendingUp, TrendingDown, Package, Store, Clock, ChevronsUpDown, ChevronDown, Tag, Download, Globe, Filter, BarChart3 } from 'lucide-react';
-import { subDays, format, parseISO, startOfDay, eachDayOfInterval } from 'date-fns';
+import { TrendingUp, Package, Store, ChevronDown, Tag, Download, Globe, Filter, BarChart3 } from 'lucide-react';
+import { subDays, format, parseISO, eachDayOfInterval } from 'date-fns';
 import {
   useReactTable,
   getCoreRowModel,
@@ -85,7 +46,7 @@ interface LanguageItem { code: string; count: number; }
 type ActiveView = 'stores' | 'keywords' | 'languages';
 
 // --- Utility Functions ---
-const exportToCsv = (data: any[], filename: string, headers: string[]) => {
+const exportToCsv = (data: StoreRow[], filename: string, headers: (keyof StoreRow)[]) => {
   const csvRows = [headers.join(',')];
   for (const row of data) {
     csvRows.push(headers.map(header => `"${String(row[header]).replace(/"/g, '""')}"`).join(','));
@@ -178,7 +139,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
   }, [availableTabs, activeView]);
 
   const { kpiData, storeTableData, keywordData, languageData, chartData } = useMemo(() => {
-    if (!products || !allProductsRaw) return { kpiData: {}, storeTableData: [], keywordData: [], languageData: [], chartData: [] };
+    if (!products || !allProductsRaw) return { kpiData: { totalProducts: 0, totalStores: 0, newProducts30d: 0 }, storeTableData: [], keywordData: [], languageData: [], chartData: [] };
     const now = new Date();
     const thirtyDaysAgo = subDays(now, 30);
     const recentProducts = products.filter(p => p.created_at && parseISO(p.created_at) >= thirtyDaysAgo);
@@ -267,7 +228,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
       <motion.div variants={itemVariants} className="bg-white dark:bg-gray-800 p-6 rounded-lg">
           <div className="flex items-center gap-2 mb-6">
               <BarChart3 className="text-indigo-500" size={24} />
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">{t.productsTrend || "Products Trend (30 Days)"}</h2>
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white">{t.productsTrend}</h2>
           </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -296,7 +257,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
         <div className="p-6 flex flex-col sm:flex-row justify-between items-center border-b border-gray-100 dark:border-gray-700 gap-4">
           {availableTabs.length > 0 && <SegmentedControl tabs={availableTabs} activeTab={activeView} onTabChange={setActiveView} />}
           <div className="flex items-center gap-3">
-            {activeView === 'stores' && <button onClick={() => exportToCsv(storeTableData, 'stores_data.csv', Object.keys(storeTableData[0] || {}))} className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm"><Download size={18} /> <span className="hidden sm:inline">{t.exportData}</span></button>}
+            {activeView === 'stores' && <button onClick={() => exportToCsv(storeTableData, 'stores_data.csv', Object.keys(storeTableData[0] || {}) as (keyof StoreRow)[])} className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm"><Download size={18} /> <span className="hidden sm:inline">{t.exportData}</span></button>}
             <DashboardSettings />
           </div>
         </div>
@@ -330,7 +291,7 @@ const KpiCard: React.FC<KpiCardProps> = ({ title, value, icon, iconBg }) => (
     </motion.div>
 );
 
-const StoreTable: React.FC<{data: StoreRow[], t: any, onNavigateWithFilter: (f: any) => void, totalProductsSum: number}> = ({ data, t, onNavigateWithFilter, totalProductsSum }) => {
+const StoreTable: React.FC<{data: StoreRow[], t: any, onNavigateWithFilter: (f: { store: string }) => void, totalProductsSum: number}> = ({ data, t, onNavigateWithFilter, totalProductsSum }) => {
     const [sorting, setSorting] = useState<SortingState>([]);
     const { storeColumnsVisibility } = useDashboardStore();
     
@@ -376,7 +337,7 @@ const ListItem: React.FC<{ children: React.ReactNode; index: number }> = ({ chil
   </motion.div>
 );
 
-const KeywordList: React.FC<{data: {text: string, value: number}[], t: any, onNavigateWithFilter: (f: any) => void}> = ({data, t, onNavigateWithFilter}) => (
+const KeywordList: React.FC<{data: {text: string, value: number}[], t: any, onNavigateWithFilter: (f: { name: string }) => void}> = ({data, t, onNavigateWithFilter}) => (
     <div className="divide-y divide-gray-100 dark:divide-gray-700">
         {data.map(({text, value}, index) => (
             <ListItem key={text} index={index}>
@@ -390,7 +351,7 @@ const KeywordList: React.FC<{data: {text: string, value: number}[], t: any, onNa
     </div>
 );
 
-const LanguageList: React.FC<{data: LanguageItem[], t: any, onNavigateWithFilter: (f: { language?: string }) => void}> = ({data, t, onNavigateWithFilter}) => (
+const LanguageList: React.FC<{data: LanguageItem[], t: any, onNavigateWithFilter: (f: { language: string }) => void}> = ({data, t, onNavigateWithFilter}) => (
     <div className="divide-y divide-gray-100 dark:divide-gray-700">
         {data.map(({code, count}, index) => (
             <ListItem key={code} index={index}>
