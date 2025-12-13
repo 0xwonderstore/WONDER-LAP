@@ -1,52 +1,61 @@
+// src/types.ts
+
 export interface Product {
   id: string;
-  name: string; // Mapped from 'title'
-  description?: string; // Mapped from 'body_html' or similar
-  url: string; // The product URL
-  vendor: string;
-  store: {
-    name: string;
-    url: string;
-    facebook_page_id?: string;
-  };
-  images: {
-    id: number | string;
-    src: string;
-  }[]; // Should be an array of objects with src
-  price: string;
+  name: string;
+  store: string;
+  price: number;
   currency: string;
-  language: string; 
-  country?: string;
+  imageUrl: string;
+  productUrl: string;
+  timestamp: string;
+  vendor: string;
   created_at: string;
-  
-  // Original fields (optional if you want to keep them for reference, but best to stick to a unified model)
-  title?: string;
-  body_html?: string;
-  product_type?: string;
-  handle?: string;
-  updated_at?: string;
-  published_at?: string;
-  tags?: string;
-  variants?: any[];
-  options?: any[];
-  image?: {
-      id: number;
-      src: string;
-  } | null;
-  favorite?: boolean; // Client-side state
+  language?: string;
+  meta?: {
+    [key: string]: any;
+  };
 }
 
-// Corrected InstagramPost interface to use postedAt and include username
 export interface InstagramPost {
   id: string;
-  username: string;
-  media_type: 'image' | 'video' | 'CAROUSEL_ALBUM';
+  caption: string;
   media_url: string;
-  thumbnail_url?: string; // For videos
-  likes: number;
-  comments: number;
   timestamp: string;
+  username: string;
   permalink: string;
-  caption?: string;
+  media_type: string;
+  language?: string;
+  meta?: {
+    [key: string]: any;
+  };
+}
+
+export interface Toast {
+  id: number;
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
+
+// --- Dashboard Specific Types ---
+
+export interface StoreRow {
+  vendor: string;
+  totalProducts: number;
+  newProducts30d: number;
+  lastProductAdded: string;
+  firstProductAdded: string;
   language?: string;
 }
+
+export interface KeywordItem {
+  text: string;
+  value: number;
+}
+
+export interface LanguageItem {
+  code: string;
+  count: number;
+}
+
+export type ActiveView = 'stores' | 'keywords' | 'languages';

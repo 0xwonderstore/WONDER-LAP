@@ -12,7 +12,7 @@ import { useLocalStorage } from './hooks/useLocalStorage';
 import ProductCard from './components/ProductCard';
 import ProductTable from './components/ProductTable';
 import Pagination from './components/Pagination';
-import { EmptyState } from './components/EmptyState';
+import { EmptyState }from './components/EmptyState';
 import FilterComponent from './components/FilterComponent';
 import Toast from './components/Toast';
 import { DateRange } from 'react-day-picker';
@@ -26,6 +26,7 @@ const BlacklistPage = React.lazy(() => import('./components/BlacklistPage'));
 const InstagramPage = React.lazy(() => import('./components/InstagramPage'));
 const ScrollButtons = React.lazy(() => import('./components/ScrollButtons'));
 const LanguageSwitcher = React.lazy(() => import('./components/LanguageSwitcher'));
+const MetaAdLibraryLink = React.lazy(() => import('./components/MetaAdLibraryLink'));
 
 // --- Type Definitions ---
 type Page = 'home' | 'favorites' | 'dashboard' | 'blacklist' | 'instagram';
