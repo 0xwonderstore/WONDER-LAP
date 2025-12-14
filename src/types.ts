@@ -43,6 +43,9 @@ export interface StoreRow {
   vendor: string;
   totalProducts: number;
   newProducts30d: number;
+  newProducts60d: number;
+  newProducts90d: number;
+  newProducts180d: number;
   lastProductAdded: string;
   firstProductAdded: string;
   language?: string;

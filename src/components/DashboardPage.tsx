@@ -89,11 +89,26 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
 
     const now = new Date();
     const thirtyDaysAgo = subDays(now, 30);
-    const recentProducts = products.filter(p => p.created_at && parseISO(p.created_at) >= thirtyDaysAgo);
-    const uniqueStores = new Set(products.map(p => p.vendor).filter(Boolean));
+    const sixtyDaysAgo = subDays(now, 60);
+    const ninetyDaysAgo = subDays(now, 90);
+    const oneEightyDaysAgo = subDays(now, 180);
 
+    const getRecentProductReducer = (period: Date) => {
+        return products.reduce((acc, p) => {
+            if (p.vendor && p.created_at && parseISO(p.created_at) >= period) {
+                acc[p.vendor] = (acc[p.vendor] || 0) + 1;
+            }
+            return acc;
+        }, {} as {[k: string]: number});
+    };
+
+    const storeNewProductCounts30d = getRecentProductReducer(thirtyDaysAgo);
+    const storeNewProductCounts60d = getRecentProductReducer(sixtyDaysAgo);
+    const storeNewProductCounts90d = getRecentProductReducer(ninetyDaysAgo);
+    const storeNewProductCounts180d = getRecentProductReducer(oneEightyDaysAgo);
+
+    const uniqueStores = new Set(products.map(p => p.vendor).filter(Boolean));
     const storeProductCounts = allProductsRaw.reduce((acc, p) => { if(p.vendor) acc[p.vendor] = (acc[p.vendor] || 0) + 1; return acc; }, {} as {[k: string]: number});
-    const storeNewProductCounts30d = recentProducts.reduce((acc, p) => { if(p.vendor) acc[p.vendor] = (acc[p.vendor] || 0) + 1; return acc; }, {} as {[k: string]: number});
     
     const productDatesByStore = products.reduce((acc, p) => {
         if (p.vendor && p.created_at) {
@@ -132,12 +147,15 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
     }));
 
     return {
-        kpiData: { totalProducts: products.length, totalStores: uniqueStores.size, newProducts30d: recentProducts.length },
+        kpiData: { totalProducts: products.length, totalStores: uniqueStores.size, newProducts30d: Object.values(storeNewProductCounts30d).reduce((a, b) => a + b, 0) },
         storeTableData: Object.entries(storeProductCounts)
             .map(([vendor, count]): StoreRow => ({
                 vendor,
                 totalProducts: count,
                 newProducts30d: storeNewProductCounts30d[vendor] || 0,
+                newProducts60d: storeNewProductCounts60d[vendor] || 0,
+                newProducts90d: storeNewProductCounts90d[vendor] || 0,
+                newProducts180d: storeNewProductCounts180d[vendor] || 0,
                 lastProductAdded: storeDateInfo[vendor] ? format(storeDateInfo[vendor].last, 'yyyy-MM-dd') : 'N/A',
                 firstProductAdded: storeDateInfo[vendor] ? format(storeDateInfo[vendor].first, 'yyyy-MM-dd') : 'N/A',
             }))
