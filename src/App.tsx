@@ -26,7 +26,6 @@ const BlacklistPage = React.lazy(() => import('./components/BlacklistPage'));
 const InstagramPage = React.lazy(() => import('./components/InstagramPage'));
 const ScrollButtons = React.lazy(() => import('./components/ScrollButtons'));
 const LanguageSwitcher = React.lazy(() => import('./components/LanguageSwitcher'));
-const MetaAdLibraryLink = React.lazy(() => import('./components/MetaAdLibraryLink'));
 
 // --- Type Definitions ---
 type Page = 'home' | 'favorites' | 'dashboard' | 'blacklist' | 'instagram';
