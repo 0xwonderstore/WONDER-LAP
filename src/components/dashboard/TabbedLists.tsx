@@ -61,6 +61,17 @@ const PercentageCell: React.FC<{ value: number }> = ({ value }) => (
   </span>
 );
 
+const ProgressBarCell: React.FC<{ value: number; colorClass: string }> = ({ value, colorClass }) => (
+  <div className="w-full min-w-[100px]">
+    <div className="flex justify-between mb-1">
+      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{value.toFixed(1)}%</span>
+    </div>
+    <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+      <div className={`h-2 rounded-full ${colorClass}`} style={{ width: `${Math.min(value, 100)}%` }}></div>
+    </div>
+  </div>
+);
+
 
 export const StoreTable: React.FC<StoreTableProps> = ({ data, t, onNavigateWithFilter, totalProductsSum }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -97,6 +108,29 @@ export const StoreTable: React.FC<StoreTableProps> = ({ data, t, onNavigateWithF
     ...(storeColumnsVisibility.newProducts60dPercentage ? [{ accessorKey: 'newProducts60dPercentage', header: t.dashboard_newProducts60d_percentage_store, cell: ({ row }) => <PercentageCell value={row.original.newProducts60dPercentage} /> }] : []),
     ...(storeColumnsVisibility.newProducts90dPercentage ? [{ accessorKey: 'newProducts90dPercentage', header: t.dashboard_newProducts90d_percentage_store, cell: ({ row }) => <PercentageCell value={row.original.newProducts90dPercentage} /> }] : []),
     ...(storeColumnsVisibility.newProducts180dPercentage ? [{ accessorKey: 'newProducts180dPercentage', header: t.dashboard_newProducts180d_percentage_store, cell: ({ row }) => <PercentageCell value={row.original.newProducts180dPercentage} /> }] : []),
+    
+    // New Activity Rate Columns
+    ...(storeColumnsVisibility.activityRate30d ? [{ 
+        accessorKey: 'activityRate30d', 
+        header: t.dashboard_activityRate30d, 
+        cell: ({ row }) => <ProgressBarCell value={row.original.activityRate30d} colorClass="bg-green-500" /> 
+    }] : []),
+    ...(storeColumnsVisibility.activityRate60d ? [{ 
+        accessorKey: 'activityRate60d', 
+        header: t.dashboard_activityRate60d, 
+        cell: ({ row }) => <ProgressBarCell value={row.original.activityRate60d} colorClass="bg-blue-500" /> 
+    }] : []),
+    ...(storeColumnsVisibility.activityRate90d ? [{ 
+        accessorKey: 'activityRate90d', 
+        header: t.dashboard_activityRate90d, 
+        cell: ({ row }) => <ProgressBarCell value={row.original.activityRate90d} colorClass="bg-orange-500" /> 
+    }] : []),
+    ...(storeColumnsVisibility.activityRate180d ? [{ 
+        accessorKey: 'activityRate180d', 
+        header: t.dashboard_activityRate180d, 
+        cell: ({ row }) => <ProgressBarCell value={row.original.activityRate180d} colorClass="bg-red-500" /> 
+    }] : []),
+
     ...(storeColumnsVisibility.lastProductAdded ? [{
       accessorKey: 'lastProductAdded',
       header: t.dashboard_lastProductAdded,

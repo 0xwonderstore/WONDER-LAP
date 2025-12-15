@@ -149,20 +149,31 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw,
     return {
         kpiData: { totalProducts: products.length, totalStores: uniqueStores.size, newProducts30d: Object.values(storeNewProductCounts30d).reduce((a, b) => a + b, 0) },
         storeTableData: Object.entries(storeProductCounts)
-            .map(([vendor, count]): StoreRow => ({
-                vendor,
-                totalProducts: count,
-                newProducts30d: storeNewProductCounts30d[vendor] || 0,
-                newProducts60d: storeNewProductCounts60d[vendor] || 0,
-                newProducts90d: storeNewProductCounts90d[vendor] || 0,
-                newProducts180d: storeNewProductCounts180d[vendor] || 0,
-                newProducts30dPercentage: count > 0 ? ((storeNewProductCounts30d[vendor] || 0) / count) * 100 : 0,
-                newProducts60dPercentage: count > 0 ? ((storeNewProductCounts60d[vendor] || 0) / count) * 100 : 0,
-                newProducts90dPercentage: count > 0 ? ((storeNewProductCounts90d[vendor] || 0) / count) * 100 : 0,
-                newProducts180dPercentage: count > 0 ? ((storeNewProductCounts180d[vendor] || 0) / count) * 100 : 0,
-                lastProductAdded: storeDateInfo[vendor] ? format(storeDateInfo[vendor].last, 'yyyy-MM-dd') : 'N/A',
-                firstProductAdded: storeDateInfo[vendor] ? format(storeDateInfo[vendor].first, 'yyyy-MM-dd') : 'N/A',
-            }))
+            .map(([vendor, count]): StoreRow => {
+                const newProducts30d = storeNewProductCounts30d[vendor] || 0;
+                const newProducts60d = storeNewProductCounts60d[vendor] || 0;
+                const newProducts90d = storeNewProductCounts90d[vendor] || 0;
+                const newProducts180d = storeNewProductCounts180d[vendor] || 0;
+
+                return {
+                    vendor,
+                    totalProducts: count,
+                    newProducts30d,
+                    newProducts60d,
+                    newProducts90d,
+                    newProducts180d,
+                    newProducts30dPercentage: count > 0 ? (newProducts30d / count) * 100 : 0,
+                    newProducts60dPercentage: count > 0 ? (newProducts60d / count) * 100 : 0,
+                    newProducts90dPercentage: count > 0 ? (newProducts90d / count) * 100 : 0,
+                    newProducts180dPercentage: count > 0 ? (newProducts180d / count) * 100 : 0,
+                    activityRate30d: count > 0 ? (newProducts30d / count) * 100 : 0,
+                    activityRate60d: count > 0 ? (newProducts60d / count) * 100 : 0,
+                    activityRate90d: count > 0 ? (newProducts90d / count) * 100 : 0,
+                    activityRate180d: count > 0 ? (newProducts180d / count) * 100 : 0,
+                    lastProductAdded: storeDateInfo[vendor] ? format(storeDateInfo[vendor].last, 'yyyy-MM-dd') : 'N/A',
+                    firstProductAdded: storeDateInfo[vendor] ? format(storeDateInfo[vendor].first, 'yyyy-MM-dd') : 'N/A',
+                }
+            })
             .sort((a, b) => b.totalProducts - a.totalProducts),
         keywordData: Array.from(keywordCounts.entries()).map(([text, value]): KeywordItem => ({ text, value })).sort((a,b) => b.value - a.value).slice(0, 20),
         languageData: Object.entries(products.reduce((acc, p) => { if(p.language) acc[p.language] = (acc[p.language] || 0) + 1; return acc; }, {} as {[k: string]: number}))

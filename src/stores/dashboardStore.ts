@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface DashboardState {
   tabVisibility: {
@@ -18,6 +18,10 @@ interface DashboardState {
     newProducts60dPercentage: boolean;
     newProducts90dPercentage: boolean;
     newProducts180dPercentage: boolean;
+    activityRate30d: boolean;
+    activityRate60d: boolean;
+    activityRate90d: boolean;
+    activityRate180d: boolean;
     lastProductAdded: boolean;
     firstProductAdded: boolean;
     metaAdLibrary: boolean;
@@ -45,6 +49,10 @@ export const useDashboardStore = create<DashboardState>()(
         newProducts60dPercentage: false,
         newProducts90dPercentage: false,
         newProducts180dPercentage: false,
+        activityRate30d: true,
+        activityRate60d: false,
+        activityRate90d: false,
+        activityRate180d: false,
         lastProductAdded: true,
         firstProductAdded: true,
         metaAdLibrary: true,
@@ -65,7 +73,8 @@ export const useDashboardStore = create<DashboardState>()(
         })),
     }),
     {
-      name: 'dashboard-settings',
+      name: 'dashboard-settings-v2', // Changed name to force reset for new features
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );
