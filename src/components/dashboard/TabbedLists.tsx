@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender, SortingState, ColumnDef } from '@tanstack/react-table';
 import { ChevronDown } from 'lucide-react';
 import { useDashboardStore } from '../../stores/dashboardStore';
-import { StoreRow, KeywordItem, LanguageItem } from '../../types'; // Assuming types are moved to a central place
+import { StoreRow, KeywordItem, LanguageItem } from '../../types';
 
 // --- Animation Variants ---
 const itemVariants = {
@@ -51,6 +51,17 @@ interface StoreTableProps {
   totalProductsSum: number;
 }
 
+const PositiveChangeCell: React.FC<{ value: number }> = ({ value }) => (
+    <span className={`font-bold text-sm ${value > 0 ? 'text-teal-500' : 'text-gray-400 dark:text-gray-500'}`}>{value > 0 ? `+${value}` : '-'}</span>
+);
+
+const PercentageCell: React.FC<{ value: number }> = ({ value }) => (
+  <span className={`font-bold text-sm ${value > 10 ? 'text-green-500' : value > 0 ? 'text-yellow-500' : 'text-gray-400 dark:text-gray-500'}`}>
+    {value.toFixed(1)}%
+  </span>
+);
+
+
 export const StoreTable: React.FC<StoreTableProps> = ({ data, t, onNavigateWithFilter, totalProductsSum }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const { storeColumnsVisibility } = useDashboardStore();
@@ -78,11 +89,14 @@ export const StoreTable: React.FC<StoreTableProps> = ({ data, t, onNavigateWithF
         </div>
       ),
     }] : []),
-    ...(storeColumnsVisibility.newProducts30d ? [{
-      accessorKey: 'newProducts30d',
-      header: t.dashboard_newProducts30d_store,
-      cell: ({ row }) => <span className={`font-bold text-sm ${row.original.newProducts30d > 0 ? 'text-teal-500' : 'text-gray-400 dark:text-gray-500'}`}>{row.original.newProducts30d > 0 ? `+${row.original.newProducts30d}` : '-'}</span>,
-    }] : []),
+    ...(storeColumnsVisibility.newProducts30d ? [{ accessorKey: 'newProducts30d', header: t.dashboard_newProducts30d_store, cell: ({ row }) => <PositiveChangeCell value={row.original.newProducts30d} /> }] : []),
+    ...(storeColumnsVisibility.newProducts60d ? [{ accessorKey: 'newProducts60d', header: t.dashboard_newProducts60d_store, cell: ({ row }) => <PositiveChangeCell value={row.original.newProducts60d} /> }] : []),
+    ...(storeColumnsVisibility.newProducts90d ? [{ accessorKey: 'newProducts90d', header: t.dashboard_newProducts90d_store, cell: ({ row }) => <PositiveChangeCell value={row.original.newProducts90d} /> }] : []),
+    ...(storeColumnsVisibility.newProducts180d ? [{ accessorKey: 'newProducts180d', header: t.dashboard_newProducts180d_store, cell: ({ row }) => <PositiveChangeCell value={row.original.newProducts180d} /> }] : []),
+    ...(storeColumnsVisibility.newProducts30dPercentage ? [{ accessorKey: 'newProducts30dPercentage', header: t.dashboard_newProducts30d_percentage_store, cell: ({ row }) => <PercentageCell value={row.original.newProducts30dPercentage} /> }] : []),
+    ...(storeColumnsVisibility.newProducts60dPercentage ? [{ accessorKey: 'newProducts60dPercentage', header: t.dashboard_newProducts60d_percentage_store, cell: ({ row }) => <PercentageCell value={row.original.newProducts60dPercentage} /> }] : []),
+    ...(storeColumnsVisibility.newProducts90dPercentage ? [{ accessorKey: 'newProducts90dPercentage', header: t.dashboard_newProducts90d_percentage_store, cell: ({ row }) => <PercentageCell value={row.original.newProducts90dPercentage} /> }] : []),
+    ...(storeColumnsVisibility.newProducts180dPercentage ? [{ accessorKey: 'newProducts180dPercentage', header: t.dashboard_newProducts180d_percentage_store, cell: ({ row }) => <PercentageCell value={row.original.newProducts180dPercentage} /> }] : []),
     ...(storeColumnsVisibility.lastProductAdded ? [{
       accessorKey: 'lastProductAdded',
       header: t.dashboard_lastProductAdded,

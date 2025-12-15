@@ -46,6 +46,10 @@ export interface StoreRow {
   newProducts60d: number;
   newProducts90d: number;
   newProducts180d: number;
+  newProducts30dPercentage: number;
+  newProducts60dPercentage: number;
+  newProducts90dPercentage: number;
+  newProducts180dPercentage: number;
   lastProductAdded: string;
   firstProductAdded: string;
   language?: string;

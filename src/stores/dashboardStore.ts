@@ -14,6 +14,10 @@ interface DashboardState {
     newProducts60d: boolean;
     newProducts90d: boolean;
     newProducts180d: boolean;
+    newProducts30dPercentage: boolean;
+    newProducts60dPercentage: boolean;
+    newProducts90dPercentage: boolean;
+    newProducts180dPercentage: boolean;
     lastProductAdded: boolean;
     firstProductAdded: boolean;
     metaAdLibrary: boolean;
@@ -34,9 +38,13 @@ export const useDashboardStore = create<DashboardState>()(
         totalProducts: true,
         language: true,
         newProducts30d: true,
-        newProducts60d: false, // Default hidden
-        newProducts90d: false, // Default hidden
-        newProducts180d: false, // Default hidden
+        newProducts60d: false,
+        newProducts90d: false,
+        newProducts180d: false,
+        newProducts30dPercentage: false,
+        newProducts60dPercentage: false,
+        newProducts90dPercentage: false,
+        newProducts180dPercentage: false,
         lastProductAdded: true,
         firstProductAdded: true,
         metaAdLibrary: true,
