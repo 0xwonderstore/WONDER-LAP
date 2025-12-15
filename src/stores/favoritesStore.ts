@@ -2,12 +2,11 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { normalizeUrl } from '../utils/urlUtils';
 
-// A simpler, more direct state shape.
 interface FavoritesState {
-  // Using a Set for efficient add/delete/has operations.
   favoriteUrls: Set<string>;
   toggleFavorite: (productUrl: string) => void;
   isFavorite: (productUrl: string) => boolean;
+  removeAllFavorites: () => void; // New function to remove all favorites
 }
 
 export const useFavoritesStore = create<FavoritesState>()(
@@ -32,10 +31,13 @@ export const useFavoritesStore = create<FavoritesState>()(
         const normalized = normalizeUrl(productUrl);
         return get().favoriteUrls.has(normalized);
       },
+
+      removeAllFavorites: () => {
+        set({ favoriteUrls: new Set() });
+      },
     }),
     {
       name: 'favorites-storage',
-      // Custom serializer for storing a Set in localStorage
       storage: {
         getItem: (name) => {
           const str = localStorage.getItem(name);
@@ -49,7 +51,6 @@ export const useFavoritesStore = create<FavoritesState>()(
           };
         },
         setItem: (name, newValue) => {
-          // Convert Set to array before storing
           const str = JSON.stringify({
             state: {
               ...newValue.state,

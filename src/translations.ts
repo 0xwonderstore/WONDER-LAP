@@ -19,6 +19,9 @@ export const translations = {
 
     // FavoritesPage.tsx
     favorites_title: 'المفضلة ({count})',
+    removeAllFavorites: 'حذف كل المفضلة',
+    sort_by_newest: 'الأحدث أولاً',
+    sort_by_oldest: 'الأقدم أولاً',
     
     // DateRangePicker
     apply: 'تطبيق',
@@ -212,6 +215,9 @@ export const translations = {
 
     // FavoritesPage.tsx
     favorites_title: 'Favorites ({count})',
+    removeAllFavorites: 'Remove All Favorites',
+    sort_by_newest: 'Newest First',
+    sort_by_oldest: 'Oldest First',
 
     // DateRangePicker
     apply: 'Apply',
