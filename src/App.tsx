@@ -51,7 +51,8 @@ const App: React.FC = () => {
   const { data: productData, isLoading } = useQuery<LoadProductsResult>({
     queryKey: ['products'],
     queryFn: loadProducts,
-    staleTime: 1000 * 60 * 5,
+    staleTime: Infinity, // Never stale to prevent reloading
+    gcTime: Infinity, // Keep in cache as long as possible
   });
 
   const uniqueProducts: Product[] = useMemo(() => productData?.uniqueProducts || [], [productData]);

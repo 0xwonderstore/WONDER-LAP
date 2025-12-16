@@ -10,25 +10,35 @@ export const formatDate = (dateString: string | Date): string => {
 };
 
 // Helper function to normalize a URL to its core hostname
+// Memoized to avoid re-calculation for the same URL
+const hostnameCache = new Map<string, string>();
+
 export const normalizeHostname = (url: string): string => {
   if (!url) return '';
+  if (hostnameCache.has(url)) return hostnameCache.get(url)!;
+  
   // Strips protocol, 'www.' prefix, and any path. Converts to lowercase.
-  return url.trim().toLowerCase().replace(/^(?:https?|ftp):\/\//, '').replace(/^(?:www\.)?/, '').split('/')[0];
+  const normalized = url.trim().toLowerCase().replace(/^(?:https?|ftp):\/\//, '').replace(/^(?:www\.)?/, '').split('/')[0];
+  hostnameCache.set(url, normalized);
+  return normalized;
 };
 
 /**
  * A more robust search function that normalizes text for better matching.
  * It handles different character cases and accents.
  */
+// Memoize text normalization for common strings if needed, but simple string ops are usually fast enough.
+// We can inline the regex for performance if called frequently.
+const combiningDiacritics = /[\u0300-\u036f]/g;
+
 const normalizeText = (text: string): string => {
+    if (!text) return '';
     return text
         .toLowerCase()
         // NFD: Normalization Form Canonical Decomposition.
-        // This separates combined characters into their base characters and diacritical marks.
-        // For example, 'é' becomes 'e' + '´'.
         .normalize('NFD')
         // This regex removes the separated diacritical marks (accents, etc.).
-        .replace(/[\\u0300-\\u036f]/g, '');
+        .replace(combiningDiacritics, '');
 };
 
 export const searchProducts = (
@@ -41,13 +51,23 @@ export const searchProducts = (
 
     const normalizedSearchTerm = normalizeText(searchTerm);
 
-    return products.filter(product => {
+    // Optimized filter loop
+    const result: Product[] = [];
+    for (let i = 0; i < products.length; i++) {
+        const product = products[i];
         const normalizedName = normalizeText(product.name || '');
-        const normalizedDescription = normalizeText(product.description || '');
+        // Only normalize description if name doesn't match to save time
+        if (normalizedName.includes(normalizedSearchTerm)) {
+            result.push(product);
+            continue;
+        }
         
-        return normalizedName.includes(normalizedSearchTerm) ||
-               normalizedDescription.includes(normalizedSearchTerm);
-    });
+        const normalizedDescription = normalizeText(product.description || '');
+        if (normalizedDescription.includes(normalizedSearchTerm)) {
+            result.push(product);
+        }
+    }
+    return result;
 };
 
 
@@ -69,39 +89,56 @@ export const filterProducts = (
     ? blacklistedKeywords.map(k => k.toLowerCase().trim()).filter(Boolean)
     : [];
   
+  // Pre-calculate normalized blocked stores set for O(1) lookup logic where possible, 
+  // though we are doing substring matching so we still need to iterate.
+  // But we can cache the normalization of blocked stores.
   const normalizedBlockedStores = hasStores
     ? blockedStores.map(normalizeHostname)
     : [];
 
-  return safeProducts.filter(product => {
-    // Check for blacklisted keywords
-    if (lowercasedKeywords.length > 0) {
-      const name = (product.name || '').toLowerCase();
-      const description = (product.description || '').toLowerCase();
-      const hasKeyword = lowercasedKeywords.some(keyword => 
-        name.includes(keyword) || description.includes(keyword)
-      );
-      if (hasKeyword) {
-        return false; // Exclude product
+  const result: Product[] = [];
+
+  for (let i = 0; i < safeProducts.length; i++) {
+      const product = safeProducts[i];
+      let excluded = false;
+
+      // Check for blacklisted keywords
+      if (hasKeywords) {
+          const name = (product.name || '').toLowerCase();
+          // Check name first as it's shorter
+          if (lowercasedKeywords.some(keyword => name.includes(keyword))) {
+              excluded = true;
+          } else {
+             const description = (product.description || '').toLowerCase();
+             if (lowercasedKeywords.some(keyword => description.includes(keyword))) {
+                 excluded = true;
+             }
+          }
       }
-    }
 
-    // Check for blocked stores
-    if (normalizedBlockedStores.length > 0) {
-      const storeUrl = product.store?.url || '';
-      const vendorName = (product.vendor || '').toLowerCase();
-      const normalizedStoreUrl = normalizeHostname(storeUrl);
+      if (excluded) continue;
 
-      const isStoreBlocked = normalizedBlockedStores.some(blockedStore => 
-        (normalizedStoreUrl && normalizedStoreUrl.includes(blockedStore)) || 
-        (vendorName && vendorName.includes(blockedStore))
-      );
+      // Check for blocked stores
+      if (hasStores) {
+          const storeUrl = product.store?.url || '';
+          const vendorName = (product.vendor || '').toLowerCase();
+          // Normalize only if we have a storeUrl, otherwise use empty string
+          const normalizedStoreUrl = storeUrl ? normalizeHostname(storeUrl) : '';
 
-      if (isStoreBlocked) {
-        return false; // Exclude product
+          const isStoreBlocked = normalizedBlockedStores.some(blockedStore => 
+              (normalizedStoreUrl && normalizedStoreUrl.includes(blockedStore)) || 
+              (vendorName && vendorName.includes(blockedStore))
+          );
+
+          if (isStoreBlocked) {
+              excluded = true;
+          }
       }
-    }
 
-    return true; // Include product if it passes all checks
-  });
+      if (!excluded) {
+          result.push(product);
+      }
+  }
+
+  return result;
 };

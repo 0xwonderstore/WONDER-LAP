@@ -10,6 +10,8 @@ import { Eye } from "lucide-react";
 import { InstagramPost } from "../types";
 import { instagramLanguageMapping } from '../data/instagramLanguageMapping';
 import LoadingSpinner from "./LoadingSpinner";
+import { useQuery } from "@tanstack/react-query";
+import { loadInstagramPosts } from "../utils/instagramLoader";
 
 const InstagramPage = () => {
   const { t } = useTranslation();
@@ -19,30 +21,12 @@ const InstagramPage = () => {
   // Reduced from 100 to 24 for better performance
   const POSTS_PER_PAGE = 24;
 
-  const [allPosts, setAllPosts] = useState<InstagramPost[]>([]);
-  const [loadingPosts, setLoadingPosts] = useState(true);
-
-  useEffect(() => {
-    const loadInstagramPosts = async () => {
-      const modules = import.meta.glob('/src/data/instagram/*.json');
-      const loadedPosts: InstagramPost[] = [];
-      for (const path in modules) {
-        try {
-          const module: any = await modules[path]();
-          const postsPage = Array.isArray(module.default) ? module.default : module.default?.posts;
-          if (postsPage && Array.isArray(postsPage)) {
-            loadedPosts.push(...postsPage);
-          }
-        } catch (error) {
-          console.error(`Error loading or processing ${path}:`, error);
-        }
-      }
-      setAllPosts(loadedPosts);
-      setLoadingPosts(false);
-    };
-
-    loadInstagramPosts();
-  }, []);
+  const { data: allPosts = [], isLoading: loadingPosts } = useQuery<InstagramPost[]>({
+    queryKey: ['instagramPosts'],
+    queryFn: loadInstagramPosts,
+    staleTime: Infinity,
+    gcTime: Infinity
+  });
 
   const allUniqueUsernames = useMemo(() => {
     return [...new Set(allPosts.map((p) => p.username).filter(Boolean))];

@@ -69,6 +69,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
             decoding="async" 
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.5 }}
+            width={400} // Explicit width to help browser layout
+            height={400} // Explicit height
           />
         </a>
         

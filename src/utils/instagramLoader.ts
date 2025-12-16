@@ -1,6 +1,12 @@
 import { InstagramPost } from '../types';
 
+let cachedPosts: InstagramPost[] | null = null;
+
 export async function loadInstagramPosts(): Promise<InstagramPost[]> {
+    if (cachedPosts) {
+        return cachedPosts;
+    }
+
     const modules = import.meta.glob('/src/data/instagram/*.json');
     
     const loadPromises = Object.entries(modules).map(async ([path, loader]) => {
@@ -18,5 +24,6 @@ export async function loadInstagramPosts(): Promise<InstagramPost[]> {
     });
 
     const results = await Promise.all(loadPromises);
-    return results.flat();
+    cachedPosts = results.flat();
+    return cachedPosts;
 }
