@@ -8,19 +8,24 @@ export interface LoadProductsResult {
     uniqueCount: number;
 }
 
+// Cache the result to avoid re-loading/re-processing on every call
+let cachedResult: LoadProductsResult | null = null;
+
 export async function loadProducts(): Promise<LoadProductsResult> {
-    const allProducts: Product[] = [];
+    if (cachedResult) {
+        return cachedResult;
+    }
 
     // Linking to product files in src/data/products
     const modules = import.meta.glob('/src/data/products/*.json');
 
-    for (const path in modules) {
+    const loadPromises = Object.entries(modules).map(async ([path, loader]) => {
         try {
-            const module: any = await modules[path]();
+            const module: any = await loader();
             const productsPage = Array.isArray(module.default) ? module.default : module.default?.products;
 
             if (productsPage && Array.isArray(productsPage)) {
-                const mappedProducts = productsPage.map((p: any, index: number) => {
+                return productsPage.map((p: any, index: number) => {
                     const productId = p.id || p.url || `product-${Date.now()}-${Math.random()}`;
 
                     return {
@@ -45,12 +50,16 @@ export async function loadProducts(): Promise<LoadProductsResult> {
                         description: p.description || '',
                     };
                 });
-                allProducts.push(...mappedProducts);
             }
+            return [];
         } catch (error) {
             console.error(`Error loading or processing ${path}:`, error);
+            return [];
         }
-    }
+    });
+
+    const results = await Promise.all(loadPromises);
+    const allProducts: Product[] = results.flat();
 
     // Logic: If a store has at least one Arabic product, classify the entire store as Arabic.
     const arabicStores = new Set<string>();
@@ -101,10 +110,12 @@ export async function loadProducts(): Promise<LoadProductsResult> {
         return true; 
     });
 
-    return {
+    cachedResult = {
         uniqueProducts,
         allProducts,
         totalBeforeFilter,
         uniqueCount: uniqueProducts.length,
     };
+
+    return cachedResult;
 }
