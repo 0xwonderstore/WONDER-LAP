@@ -19,9 +19,15 @@ export const translations = {
 
     // FavoritesPage.tsx
     favorites_title: 'المفضلة ({count})',
+    favorites_subtitle: 'لديك {count} عنصر محفوظ في مجموعتك الخاصة.',
+    saved_items_badge: '{count} عنصر محفوظ',
     removeAllFavorites: 'حذف كل المفضلة',
+    confirm_remove_favorites: 'هل أنت متأكد من رغبتك في إزالة هذه العناصر من المفضلة؟',
     sort_by_newest: 'الأحدث أولاً',
     sort_by_oldest: 'الأقدم أولاً',
+    clearFilters: 'مسح جميع الفلاتر',
+    search_no_results_title: 'لا توجد نتائج',
+    search_no_results_desc: 'لم نتمكن من العثور على أي منتجات تطابق الفلاتر الحالية.',
     
     // DateRangePicker
     apply: 'تطبيق',
@@ -215,9 +221,15 @@ export const translations = {
 
     // FavoritesPage.tsx
     favorites_title: 'Favorites ({count})',
+    favorites_subtitle: 'You have {count} items saved in your collection.',
+    saved_items_badge: '{count} Saved Items',
     removeAllFavorites: 'Remove All Favorites',
+    confirm_remove_favorites: 'Are you sure you want to remove these favorites?',
     sort_by_newest: 'Newest First',
     sort_by_oldest: 'Oldest First',
+    clearFilters: 'Clear All Filters',
+    search_no_results_title: 'No Results Found',
+    search_no_results_desc: 'We couldn\'t find any products matching your current filters.',
 
     // DateRangePicker
     apply: 'Apply',
