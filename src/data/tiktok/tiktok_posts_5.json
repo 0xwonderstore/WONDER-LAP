@@ -1,31 +1,23 @@
 {
   "posts": [
     {
+      "authorAvatar": "https://ui-avatars.com/api/?name=Cat+Lover&background=9C27B0&color=fff",
+      "author": "cat_lover",
       "id": "7351234567890123460",
+      "cover": "https://picsum.photos/seed/tiktok5/400/700",
+      "createTime": "2025-12-09 12:45:00",
       "desc": "Funny cat moments 🐱 #cat #funny #pets",
-      "author": {
-        "uniqueId": "cat_lover",
-        "nickname": "Cat Lover",
-        "avatarThumb": "https://ui-avatars.com/api/?name=Cat+Lover&background=9C27B0&color=fff"
-      },
-      "video": {
-        "cover": "https://picsum.photos/seed/tiktok5/400/700",
-        "playAddr": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
-        "duration": 20
-      },
-      "stats": {
-        "playCount": 1200000,
-        "diggCount": 340000,
-        "commentCount": 5600,
-        "shareCount": 45000,
-        "collectCount": 89000
-      },
-      "createTime": 1712400000,
+      "duration": 20,
       "isAd": false,
-      "music": {
-        "title": "Meow Mix",
-        "authorName": "Cat Lover"
-      },
+      "playCount": 1200000,
+      "diggCount": 340000,
+      "commentCount": 5600,
+      "shareCount": 45000,
+      "collectCount": 89000,
+      "diversification": "Pets & Animals",
+      "music": "Meow Mix - Cat Lover",
+      "isOriginalMusic": true,
+      "hashtags": ["cat", "funny", "pets"],
       "url": "https://www.tiktok.com/@cat_lover/video/7351234567890123460"
     }
   ]

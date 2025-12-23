@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { TikTokPost } from '../types';
-import { Heart, MessageCircle, Share2, Bookmark, Play, Calendar, ExternalLink, Music } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, Play, Calendar, ExternalLink, Music, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatDate } from '../utils/productUtils';
 import { useTranslation } from 'react-i18next';
@@ -27,15 +27,15 @@ const TikTokCard: React.FC<TikTokCardProps> = ({ post }) => {
       <div className="p-4 flex items-center justify-between border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">
         <div className="flex items-center gap-3">
           <img 
-            src={post.author.avatarThumb} 
-            alt={post.author.nickname} 
-            className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-600 shadow-sm"
+            src={post.authorAvatar} 
+            alt={post.author} 
+            className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-600 shadow-sm object-cover"
           />
           <div className="flex flex-col">
             <span className="font-bold text-sm text-gray-800 dark:text-gray-100 truncate max-w-[120px]">
-                {post.author.nickname}
+                {post.author}
             </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">@{post.author.uniqueId}</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">@{post.author}</span>
           </div>
         </div>
         {post.isAd && (
@@ -48,7 +48,7 @@ const TikTokCard: React.FC<TikTokCardProps> = ({ post }) => {
       {/* Video Preview Area */}
       <div className="relative aspect-[9/16] bg-black group-hover:shadow-inner transition-all overflow-hidden">
         <img 
-            src={post.video.cover} 
+            src={post.cover} 
             alt="Video Cover" 
             className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300 group-hover:scale-105"
         />
@@ -56,13 +56,23 @@ const TikTokCard: React.FC<TikTokCardProps> = ({ post }) => {
         {/* Overlay Stats on Video */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
         
+        {/* Diversification Tag */}
+        {post.diversification && (
+            <div className="absolute top-3 left-3">
+                <span className="flex items-center gap-1 bg-black/40 backdrop-blur-md text-white text-[10px] px-2 py-1 rounded-lg border border-white/10">
+                    <Tag size={10} />
+                    {post.diversification}
+                </span>
+            </div>
+        )}
+
         <div className="absolute bottom-4 left-4 right-4 text-white">
              <p className="text-sm line-clamp-2 mb-3 font-medium text-shadow-sm">{post.desc}</p>
              
              {post.music && (
                 <div className="flex items-center gap-2 text-xs opacity-90 mb-1">
                     <Music size={12} className="animate-spin-slow" />
-                    <span className="truncate max-w-[200px]">{post.music.title} - {post.music.authorName}</span>
+                    <span className="truncate max-w-[200px]">{post.music}</span>
                 </div>
              )}
         </div>
@@ -87,7 +97,7 @@ const TikTokCard: React.FC<TikTokCardProps> = ({ post }) => {
                <div className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 group-hover/stat:text-brand-primary group-hover/stat:bg-brand-primary/10 transition-colors">
                    <Play size={16} />
                </div>
-               <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{formatNumber(post.stats.playCount)}</span>
+               <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{formatNumber(post.playCount)}</span>
            </div>
            
            {/* Likes */}
@@ -95,7 +105,7 @@ const TikTokCard: React.FC<TikTokCardProps> = ({ post }) => {
                <div className="p-2 rounded-full bg-pink-50 dark:bg-pink-900/20 text-pink-500 group-hover/stat:bg-pink-100 dark:group-hover/stat:bg-pink-900/40 transition-colors">
                    <Heart size={16} />
                </div>
-               <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{formatNumber(post.stats.diggCount)}</span>
+               <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{formatNumber(post.diggCount)}</span>
            </div>
 
            {/* Comments */}
@@ -103,7 +113,7 @@ const TikTokCard: React.FC<TikTokCardProps> = ({ post }) => {
                <div className="p-2 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-500 group-hover/stat:bg-blue-100 dark:group-hover/stat:bg-blue-900/40 transition-colors">
                    <MessageCircle size={16} />
                </div>
-               <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{formatNumber(post.stats.commentCount)}</span>
+               <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{formatNumber(post.commentCount)}</span>
            </div>
 
            {/* Shares */}
@@ -111,7 +121,7 @@ const TikTokCard: React.FC<TikTokCardProps> = ({ post }) => {
                <div className="p-2 rounded-full bg-green-50 dark:bg-green-900/20 text-green-500 group-hover/stat:bg-green-100 dark:group-hover/stat:bg-green-900/40 transition-colors">
                    <Share2 size={16} />
                </div>
-               <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{formatNumber(post.stats.shareCount)}</span>
+               <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{formatNumber(post.shareCount)}</span>
            </div>
 
            {/* Saves */}
@@ -119,7 +129,7 @@ const TikTokCard: React.FC<TikTokCardProps> = ({ post }) => {
                <div className="p-2 rounded-full bg-yellow-50 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-500 group-hover/stat:bg-yellow-100 dark:group-hover/stat:bg-yellow-900/40 transition-colors">
                    <Bookmark size={16} />
                </div>
-               <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{formatNumber(post.stats.collectCount)}</span>
+               <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{formatNumber(post.collectCount)}</span>
            </div>
 
             {/* Date */}
@@ -128,7 +138,7 @@ const TikTokCard: React.FC<TikTokCardProps> = ({ post }) => {
                    <Calendar size={16} />
                </div>
                <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 mt-1">
-                   {formatDate(new Date(post.createTime * 1000))}
+                   {formatDate(post.createTime)}
                </span>
            </div>
       </div>

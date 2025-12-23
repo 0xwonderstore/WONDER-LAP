@@ -34,30 +34,30 @@ export interface InstagramPost {
 export interface TikTokPost {
     id: string;
     desc: string;
-    author: {
-        uniqueId: string;
-        nickname: string;
-        avatarThumb: string;
-    };
-    video: {
-        cover: string;
-        playAddr: string;
-        duration: number;
-    };
-    stats: {
-        playCount: number;
-        diggCount: number;
-        commentCount: number;
-        shareCount: number;
-        collectCount: number;
-    };
-    createTime: number; // Unix timestamp in seconds
+    createTime: string; // "2025-12-05 14:38:16"
+    
+    // Author
+    author: string; // username e.g. "bk_homegoods"
+    authorAvatar: string;
+    
+    // Video Metadata
+    cover: string;
+    duration: number;
+    url: string; // Link to video on TikTok
+    
+    // Stats
+    playCount: number;
+    diggCount: number; // Likes
+    commentCount: number;
+    shareCount: number;
+    collectCount: number; // Saves
+    
+    // Meta
     isAd: boolean;
-    music?: {
-        title: string;
-        authorName: string;
-    };
-    url: string; // Direct link to video
+    diversification: string; // e.g. "Home & Garden"
+    music: string;
+    isOriginalMusic: boolean;
+    hashtags: string[];
 }
 
 export interface StoreRow {

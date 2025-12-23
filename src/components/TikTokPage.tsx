@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { loadTikTokPosts } from '../utils/tiktokLoader';
@@ -8,19 +8,21 @@ import TikTokCard from './TikTokCard';
 import Pagination from './Pagination';
 import LoadingSpinner from './LoadingSpinner';
 import { EmptyState } from './EmptyState';
-import { Search, RotateCcw, Filter, SortAsc, SortDesc } from 'lucide-react';
+import { SortDesc } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Select from './Select';
+import TikTokFilterComponent from './TikTokFilterComponent';
 
 const TikTokPage = () => {
     const { t } = useTranslation();
     const { 
         currentPage, 
         filters, 
+        dateRange,
         sort, 
         sortBy, 
         setCurrentPage, 
         setFilters, 
+        setDateRange,
         setSort, 
         setSortBy, 
         reset 
@@ -43,30 +45,42 @@ const TikTokPage = () => {
         if (filters.username) {
             const lowerUser = filters.username.toLowerCase();
             posts = posts.filter(p => 
-                p.author.nickname.toLowerCase().includes(lowerUser) || 
-                p.author.uniqueId.toLowerCase().includes(lowerUser)
+                p.author.toLowerCase().includes(lowerUser)
             );
         }
 
-        // Filter by Stats
-        if (filters.minPlayCount) posts = posts.filter(p => p.stats.playCount >= filters.minPlayCount!);
-        if (filters.minDiggCount) posts = posts.filter(p => p.stats.diggCount >= filters.minDiggCount!);
+        // Filter by Date Range
+        if (dateRange?.from) {
+            posts = posts.filter(p => new Date(p.createTime) >= dateRange.from!);
+        }
+        if (dateRange?.to) {
+            posts = posts.filter(p => new Date(p.createTime) <= dateRange.to!);
+        }
+
+        // Filter by Stats (using new flat structure)
+        if (filters.minPlayCount) posts = posts.filter(p => p.playCount >= filters.minPlayCount!);
+        if (filters.minDiggCount) posts = posts.filter(p => p.diggCount >= filters.minDiggCount!);
+        if (filters.minCommentCount) posts = posts.filter(p => p.commentCount >= filters.minCommentCount!);
+        if (filters.minShareCount) posts = posts.filter(p => p.shareCount >= filters.minShareCount!);
+        if (filters.minCollectCount) posts = posts.filter(p => p.collectCount >= filters.minCollectCount!);
         if (filters.isAd !== null) posts = posts.filter(p => p.isAd === filters.isAd);
 
         // Sort
         if (sort) {
             posts.sort((a, b) => {
-                const valA = a.stats[sortBy];
-                const valB = b.stats[sortBy];
+                // @ts-ignore: Dynamic access
+                const valA = a[sortBy];
+                // @ts-ignore: Dynamic access
+                const valB = b[sortBy];
                 return sort === 'asc' ? valA - valB : valB - valA;
             });
         } else {
-             // Default sort by Date Desc
-             posts.sort((a, b) => b.createTime - a.createTime);
+             // Default sort by Date Desc (parsing string date)
+             posts.sort((a, b) => new Date(b.createTime).getTime() - new Date(a.createTime).getTime());
         }
 
         return posts;
-    }, [allPosts, filters, sort, sortBy]);
+    }, [allPosts, filters, dateRange, sort, sortBy]);
 
     const totalPages = Math.ceil(filteredAndSortedPosts.length / POSTS_PER_PAGE);
     const paginatedPosts = filteredAndSortedPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
@@ -85,12 +99,21 @@ const TikTokPage = () => {
         setCurrentPage(1);
     };
 
-    const toggleAdFilter = () => {
-        if (filters.isAd === null) setFilters({ isAd: true });
-        else if (filters.isAd === true) setFilters({ isAd: false });
-        else setFilters({ isAd: null });
+    const handleFilterChange = useCallback((newFilters: any) => {
+        setFilters(newFilters);
         setCurrentPage(1);
-    };
+    }, [setFilters, setCurrentPage]);
+
+    const handleDateChange = useCallback((newDateRange: any) => {
+        setDateRange(newDateRange);
+        setCurrentPage(1);
+    }, [setDateRange, setCurrentPage]);
+
+    const handleReset = useCallback(() => {
+        reset();
+        setCurrentPage(1);
+    }, [reset, setCurrentPage]);
+
 
     if (isLoading) {
         return (
@@ -103,74 +126,44 @@ const TikTokPage = () => {
     return (
         <div className="container mx-auto px-4 py-8 animate-fade-in-up">
             
-            {/* Header & Controls */}
-            <div className="mb-10 space-y-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                     <div>
-                        <h1 className="text-4xl font-black mb-2 text-gray-900 dark:text-white flex items-center gap-3">
-                             <span className="bg-black text-white dark:bg-white dark:text-black p-2 rounded-lg">
-                                <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>
-                             </span>
-                             {t('tiktok_feature') || "TikTok Library"}
-                        </h1>
-                        <p className="text-gray-500 dark:text-gray-400">
-                             {t('tiktok_subtitle') || "Browse top performing TikTok videos and ads."}
-                        </p>
-                     </div>
+            {/* Header */}
+            <div className="mb-8">
+                <h1 className="text-4xl font-black mb-2 text-gray-900 dark:text-white flex items-center gap-3">
+                        <span className="bg-black text-white dark:bg-white dark:text-black p-2 rounded-lg">
+                        <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>
+                        </span>
+                        {t('tiktok_feature') || "TikTok Library"}
+                </h1>
+                <p className="text-gray-500 dark:text-gray-400">
+                        {t('tiktok_subtitle') || "Browse top performing TikTok videos and ads."}
+                </p>
+            </div>
 
-                     <div className="flex gap-2">
-                         <button 
-                            onClick={reset}
-                            className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
-                            title={t('resetFilters')}
-                         >
-                             <RotateCcw size={20} />
-                         </button>
-                     </div>
-                </div>
+            {/* Advanced Filters */}
+            <TikTokFilterComponent 
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                date={dateRange}
+                setDate={handleDateChange}
+                onReset={handleReset}
+                posts={allPosts}
+            />
 
-                {/* Filters Bar */}
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col lg:flex-row gap-4 items-center">
-                    
-                    {/* Search */}
-                    <div className="relative w-full lg:w-72 group">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-primary transition-colors" size={18} />
-                        <input 
-                            type="text" 
-                            placeholder={t('search_user') || "Search username..."}
-                            value={filters.username}
-                            onChange={(e) => { setFilters({ username: e.target.value }); setCurrentPage(1); }}
-                            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none transition-all"
-                        />
-                    </div>
-
-                    {/* Ad Filter Toggle */}
-                    <button 
-                        onClick={toggleAdFilter}
-                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border
-                            ${filters.isAd === true ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 
-                              filters.isAd === false ? 'bg-green-100 text-green-700 border-green-200' : 
-                              'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'}`}
+            {/* Sort Bar (Separate for clarity below filters) */}
+            <div className="flex justify-end mb-6">
+                <div className="flex items-center gap-2">
+                    <SortDesc size={16} className="text-gray-400" />
+                    <span className="text-sm font-bold text-gray-500">{t('sort_by')}:</span>
+                    <select 
+                        onChange={handleSortChange}
+                        className="pl-2 pr-8 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium outline-none focus:ring-2 focus:ring-brand-primary/20"
                     >
-                        <span>{filters.isAd === true ? "Ads Only" : filters.isAd === false ? "Organic Only" : "All Posts"}</span>
-                    </button>
-
-                    <div className="h-8 w-px bg-gray-200 dark:bg-gray-700 hidden lg:block" />
-
-                    {/* Sort Select */}
-                    <div className="flex items-center gap-2 w-full lg:w-auto">
-                        <SortDesc size={18} className="text-gray-400" />
-                        <select 
-                            onChange={handleSortChange}
-                            className="flex-grow lg:w-56 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 outline-none text-sm text-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-brand-primary/20"
-                        >
-                            <option value="default">{t('sort_default') || "Default (Newest)"}</option>
-                            <option value="playCount-desc">Most Viewed</option>
-                            <option value="diggCount-desc">Most Liked</option>
-                            <option value="shareCount-desc">Most Shared</option>
-                            <option value="collectCount-desc">Most Saved</option>
-                        </select>
-                    </div>
+                        <option value="default">{t('sort_default') || "Default (Newest)"}</option>
+                        <option value="playCount-desc">Most Viewed</option>
+                        <option value="diggCount-desc">Most Liked</option>
+                        <option value="shareCount-desc">Most Shared</option>
+                        <option value="collectCount-desc">Most Saved</option>
+                    </select>
                 </div>
             </div>
 

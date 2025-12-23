@@ -34,6 +34,10 @@ export const translations = {
     tiktok_subtitle: 'تصفح أفضل فيديوهات وإعلانات تيك توك.',
     search_user: 'بحث عن مستخدم...',
     sort_default: 'الافتراضي (الأحدث)',
+    min_interactions: 'الحد الأدنى للتفاعلات',
+    views: 'مشاهدات',
+    shares: 'مشاركات',
+    saves: 'حفظ',
     
     // DateRangePicker
     apply: 'تطبيق',
@@ -242,6 +246,10 @@ export const translations = {
     tiktok_subtitle: 'Browse top performing TikTok videos and ads.',
     search_user: 'Search username...',
     sort_default: 'Default (Newest)',
+    min_interactions: 'Minimum Interactions',
+    views: 'Views',
+    shares: 'Shares',
+    saves: 'Saves',
 
     // DateRangePicker
     apply: 'Apply',
