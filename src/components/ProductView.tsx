@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Product } from '../types';
 import ProductTable from './ProductTable';
 import { EmptyState } from './EmptyState';
@@ -7,7 +7,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import ProductCard from './ProductCard';
 import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
-import { searchProducts } from '../utils/productUtils';
+import { searchProducts, countDuplicates } from '../utils/productUtils';
 
 interface ProductViewProps {
   products: Product[];
@@ -75,6 +75,14 @@ const ProductView: React.FC<ProductViewProps> = ({
     });
   }, [products, filters]);
 
+  // Calculate duplicates for the currently visible products or all processed products?
+  // Usually better to calculate for all processed products so the count is accurate across pages if needed,
+  // but if we want to show global duplicates, we should calculate on 'products' prop.
+  // Let's calculate on 'processedProducts' to show duplicates within the current filter context,
+  // OR calculate on 'products' to show duplicates across the whole dataset. 
+  // Global duplicates seems more useful.
+  const duplicateCounts = useMemo(() => countDuplicates(products), [products]);
+
   const totalPages = Math.ceil(processedProducts.length / productsPerPage);
   const currentProducts = processedProducts.slice((currentPage - 1) * productsPerPage, currentPage * productsPerPage);
   const handlePageChange = (page: number) => { setCurrentPage(page); };
@@ -107,7 +115,13 @@ const ProductView: React.FC<ProductViewProps> = ({
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {currentProducts.map(p => (
-                <ProductCard key={p.url} product={p} t={t} onNavigateWithFilter={onNavigateWithFilter} />
+                <ProductCard 
+                    key={p.url} 
+                    product={p} 
+                    t={t} 
+                    onNavigateWithFilter={onNavigateWithFilter} 
+                    duplicateCount={duplicateCounts.get(p.url) || 0}
+                />
               ))}
             </div>
           ) : (

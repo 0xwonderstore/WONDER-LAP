@@ -142,3 +142,46 @@ export const filterProducts = (
 
   return result;
 };
+
+/**
+ * Detect duplicate products by image URL or name similarity.
+ * Returns a map of productId -> duplicateCount
+ */
+export const countDuplicates = (products: Product[]): Map<string, number> => {
+    const duplicateMap = new Map<string, number>();
+    const imageCount = new Map<string, number>();
+    const nameCount = new Map<string, number>();
+
+    // First pass: Count occurrences
+    for (const product of products) {
+        if (product.images?.[0]?.src) {
+            const img = product.images[0].src;
+            imageCount.set(img, (imageCount.get(img) || 0) + 1);
+        } else if (product.name) {
+            const name = normalizeText(product.name);
+            nameCount.set(name, (nameCount.get(name) || 0) + 1);
+        }
+    }
+
+    // Second pass: Assign counts to products
+    for (const product of products) {
+        let count = 0;
+        if (product.images?.[0]?.src) {
+             const img = product.images[0].src;
+             count = imageCount.get(img) || 0;
+        } else if (product.name) {
+             const name = normalizeText(product.name);
+             count = nameCount.get(name) || 0;
+        }
+        
+        // If count > 1, it means there are duplicates (including itself).
+        // The display logic might want to show "X duplicates found" which usually means X other items.
+        // Or "Appears X times". Let's assume we want to show total occurrences if > 1.
+        if (count > 1) {
+             // We map by product URL or ID to ensure we can look it up in the component
+             duplicateMap.set(product.url, count);
+        }
+    }
+
+    return duplicateMap;
+};

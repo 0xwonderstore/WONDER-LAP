@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Heart, Search, EyeOff, ExternalLink } from 'lucide-react';
+import { Calendar, Heart, Search, EyeOff, ExternalLink, Layers } from 'lucide-react';
 import { Product } from '../types';
 import { formatDate } from '../utils/productUtils';
 import { useFavoritesStore } from '../stores/favoritesStore';
@@ -12,9 +12,10 @@ interface ProductCardProps {
   product: Product;
   t: any;
   onNavigateWithFilter: (filter: { store?: string }) => void;
+  duplicateCount?: number;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFilter }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFilter, duplicateCount = 0 }) => {
   const { toggleFavorite, isFavorite } = useFavoritesStore();
   const { addStore } = useBlacklistStore();
   const { showToast } = useToastStore();
@@ -58,6 +59,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
       transition={{ duration: 0.4 }}
       whileHover={{ y: -2, boxShadow: '0px 5px 15px rgba(0,0,0,0.2)' }}
       className="group relative bg-white dark:bg-[#111111] rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 dark:border-[#222] flex flex-col h-full">
+      
+      {/* Duplicate Badge */}
+      {duplicateCount > 0 && (
+          <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg border border-white/10">
+              <Layers className="w-3.5 h-3.5" />
+              <span>{duplicateCount}</span>
+          </div>
+      )}
+
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-gray-50 dark:bg-[#0a0a0a]">
         <a href={product.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
