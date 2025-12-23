@@ -1,43 +1,64 @@
 // src/types.ts
 
 export interface Product {
-  id: string;
-  name: string;
-  store: string;
-  price: number;
-  currency: string;
-  imageUrl: string;
-  productUrl: string;
-  timestamp: string;
-  vendor: string;
-  created_at: string;
-  language?: string;
-  meta?: {
-    [key: string]: any;
-  };
+    id: string;
+    name: string;
+    url: string;
+    vendor: string;
+    store: {
+        name: string;
+        url: string;
+        facebook_page_id?: string;
+    };
+    images: { id: string; src: string }[];
+    price: string;
+    currency: string;
+    language: string;
+    country?: string;
+    created_at: string;
+    description?: string;
 }
 
 export interface InstagramPost {
-  id: string;
-  caption: string;
-  media_url: string;
-  timestamp: string;
-  username: string;
-  permalink: string;
-  media_type: string;
-  language?: string;
-  meta?: {
-    [key: string]: any;
-  };
+    username: string;
+    permalink: string;
+    media_url: string;
+    media_type: 'IMAGE' | 'VIDEO' | 'CAROUSEL_ALBUM';
+    thumbnail_url?: string;
+    caption: string;
+    likes: number;
+    comments: number;
+    timestamp: string;
 }
 
-export interface Toast {
-  id: number;
-  message: string;
-  type: 'success' | 'error' | 'info';
+export interface TikTokPost {
+    id: string;
+    desc: string;
+    author: {
+        uniqueId: string;
+        nickname: string;
+        avatarThumb: string;
+    };
+    video: {
+        cover: string;
+        playAddr: string;
+        duration: number;
+    };
+    stats: {
+        playCount: number;
+        diggCount: number;
+        commentCount: number;
+        shareCount: number;
+        collectCount: number;
+    };
+    createTime: number; // Unix timestamp in seconds
+    isAd: boolean;
+    music?: {
+        title: string;
+        authorName: string;
+    };
+    url: string; // Direct link to video
 }
-
-// --- Dashboard Specific Types ---
 
 export interface StoreRow {
   vendor: string;

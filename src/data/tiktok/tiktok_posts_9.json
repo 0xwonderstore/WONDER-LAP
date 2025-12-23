@@ -1,0 +1,32 @@
+{
+  "posts": [
+    {
+      "id": "7351234567890123464",
+      "desc": "Coding tutorial: React basics 💻 #coding #react #javascript",
+      "author": {
+        "uniqueId": "code_wizard",
+        "nickname": "Code Wizard",
+        "avatarThumb": "https://ui-avatars.com/api/?name=Code+Wizard&background=3F51B5&color=fff"
+      },
+      "video": {
+        "cover": "https://picsum.photos/seed/tiktok9/400/700",
+        "playAddr": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4",
+        "duration": 59
+      },
+      "stats": {
+        "playCount": 34000,
+        "diggCount": 2300,
+        "commentCount": 120,
+        "shareCount": 450,
+        "collectCount": 2300
+      },
+      "createTime": 1712800000,
+      "isAd": false,
+      "music": {
+        "title": "Lo-Fi Code",
+        "authorName": "Code Wizard"
+      },
+      "url": "https://www.tiktok.com/@code_wizard/video/7351234567890123464"
+    }
+  ]
+}

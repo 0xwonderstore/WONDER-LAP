@@ -1,0 +1,32 @@
+{
+  "posts": [
+    {
+      "id": "7351234567890123463",
+      "desc": "Limited Time Offer! Buy Now! 🛍️ #shopping #deal #ad",
+      "author": {
+        "uniqueId": "mega_store",
+        "nickname": "Mega Store",
+        "avatarThumb": "https://ui-avatars.com/api/?name=Mega+Store&background=000000&color=fff"
+      },
+      "video": {
+        "cover": "https://picsum.photos/seed/tiktok8/400/700",
+        "playAddr": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+        "duration": 25
+      },
+      "stats": {
+        "playCount": 980000,
+        "diggCount": 5600,
+        "commentCount": 45,
+        "shareCount": 230,
+        "collectCount": 120
+      },
+      "createTime": 1712700000,
+      "isAd": true,
+      "music": {
+        "title": "Upbeat Promo",
+        "authorName": "Mega Store"
+      },
+      "url": "https://www.tiktok.com/@mega_store/video/7351234567890123463"
+    }
+  ]
+}

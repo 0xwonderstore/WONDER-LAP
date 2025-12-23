@@ -1,6 +1,6 @@
 import React, { useMemo, Suspense, useCallback, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Moon, Sun, Sparkles, Heart, LayoutDashboard, EyeOff, Instagram } from 'lucide-react';
+import { Moon, Sun, Sparkles, Heart, LayoutDashboard, EyeOff, Instagram, Video } from 'lucide-react';
 import { loadProducts, LoadProductsResult } from './utils/productLoader';
 import { filterProducts, searchProducts } from './utils/productUtils';
 import { useFavoritesStore } from './stores/favoritesStore';
@@ -24,11 +24,12 @@ const FavoritesPage = React.lazy(() => import('./components/FavoritesPage'));
 const DashboardPage = React.lazy(() => import('./components/DashboardPage'));
 const BlacklistPage = React.lazy(() => import('./components/BlacklistPage'));
 const InstagramPage = React.lazy(() => import('./components/InstagramPage'));
+const TikTokPage = React.lazy(() => import('./components/TikTokPage'));
 const ScrollButtons = React.lazy(() => import('./components/ScrollButtons'));
 const LanguageSwitcher = React.lazy(() => import('./components/LanguageSwitcher'));
 
 // --- Type Definitions ---
-type Page = 'home' | 'favorites' | 'dashboard' | 'blacklist' | 'instagram';
+type Page = 'home' | 'favorites' | 'dashboard' | 'blacklist' | 'instagram' | 'tiktok';
 type InitialFilter = { name?: string; store?: string | string[]; language?: string | string[] };
 
 const LoadingFallback: React.FC = () => (
@@ -193,6 +194,7 @@ const App: React.FC = () => {
       case 'dashboard': return <DashboardPage products={filteredProducts} allProductsRaw={allProductsRaw} totalBeforeFilter={totalBeforeFilter} onNavigateWithFilter={navigateToHomeWithFilter} isLoading={isLoading} />;
       case 'blacklist': return <BlacklistPage />;
       case 'instagram': return <InstagramPage />;
+      case 'tiktok': return <TikTokPage />;
       default: 
         return (
             <div className="animate-fade-in-up relative z-10">
@@ -252,7 +254,8 @@ const App: React.FC = () => {
   const isDashboardActive = currentPage === 'dashboard';
   const isBlacklistActive = currentPage === 'blacklist';
   const isInstagramActive = currentPage === 'instagram';
-  
+  const isTikTokActive = currentPage === 'tiktok';
+
   const favoritesCount = favoriteUrls.size;
 
   return (
@@ -295,6 +298,7 @@ const App: React.FC = () => {
             </Suspense>
             <HeaderButton onClick={() => navigateTo('dashboard')} className={isDashboardActive ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.dashboard} aria-label="Dashboard"><LayoutDashboard className={`w-5 h-5 transition-transform duration-200 ${isDashboardActive ? 'rotate-6' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isDashboardActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.dashboard}</span></HeaderButton>
             <HeaderButton onClick={() => navigateTo('instagram')} className={isInstagramActive ? 'bg-pink-100 dark:bg-pink-900/50 text-pink-600 dark:text-pink-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.instagram_feature} aria-label="Instagram"><Instagram className={`w-5 h-5 transition-transform duration-200 ${isInstagramActive ? 'rotate-6' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isInstagramActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.instagram_feature}</span></HeaderButton>
+            <HeaderButton onClick={() => navigateTo('tiktok')} className={isTikTokActive ? 'bg-cyan-100 dark:bg-cyan-900/50 text-cyan-600 dark:text-cyan-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.tiktok_feature} aria-label="TikTok"><Video className={`w-5 h-5 transition-transform duration-200 ${isTikTokActive ? 'rotate-6' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isTikTokActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.tiktok_feature}</span></HeaderButton>
             <HeaderButton onClick={() => navigateTo('blacklist')} className={isBlacklistActive ? 'bg-gray-200 dark:bg-gray-700 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.blacklist} aria-label="Blacklist"><EyeOff className={`w-5 h-5 transition-transform duration-200 ${isBlacklistActive ? 'text-gray-800 dark:text-gray-200' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isBlacklistActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.blacklist}</span></HeaderButton>
             
             {/* Favorites Button with count prop */}

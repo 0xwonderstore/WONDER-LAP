@@ -1,0 +1,32 @@
+{
+  "posts": [
+    {
+      "id": "7351234567890123465",
+      "desc": "Nature is beautiful 🌲 #nature #forest #calm",
+      "author": {
+        "uniqueId": "nature_lover",
+        "nickname": "Nature Lover",
+        "avatarThumb": "https://ui-avatars.com/api/?name=Nature+Lover&background=8BC34A&color=fff"
+      },
+      "video": {
+        "cover": "https://picsum.photos/seed/tiktok10/400/700",
+        "playAddr": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4",
+        "duration": 42
+      },
+      "stats": {
+        "playCount": 78000,
+        "diggCount": 9800,
+        "commentCount": 230,
+        "shareCount": 1200,
+        "collectCount": 4500
+      },
+      "createTime": 1712900000,
+      "isAd": false,
+      "music": {
+        "title": "Forest Sounds",
+        "authorName": "Nature Lover"
+      },
+      "url": "https://www.tiktok.com/@nature_lover/video/7351234567890123465"
+    }
+  ]
+}

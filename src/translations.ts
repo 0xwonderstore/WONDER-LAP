@@ -16,6 +16,7 @@ export const translations = {
     blacklist: 'القائمة السوداء',
     block_store: 'حظر المتجر',
     instagram_feature: 'انستقرام',
+    tiktok_feature: 'تيك توك', // New
 
     // FavoritesPage.tsx
     favorites_title: 'المفضلة ({count})',
@@ -28,6 +29,11 @@ export const translations = {
     clearFilters: 'مسح جميع الفلاتر',
     search_no_results_title: 'لا توجد نتائج',
     search_no_results_desc: 'لم نتمكن من العثور على أي منتجات تطابق الفلاتر الحالية.',
+    
+    // TikTokPage.tsx
+    tiktok_subtitle: 'تصفح أفضل فيديوهات وإعلانات تيك توك.',
+    search_user: 'بحث عن مستخدم...',
+    sort_default: 'الافتراضي (الأحدث)',
     
     // DateRangePicker
     apply: 'تطبيق',
@@ -218,6 +224,7 @@ export const translations = {
     blacklist: 'Blacklist',
     block_store: 'Block Store',
     instagram_feature: 'Instagram',
+    tiktok_feature: 'TikTok', // New
 
     // FavoritesPage.tsx
     favorites_title: 'Favorites ({count})',
@@ -230,6 +237,11 @@ export const translations = {
     clearFilters: 'Clear All Filters',
     search_no_results_title: 'No Results Found',
     search_no_results_desc: 'We couldn\'t find any products matching your current filters.',
+    
+    // TikTokPage.tsx
+    tiktok_subtitle: 'Browse top performing TikTok videos and ads.',
+    search_user: 'Search username...',
+    sort_default: 'Default (Newest)',
 
     // DateRangePicker
     apply: 'Apply',

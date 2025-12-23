@@ -1,0 +1,32 @@
+{
+  "posts": [
+    {
+      "id": "7351234567890123456",
+      "desc": "Amazing new gadget! 🤩 #tech #gadgets #fyp",
+      "author": {
+        "uniqueId": "tech_guru",
+        "nickname": "Tech Guru",
+        "avatarThumb": "https://ui-avatars.com/api/?name=Tech+Guru&background=0D8ABC&color=fff"
+      },
+      "video": {
+        "cover": "https://picsum.photos/seed/tiktok1/400/700",
+        "playAddr": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "duration": 60
+      },
+      "stats": {
+        "playCount": 150000,
+        "diggCount": 12500,
+        "commentCount": 340,
+        "shareCount": 1200,
+        "collectCount": 4500
+      },
+      "createTime": 1712000000,
+      "isAd": false,
+      "music": {
+        "title": "Original Sound",
+        "authorName": "Tech Guru"
+      },
+      "url": "https://www.tiktok.com/@tech_guru/video/7351234567890123456"
+    }
+  ]
+}

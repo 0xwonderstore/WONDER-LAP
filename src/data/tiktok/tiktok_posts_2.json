@@ -1,0 +1,32 @@
+{
+  "posts": [
+    {
+      "id": "7351234567890123457",
+      "desc": "Check out this promo! 50% OFF 🤑 #sale #promo #ad",
+      "author": {
+        "uniqueId": "brand_official",
+        "nickname": "Best Brand",
+        "avatarThumb": "https://ui-avatars.com/api/?name=Best+Brand&background=ff0000&color=fff"
+      },
+      "video": {
+        "cover": "https://picsum.photos/seed/tiktok2/400/700",
+        "playAddr": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+        "duration": 30
+      },
+      "stats": {
+        "playCount": 500000,
+        "diggCount": 4500,
+        "commentCount": 120,
+        "shareCount": 50,
+        "collectCount": 200
+      },
+      "createTime": 1712100000,
+      "isAd": true,
+      "music": {
+        "title": "Trending Song",
+        "authorName": "Artist X"
+      },
+      "url": "https://www.tiktok.com/@brand_official/video/7351234567890123457"
+    }
+  ]
+}

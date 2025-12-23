@@ -1,0 +1,32 @@
+{
+  "posts": [
+    {
+      "id": "7351234567890123458",
+      "desc": "Cooking hacks you need to know 🍳 #cooking #food #hack",
+      "author": {
+        "uniqueId": "chef_master",
+        "nickname": "Chef Master",
+        "avatarThumb": "https://ui-avatars.com/api/?name=Chef+Master&background=4CAF50&color=fff"
+      },
+      "video": {
+        "cover": "https://picsum.photos/seed/tiktok3/400/700",
+        "playAddr": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+        "duration": 45
+      },
+      "stats": {
+        "playCount": 89000,
+        "diggCount": 6700,
+        "commentCount": 230,
+        "shareCount": 890,
+        "collectCount": 3400
+      },
+      "createTime": 1712200000,
+      "isAd": false,
+      "music": {
+        "title": "Cooking Vibes",
+        "authorName": "Chef Master"
+      },
+      "url": "https://www.tiktok.com/@chef_master/video/7351234567890123458"
+    }
+  ]
+}

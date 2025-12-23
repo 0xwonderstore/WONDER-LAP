@@ -1,0 +1,32 @@
+{
+  "posts": [
+    {
+      "id": "7351234567890123459",
+      "desc": "My travel vlog to Japan 🇯🇵 #travel #japan #vlog",
+      "author": {
+        "uniqueId": "travel_diaries",
+        "nickname": "Travel Diaries",
+        "avatarThumb": "https://ui-avatars.com/api/?name=Travel+Diaries&background=FF9800&color=fff"
+      },
+      "video": {
+        "cover": "https://picsum.photos/seed/tiktok4/400/700",
+        "playAddr": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+        "duration": 55
+      },
+      "stats": {
+        "playCount": 230000,
+        "diggCount": 45000,
+        "commentCount": 1200,
+        "shareCount": 5600,
+        "collectCount": 12000
+      },
+      "createTime": 1712300000,
+      "isAd": false,
+      "music": {
+        "title": "Kyoto Dreams",
+        "authorName": "Travel Diaries"
+      },
+      "url": "https://www.tiktok.com/@travel_diaries/video/7351234567890123459"
+    }
+  ]
+}
