@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { TikTokPost } from '../types';
-import { Heart, MessageCircle, Share2, Bookmark, Play, Calendar, ExternalLink, Music, Tag } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, Play, Calendar, Music, Tag, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatDate } from '../utils/productUtils';
 import { useTranslation } from 'react-i18next';
@@ -26,11 +26,17 @@ const TikTokCard: React.FC<TikTokCardProps> = ({ post }) => {
       {/* Header: Author Info */}
       <div className="p-4 flex items-center justify-between border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">
         <div className="flex items-center gap-3">
-          <img 
-            src={post.authorAvatar} 
-            alt={post.author} 
-            className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-600 shadow-sm object-cover"
-          />
+          {post.authorAvatar ? (
+             <img 
+                src={post.authorAvatar} 
+                alt={post.author} 
+                className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-600 shadow-sm object-cover"
+            />
+          ) : (
+             <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-400">
+                <User size={20} />
+             </div>
+          )}
           <div className="flex flex-col">
             <span className="font-bold text-sm text-gray-800 dark:text-gray-100 truncate max-w-[120px]">
                 {post.author}
@@ -67,7 +73,7 @@ const TikTokCard: React.FC<TikTokCardProps> = ({ post }) => {
         )}
 
         <div className="absolute bottom-4 left-4 right-4 text-white">
-             <p className="text-sm line-clamp-2 mb-3 font-medium text-shadow-sm">{post.desc}</p>
+             {post.desc && <p className="text-sm line-clamp-2 mb-3 font-medium text-shadow-sm">{post.desc}</p>}
              
              {post.music && (
                 <div className="flex items-center gap-2 text-xs opacity-90 mb-1">

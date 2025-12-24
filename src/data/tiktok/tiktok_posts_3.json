@@ -1,12 +1,9 @@
 {
   "posts": [
     {
-      "authorAvatar": "https://ui-avatars.com/api/?name=Chef+Master&background=4CAF50&color=fff",
       "author": "chef_master",
-      "id": "7351234567890123458",
       "cover": "https://picsum.photos/seed/tiktok3/400/700",
       "createTime": "2025-12-07 18:30:00",
-      "desc": "Cooking hacks you need to know 🍳 #cooking #food #hack",
       "duration": 45,
       "isAd": false,
       "playCount": 89000,
@@ -15,7 +12,6 @@
       "shareCount": 890,
       "collectCount": 3400,
       "diversification": "Food & Beverage",
-      "music": "Cooking Vibes - Chef Master",
       "isOriginalMusic": true,
       "hashtags": ["cooking", "food", "hack"],
       "url": "https://www.tiktok.com/@chef_master/video/7351234567890123458"

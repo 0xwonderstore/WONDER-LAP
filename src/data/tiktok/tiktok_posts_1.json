@@ -1,12 +1,9 @@
 {
   "posts": [
     {
-      "authorAvatar": "https://ui-avatars.com/api/?name=Tech+Guru&background=0D8ABC&color=fff",
       "author": "tech_guru",
-      "id": "7351234567890123456",
       "cover": "https://picsum.photos/seed/tiktok1/400/700",
       "createTime": "2025-12-05 14:38:16",
-      "desc": "Amazing new gadget! 🤩 #tech #gadgets #fyp",
       "duration": 60,
       "isAd": false,
       "playCount": 150000,
@@ -15,10 +12,53 @@
       "shareCount": 1200,
       "collectCount": 4500,
       "diversification": "Technology & Electronics",
-      "music": "Original Sound - Tech Guru",
       "isOriginalMusic": true,
-      "hashtags": ["tech", "gadgets", "fyp"],
+      "hashtags": [
+        "tech",
+        "gadgets",
+        "fyp"
+      ],
       "url": "https://www.tiktok.com/@tech_guru/video/7351234567890123456"
+    },
+    {
+      "author": "gadget_review",
+      "cover": "https://picsum.photos/seed/tiktok11/400/700",
+      "createTime": "2025-12-04 12:20:10",
+      "duration": 45,
+      "isAd": false,
+      "playCount": 85000,
+      "diggCount": 7200,
+      "commentCount": 150,
+      "shareCount": 400,
+      "collectCount": 2100,
+      "diversification": "Gadgets",
+      "isOriginalMusic": false,
+      "hashtags": [
+        "review",
+        "gadgets",
+        "musthave"
+      ],
+      "url": "https://www.tiktok.com/@gadget_review/video/7351234567890123470"
+    },
+    {
+      "author": "future_tech",
+      "cover": "https://picsum.photos/seed/tiktok12/400/700",
+      "createTime": "2025-12-03 18:45:00",
+      "duration": 30,
+      "isAd": true,
+      "playCount": 250000,
+      "diggCount": 18000,
+      "commentCount": 600,
+      "shareCount": 3000,
+      "collectCount": 9000,
+      "diversification": "Future Tech",
+      "isOriginalMusic": true,
+      "hashtags": [
+        "future",
+        "technology",
+        "wow"
+      ],
+      "url": "https://www.tiktok.com/@future_tech/video/7351234567890123471"
     }
   ]
 }

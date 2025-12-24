@@ -32,30 +32,29 @@ export interface InstagramPost {
 }
 
 export interface TikTokPost {
-    id: string;
-    desc: string;
-    createTime: string; // "2025-12-05 14:38:16"
+    desc?: string; // Optional
+    createTime: string;
     
     // Author
-    author: string; // username e.g. "bk_homegoods"
-    authorAvatar: string;
+    author: string; 
+    authorAvatar?: string; // Optional
     
     // Video Metadata
     cover: string;
     duration: number;
-    url: string; // Link to video on TikTok
+    url: string; 
     
     // Stats
     playCount: number;
-    diggCount: number; // Likes
+    diggCount: number; 
     commentCount: number;
     shareCount: number;
-    collectCount: number; // Saves
+    collectCount: number; 
     
     // Meta
     isAd: boolean;
-    diversification: string; // e.g. "Home & Garden"
-    music: string;
+    diversification: string;
+    music?: string; // Optional
     isOriginalMusic: boolean;
     hashtags: string[];
 }

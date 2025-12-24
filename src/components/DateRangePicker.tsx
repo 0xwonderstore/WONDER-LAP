@@ -28,6 +28,7 @@ interface DateRangePickerProps {
   icon?: React.ReactNode;
   variant?: ColorVariant;
   label?: string; // Add label prop for consistency
+  t?: any; // Add t prop for translations
 }
 
 const colorStyles: Record<ColorVariant, { 
@@ -38,20 +39,21 @@ const colorStyles: Record<ColorVariant, {
     bgHover: string;
     badge: string;
     icon: string;
+    buttonText: string;
   }> = {
-    brand: { activeRing: 'ring-brand-primary/20', activeBorder: 'border-brand-primary', text: 'text-brand-primary', bg: 'bg-brand-primary/5', bgHover: 'hover:bg-brand-primary/5', badge: 'bg-brand-primary', icon: 'text-brand-primary' },
-    blue: { activeRing: 'ring-blue-500/20', activeBorder: 'border-blue-500', text: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20', bgHover: 'hover:bg-blue-50 dark:hover:bg-blue-900/20', badge: 'bg-blue-500', icon: 'text-blue-500' },
-    purple: { activeRing: 'ring-purple-500/20', activeBorder: 'border-purple-500', text: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20', bgHover: 'hover:bg-purple-50 dark:hover:bg-purple-900/20', badge: 'bg-purple-500', icon: 'text-purple-500' },
-    green: { activeRing: 'ring-emerald-500/20', activeBorder: 'border-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20', bgHover: 'hover:bg-emerald-50 dark:hover:bg-emerald-900/20', badge: 'bg-emerald-500', icon: 'text-emerald-500' },
-    orange: { activeRing: 'ring-orange-500/20', activeBorder: 'border-orange-500', text: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/20', bgHover: 'hover:bg-orange-50 dark:hover:bg-orange-900/20', badge: 'bg-orange-500', icon: 'text-orange-500' },
-    pink: { activeRing: 'ring-pink-500/20', activeBorder: 'border-pink-500', text: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-50 dark:bg-pink-900/20', bgHover: 'hover:bg-pink-50 dark:hover:bg-pink-900/20', badge: 'bg-pink-500', icon: 'text-pink-500' },
-    teal: { activeRing: 'ring-teal-500/20', activeBorder: 'border-teal-500', text: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-50 dark:bg-teal-900/20', bgHover: 'hover:bg-teal-50 dark:hover:bg-teal-900/20', badge: 'bg-teal-500', icon: 'text-teal-500' },
-    indigo: { activeRing: 'ring-indigo-500/20', activeBorder: 'border-indigo-500', text: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-900/20', bgHover: 'hover:bg-indigo-50 dark:hover:bg-indigo-900/20', badge: 'bg-indigo-500', icon: 'text-indigo-500' }
+    brand: { activeRing: 'ring-brand-primary/20', activeBorder: 'border-brand-primary', text: 'text-brand-primary', bg: 'bg-brand-primary/10', bgHover: 'hover:bg-brand-primary/20', badge: 'bg-brand-primary', icon: 'text-brand-primary', buttonText: 'text-gray-900 dark:text-gray-100' },
+    blue: { activeRing: 'ring-blue-500/20', activeBorder: 'border-blue-500', text: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30', bgHover: 'hover:bg-blue-200 dark:hover:bg-blue-900/50', badge: 'bg-blue-600', icon: 'text-blue-600 dark:text-blue-400', buttonText: 'text-gray-900 dark:text-gray-100' },
+    purple: { activeRing: 'ring-purple-500/20', activeBorder: 'border-purple-500', text: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30', bgHover: 'hover:bg-purple-200 dark:hover:bg-purple-900/50', badge: 'bg-purple-600', icon: 'text-purple-600 dark:text-purple-400', buttonText: 'text-gray-900 dark:text-gray-100' },
+    green: { activeRing: 'ring-emerald-500/20', activeBorder: 'border-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30', bgHover: 'hover:bg-emerald-200 dark:hover:bg-emerald-900/50', badge: 'bg-emerald-600', icon: 'text-emerald-600 dark:text-emerald-400', buttonText: 'text-gray-900 dark:text-gray-100' },
+    orange: { activeRing: 'ring-orange-500/20', activeBorder: 'border-orange-500', text: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-900/30', bgHover: 'hover:bg-orange-200 dark:hover:bg-orange-900/50', badge: 'bg-orange-600', icon: 'text-orange-600 dark:text-orange-400', buttonText: 'text-gray-900 dark:text-gray-100' },
+    pink: { activeRing: 'ring-pink-500/20', activeBorder: 'border-pink-500', text: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-100 dark:bg-pink-900/30', bgHover: 'hover:bg-pink-200 dark:hover:bg-pink-900/50', badge: 'bg-pink-600', icon: 'text-pink-600 dark:text-pink-400', buttonText: 'text-gray-900 dark:text-gray-100' },
+    teal: { activeRing: 'ring-teal-500/20', activeBorder: 'border-teal-500', text: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-100 dark:bg-teal-900/30', bgHover: 'hover:bg-teal-200 dark:hover:bg-teal-900/50', badge: 'bg-teal-600', icon: 'text-teal-600 dark:text-teal-400', buttonText: 'text-gray-900 dark:text-gray-100' },
+    indigo: { activeRing: 'ring-indigo-500/20', activeBorder: 'border-indigo-500', text: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-100 dark:bg-indigo-900/30', bgHover: 'hover:bg-indigo-200 dark:hover:bg-indigo-900/50', badge: 'bg-indigo-600', icon: 'text-indigo-600 dark:text-indigo-400', buttonText: 'text-gray-900 dark:text-gray-100' }
   };
 
-export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate, className, icon, variant = 'brand', label }) => {
+const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate, className, icon, variant = 'brand', label, t: propT }) => {
   const { language } = useLanguageStore();
-  const t = translations[language];
+  const t = propT || translations[language];
   const [isOpen, setIsOpen] = useState(false);
   const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(date);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -165,11 +167,11 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate,
     }
     const from = format(date.from, 'LLL dd, y');
     if (!date.to || isSameDay(date.from, date.to)) {
-      return <span className="font-bold text-gray-700 dark:text-gray-200 text-sm">{from}</span>;
+      return <span className={`font-bold text-sm ${styles.buttonText}`}>{from}</span>;
     }
     const to = format(date.to, 'LLL dd, y');
     return (
-      <span className="font-bold text-gray-700 dark:text-gray-200 text-xs sm:text-sm">
+      <span className={`font-bold text-xs sm:text-sm ${styles.buttonText}`}>
         {from} <span className="text-gray-400 mx-1 font-normal">-</span> {to}
       </span>
     );
@@ -196,7 +198,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate,
             <div className="flex flex-col items-start overflow-hidden">
                 {date?.from && (
                      <span className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${styles.text}`}>
-                        {label}
+                        {label || t.date || 'Date'}
                      </span>
                 )}
                 
@@ -308,3 +310,5 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate,
     </div>
   );
 };
+
+export default DateRangePicker;

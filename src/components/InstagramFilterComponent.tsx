@@ -1,7 +1,7 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DateRange } from 'react-day-picker';
-import { DateRangePicker } from './DateRangePicker';
+import DateRangePicker from './DateRangePicker'; // Default import
 import Select from './Select';
 import MultiSelect from './MultiSelect';
 import { Disclosure, Transition } from '@headlessui/react';
@@ -99,7 +99,7 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
   // Helper for input container styles
   const inputContainerClass = "space-y-2";
   const labelClass = "text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5 ml-1";
-  const inputWrapperClass = "relative";
+  const inputWrapperClass = "relative h-[46px]"; // Fixed height wrapper
 
     // Helper to render active filter badges
     const renderActiveFilterBadges = () => {
@@ -124,19 +124,19 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
         }
         if (date?.from) {
            badges.push(
-            <span key="date" className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+            <span key="date" className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300">
                <CalendarIcon className="w-3 h-3 mr-1" />
               {format(date.from, 'MMM d')} {date.to ? `- ${format(date.to, 'MMM d')}` : ''}
-               <button onClick={(e) => { e.stopPropagation(); onDateChange(undefined); }} className="ml-1 text-green-600 hover:text-green-800 dark:text-green-400"><X className="w-3 h-3" /></button>
+               <button onClick={(e) => { e.stopPropagation(); onDateChange(undefined); }} className="ml-1 text-pink-600 hover:text-pink-800 dark:text-pink-400"><X className="w-3 h-3" /></button>
             </span>
           );
         }
         if (filters.minLikes !== null) {
              badges.push(
-            <span key="likes" className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300">
+            <span key="likes" className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
                <Heart className="w-3 h-3 mr-1" />
               Likes &ge; {filters.minLikes}
-               <button onClick={(e) => { e.stopPropagation(); onFilterChange({ minLikes: null }); }} className="ml-1 text-pink-600 hover:text-pink-800 dark:text-pink-400"><X className="w-3 h-3" /></button>
+               <button onClick={(e) => { e.stopPropagation(); onFilterChange({ minLikes: null }); }} className="ml-1 text-red-600 hover:text-red-800 dark:text-red-400"><X className="w-3 h-3" /></button>
             </span>
           );
         }
@@ -210,7 +210,7 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
                                 value={filters.username} 
                                 onChange={handleInputChange} 
                                 options={usernameOptions} 
-                                className="h-[46px]"
+                                className="h-full"
                                 placeholder={t('all_users')}
                             />
                         </div>
@@ -222,7 +222,13 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
                             <CalendarIcon className="w-3.5 h-3.5" /> {t('date_posted')}
                         </label>
                         <div className={inputWrapperClass}>
-                           <DateRangePicker date={date} setDate={onDateChange} />
+                           <DateRangePicker 
+                                date={date} 
+                                setDate={onDateChange} 
+                                icon={<CalendarIcon className="w-4 h-4" />}
+                                variant="pink" 
+                                t={t}
+                           />
                         </div>
                     </div>
 
@@ -237,6 +243,7 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
                                 selected={filters.languages}
                                 onChange={handleLanguagesChange}
                                 label={t('select_language')}
+                                className="h-full"
                             />
                         </div>
                     </div>

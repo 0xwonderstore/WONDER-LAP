@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DateRange } from 'react-day-picker';
-import { Filter, X, ChevronDown, Heart, MessageCircle, Share2, Bookmark, Play, Search, Calendar, SlidersHorizontal } from 'lucide-react';
+import { Filter, X, ChevronDown, Heart, MessageCircle, Share2, Bookmark, Play, Search, Calendar, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import DateRangePicker from './DateRangePicker';
+import DateRangePicker from './DateRangePicker'; // Correct Default Import
 import { TikTokPost } from '../types';
 
 interface TikTokFilterProps {
@@ -20,7 +20,7 @@ interface TikTokFilterProps {
   date: DateRange | undefined;
   setDate: (date: DateRange | undefined) => void;
   onReset: () => void;
-  posts: TikTokPost[]; // For calculating max values if needed (optional)
+  posts: TikTokPost[]; 
 }
 
 const TikTokFilterComponent: React.FC<TikTokFilterProps> = ({ 
@@ -55,65 +55,82 @@ const TikTokFilterComponent: React.FC<TikTokFilterProps> = ({
     </div>
   );
 
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg border border-gray-100 dark:border-gray-700 mb-8 transition-all duration-300">
-      
-      {/* Top Bar: Search, Date, Ad Toggle, Reset */}
-      <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-        
-        {/* Left: Search & Ad Toggle */}
-        <div className="flex flex-col sm:flex-row w-full lg:w-auto gap-4 flex-1">
-            <div className="relative flex-grow max-w-md group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-primary transition-colors" size={18} />
-                <input 
-                    type="text" 
-                    placeholder={t('search_user') || "Search username..."}
-                    value={filters.username}
-                    onChange={(e) => onFilterChange({ username: e.target.value })}
-                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none transition-all shadow-sm"
-                />
-            </div>
+  const hasActiveFilters = Object.values(filters).some(v => v !== null && v !== '') || date?.from;
 
-            <button 
-                onClick={() => {
-                    if (filters.isAd === null) onFilterChange({ isAd: true });
-                    else if (filters.isAd === true) onFilterChange({ isAd: false });
-                    else onFilterChange({ isAd: null });
-                }}
-                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all border shadow-sm flex-shrink-0
-                    ${filters.isAd === true ? 'bg-yellow-50 text-yellow-700 border-yellow-200 ring-2 ring-yellow-500/20' : 
-                      filters.isAd === false ? 'bg-green-50 text-green-700 border-green-200 ring-2 ring-green-500/20' : 
-                      'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
-            >
-                <span>{filters.isAd === true ? "Ads Only" : filters.isAd === false ? "Organic Only" : "All Posts"}</span>
-            </button>
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-[2rem] p-6 shadow-xl shadow-gray-200/50 dark:shadow-black/20 border border-gray-100 dark:border-gray-700 mb-8 transition-all duration-300">
+      
+      {/* Top Bar: Search, Date, Filters Toggle */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+        
+        {/* Search Bar (Span 5 cols) */}
+        <div className="lg:col-span-5 relative group h-[72px] z-30">
+             <div className="w-full h-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 flex items-center justify-between transition-all duration-300 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md hover:-translate-y-0.5 focus-within:ring-4 focus-within:ring-brand-primary/20 focus-within:border-brand-primary">
+                 <div className="flex items-center gap-3 overflow-hidden flex-1">
+                    <div className="p-2 rounded-xl bg-gray-100 dark:bg-gray-700 group-focus-within:bg-brand-primary/10 transition-colors duration-300">
+                        <Search className="w-4 h-4 text-gray-500 dark:text-gray-400 group-focus-within:text-brand-primary transition-colors" />
+                    </div>
+                    <div className="flex flex-col flex-1">
+                         {filters.username && (
+                             <span className="text-[10px] font-bold uppercase tracking-wider text-brand-primary mb-0.5 animate-fade-in">
+                                {t('search')}
+                             </span>
+                         )}
+                         <input 
+                            type="text" 
+                            placeholder={filters.username ? "" : (t('search_user') || "Search username...")}
+                            value={filters.username}
+                            onChange={(e) => onFilterChange({ username: e.target.value })}
+                            className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium text-gray-800 dark:text-gray-100 placeholder-gray-400"
+                        />
+                    </div>
+                 </div>
+                 {filters.username && (
+                    <button
+                        onClick={() => onFilterChange({ username: '' })}
+                        className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                 )}
+             </div>
         </div>
 
-        {/* Right: Date, Advanced Toggle */}
-        <div className="flex flex-col sm:flex-row w-full lg:w-auto gap-3">
-             <div className="w-full sm:w-auto">
-                <DateRangePicker date={date} setDate={setDate} t={t} />
-             </div>
-             
+        {/* Date Picker (Span 4 cols) - Green Variant like Main Filter */}
+        <div className="lg:col-span-4 h-[72px] z-30">
+             <DateRangePicker 
+                date={date} 
+                setDate={setDate} 
+                icon={<Calendar className="w-4 h-4" />}
+                variant="green"
+                label={t('date') || "Date"}
+                t={t}
+            />
+        </div>
+
+        {/* Actions (Span 3 cols) */}
+        <div className="lg:col-span-3 flex gap-3 h-[72px]">
              <button
                 onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-                className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all border shadow-sm
+                className={`flex-1 h-full flex items-center justify-center gap-3 px-6 rounded-2xl text-sm font-bold transition-all border shadow-sm group
                     ${isAdvancedOpen 
-                        ? 'bg-brand-primary text-white border-brand-primary shadow-brand-primary/20' 
-                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:border-gray-300'}`}
+                        ? 'bg-brand-primary text-white border-brand-primary shadow-brand-primary/20 scale-[1.02]' 
+                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5'}`}
              >
-                 <SlidersHorizontal size={18} />
-                 <span className="hidden sm:inline">{t('filters') || "Filters"}</span>
+                 <div className={`p-2 rounded-xl transition-colors ${isAdvancedOpen ? 'bg-white/20' : 'bg-gray-100 dark:bg-gray-700 group-hover:bg-gray-200'}`}>
+                    <SlidersHorizontal size={18} />
+                 </div>
+                 <span>{t('filters') || "Filters"}</span>
                  <ChevronDown size={16} className={`transition-transform duration-300 ${isAdvancedOpen ? 'rotate-180' : ''}`} />
              </button>
 
-             {(Object.values(filters).some(v => v !== null && v !== '') || date) && (
+             {hasActiveFilters && (
                  <button 
                     onClick={onReset}
-                    className="p-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
+                    className="h-full w-[72px] flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-2xl transition-colors border border-red-100 dark:border-red-900/30 hover:shadow-md hover:-translate-y-0.5"
                     title={t('resetFilters')}
                  >
-                     <X size={20} />
+                     <Trash2 size={24} />
                  </button>
              )}
         </div>
@@ -124,17 +141,19 @@ const TikTokFilterComponent: React.FC<TikTokFilterProps> = ({
         {isAdvancedOpen && (
             <motion.div
                 initial={{ height: 0, opacity: 0, marginTop: 0 }}
-                animate={{ height: 'auto', opacity: 1, marginTop: 24 }}
+                animate={{ height: 'auto', opacity: 1, marginTop: 32 }}
                 exit={{ height: 0, opacity: 0, marginTop: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
+                transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
                 className="overflow-hidden"
             >
-                <div className="pt-6 border-t border-gray-100 dark:border-gray-700">
-                    <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                        <Filter size={16} className="text-brand-primary" />
+                <div className="pt-8 border-t border-gray-100 dark:border-gray-700">
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-brand-primary/10 text-brand-primary">
+                            <Filter size={16} />
+                        </div>
                         {t('min_interactions') || "Minimum Interactions"}
                     </h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
                         <FilterInput 
                             icon={Play} 
                             label={t('views') || "Views"} 

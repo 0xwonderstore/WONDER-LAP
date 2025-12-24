@@ -17,7 +17,7 @@ import {
 import Select from './Select';
 import MultiSelect, { ColorVariant } from './MultiSelect';
 import { DateRange } from 'react-day-picker';
-import { DateRangePicker } from './DateRangePicker';
+import DateRangePicker from './DateRangePicker'; // Default import
 import { format } from 'date-fns';
 
 interface FilterComponentProps {
