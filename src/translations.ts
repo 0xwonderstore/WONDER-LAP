@@ -16,7 +16,7 @@ export const translations = {
     blacklist: 'القائمة السوداء',
     block_store: 'حظر المتجر',
     instagram_feature: 'انستقرام',
-    tiktok_feature: 'تيك توك', // New
+    tiktok_feature: 'تيك توك', 
 
     // FavoritesPage.tsx
     favorites_title: 'المفضلة ({count})',
@@ -31,13 +31,20 @@ export const translations = {
     search_no_results_desc: 'لم نتمكن من العثور على أي منتجات تطابق الفلاتر الحالية.',
     
     // TikTokPage.tsx
-    tiktok_subtitle: 'تصفح أفضل فيديوهات وإعلانات تيك توك.',
-    search_user: 'بحث عن مستخدم...',
+    tiktok_subtitle: 'استكشف الفيديوهات الأكثر رواجاً والأعلى أداءً.',
+    search_user: 'بحث عن حساب...',
     sort_default: 'الافتراضي (الأحدث)',
     min_interactions: 'الحد الأدنى للتفاعلات',
-    views: 'مشاهدات',
-    shares: 'مشاركات',
-    saves: 'حفظ',
+    views: 'المشاهدات',
+    shares: 'المشاركات',
+    saves: 'الحفظ',
+    tiktok_plays: 'مشاهدة',
+    tiktok_likes: 'إعجاب',
+    tiktok_shares: 'مشاركة',
+    tiktok_saves: 'حفظ',
+    tiktok_comments: 'تعليق',
+    view_on_tiktok: 'مشاهدة على تيك توك',
+    tiktok_loading: 'جاري جلب أفضل المقاطع...',
     
     // DateRangePicker
     apply: 'تطبيق',
@@ -228,7 +235,7 @@ export const translations = {
     blacklist: 'Blacklist',
     block_store: 'Block Store',
     instagram_feature: 'Instagram',
-    tiktok_feature: 'TikTok', // New
+    tiktok_feature: 'TikTok',
 
     // FavoritesPage.tsx
     favorites_title: 'Favorites ({count})',
@@ -250,6 +257,13 @@ export const translations = {
     views: 'Views',
     shares: 'Shares',
     saves: 'Saves',
+    tiktok_plays: 'Plays',
+    tiktok_likes: 'Likes',
+    tiktok_shares: 'Shares',
+    tiktok_saves: 'Saves',
+    tiktok_comments: 'Comments',
+    view_on_tiktok: 'View on TikTok',
+    tiktok_loading: 'Loading trending TikToks...',
 
     // DateRangePicker
     apply: 'Apply',

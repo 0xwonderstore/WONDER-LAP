@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { Product, InstagramPost } from '../types';
+import { Product, InstagramPost, TikTokPost } from '../types';
 import { useFavoritesStore } from '../stores/favoritesStore';
 import ProductCard from './ProductCard';
 import InstagramCard from './InstagramCard';
+import TikTokCard from './TikTokCard'; // Import TikTokCard
 import { EmptyState } from './EmptyState';
 import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
@@ -14,6 +15,7 @@ import Select from './Select';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { loadInstagramPosts } from '../utils/instagramLoader';
+import { loadTikTokPosts } from '../utils/tiktokLoader'; // Import tiktok loader
 
 interface FavoritesPageProps {
   allProducts: Product[];
@@ -82,8 +84,16 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, onNavigateWi
     gcTime: Infinity,
   });
 
+  const { data: tiktokPosts = [] } = useQuery({
+    queryKey: ['tiktokPosts'],
+    queryFn: loadTikTokPosts,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
   const [productPage, setProductPage] = useState(1);
   const [instagramPage, setInstagramPage] = useState(1);
+  const [tiktokPage, setTiktokPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState('newest');
   const [storeFilter, setStoreFilter] = useState<string>('all');
@@ -95,7 +105,6 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, onNavigateWi
   };
 
   const favoriteProducts = useMemo(() => {
-    // Optimization: Create a Set of normalized favorite URLs once
     const normalizedFavs = new Set<string>();
     favoriteUrls.forEach(url => normalizedFavs.add(normalizeUrl(url)));
     
@@ -108,6 +117,13 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, onNavigateWi
 
       return instagramPosts.filter(p => normalizedFavs.has(normalizeUrl(p.permalink)));
   }, [instagramPosts, favoriteUrls]);
+
+  const favoriteTikTokPosts = useMemo(() => {
+    const normalizedFavs = new Set<string>();
+    favoriteUrls.forEach(url => normalizedFavs.add(normalizeUrl(url)));
+
+    return tiktokPosts.filter(p => normalizedFavs.has(normalizeUrl(p.url)));
+  }, [tiktokPosts, favoriteUrls]);
   
   const uniqueStores = useMemo(() => {
     const storeSet = new Set(favoriteProducts.map(p => p.vendor).filter(Boolean));
@@ -126,7 +142,6 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, onNavigateWi
       products = products.filter(p => p.vendor === storeFilter);
     }
     
-    // Create a copy before sorting to avoid mutating the original array (though useMemo helps)
     return [...products].sort((a, b) => {
       if (!a.created_at || !b.created_at) return 0;
       switch(sortOption) {
@@ -136,7 +151,6 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, onNavigateWi
     });
   }, [favoriteProducts, searchTerm, storeFilter, sortOption]);
 
-  // Reset pagination when filters change
   React.useEffect(() => {
       setProductPage(1);
   }, [searchTerm, storeFilter, sortOption]);
@@ -149,8 +163,11 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, onNavigateWi
   const instagramTotalPages = Math.ceil(favoriteInstagramPosts.length / itemsPerPage);
   const paginatedInstagramPosts = favoriteInstagramPosts.slice((instagramPage - 1) * itemsPerPage, instagramPage * itemsPerPage);
 
-  const hasFavorites = favoriteProducts.length > 0 || favoriteInstagramPosts.length > 0;
-  const totalItems = favoriteProducts.length + favoriteInstagramPosts.length;
+  const tiktokTotalPages = Math.ceil(favoriteTikTokPosts.length / itemsPerPage);
+  const paginatedTikTokPosts = favoriteTikTokPosts.slice((tiktokPage - 1) * itemsPerPage, tiktokPage * itemsPerPage);
+
+  const hasFavorites = favoriteProducts.length > 0 || favoriteInstagramPosts.length > 0 || favoriteTikTokPosts.length > 0;
+  const totalItems = favoriteProducts.length + favoriteInstagramPosts.length + favoriteTikTokPosts.length;
   
   const productControls = (
     <div className="flex flex-col sm:flex-row gap-4 w-full">
@@ -303,6 +320,31 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ allProducts, onNavigateWi
                      {instagramTotalPages > 1 && (
                         <div className="mt-12 flex justify-center">
                             <Pagination currentPage={instagramPage} totalPages={instagramTotalPages} onPageChange={setInstagramPage} totalItems={favoriteInstagramPosts.length} itemsPerPage={itemsPerPage} t={t} />
+                        </div>
+                    )}
+                </CollapsibleSection>
+            )}
+
+            {favoriteTikTokPosts.length > 0 && (
+                <CollapsibleSection 
+                    title={t.tiktok_feature} 
+                    count={favoriteTikTokPosts.length}
+                >
+                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {paginatedTikTokPosts.map((p, index) => (
+                            <motion.div
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                              key={p.url}
+                            >
+                                <TikTokCard post={p} />
+                            </motion.div>
+                        ))}
+                     </div>
+                     {tiktokTotalPages > 1 && (
+                        <div className="mt-12 flex justify-center">
+                            <Pagination currentPage={tiktokPage} totalPages={tiktokTotalPages} onPageChange={setTiktokPage} totalItems={favoriteTikTokPosts.length} itemsPerPage={itemsPerPage} t={t} />
                         </div>
                     )}
                 </CollapsibleSection>

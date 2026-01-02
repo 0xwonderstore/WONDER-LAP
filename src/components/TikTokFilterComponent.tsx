@@ -104,7 +104,6 @@ const TikTokFilterComponent: React.FC<TikTokFilterProps> = ({
                 icon={<Calendar className="w-4 h-4" />}
                 variant="green"
                 label={t('date') || "Date"}
-                t={t}
             />
         </div>
 

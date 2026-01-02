@@ -227,7 +227,6 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
                                 setDate={onDateChange} 
                                 icon={<CalendarIcon className="w-4 h-4" />}
                                 variant="pink" 
-                                t={t}
                            />
                         </div>
                     </div>

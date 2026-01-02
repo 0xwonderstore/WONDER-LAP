@@ -6,9 +6,9 @@ import { useTikTokPageStore } from '../stores/tiktokPageStore';
 import { TikTokPost } from '../types';
 import TikTokCard from './TikTokCard';
 import Pagination from './Pagination';
-import LoadingSpinner from './LoadingSpinner';
+import TikTokSkeleton from './TikTokSkeleton';
 import { EmptyState } from './EmptyState';
-import { SortDesc, RotateCcw } from 'lucide-react';
+import { SortDesc } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TikTokFilterComponent from './TikTokFilterComponent';
 
@@ -114,28 +114,22 @@ const TikTokPage = () => {
     }, [reset, setCurrentPage]);
 
 
-    if (isLoading) {
-        return (
-             <div className="flex justify-center items-center h-96">
-                <LoadingSpinner message={t('loading_posts') || "Loading TikToks..."} />
-             </div>
-        );
-    }
-
     return (
         <div className="container mx-auto px-4 py-8 animate-fade-in-up">
             
             {/* Header */}
             <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-4xl font-black mb-2 text-gray-900 dark:text-white flex items-center gap-3">
-                            <span className="bg-black text-white dark:bg-white dark:text-black p-2 rounded-lg">
-                            <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>
-                            </span>
-                            {t('tiktok_feature') || "TikTok Library"}
+                    <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white flex items-center gap-3">
+                        <div className="p-2 bg-black text-white dark:bg-white dark:text-black rounded-lg shadow-sm">
+                           <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+                           </svg>
+                        </div>
+                        {t('tiktok_feature') || "TikTok Library"}
                     </h1>
                     <p className="text-gray-500 dark:text-gray-400">
-                            {t('tiktok_subtitle') || "Browse top performing TikTok videos and ads."}
+                        {t('tiktok_subtitle') || "Browse top performing TikTok videos and ads."}
                     </p>
                 </div>
             </div>
@@ -152,34 +146,40 @@ const TikTokPage = () => {
 
             {/* Sort Bar */}
             <div className="flex justify-end mb-6">
-                <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-4 py-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-                    <SortDesc size={16} className="text-gray-400" />
-                    <span className="text-sm font-bold text-gray-500">{t('sort_by')}:</span>
+                <div className="flex items-center gap-2 bg-white dark:bg-gray-800 px-4 py-2.5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 hover:border-gray-300 transition-colors">
+                    <SortDesc size={18} className="text-brand-primary" />
+                    <span className="text-sm font-bold text-gray-700 dark:text-gray-200 whitespace-nowrap">{t('sort_by')}:</span>
                     <select 
                         onChange={handleSortChange}
-                        className="bg-transparent text-sm font-medium outline-none text-gray-700 dark:text-gray-200 cursor-pointer"
+                        className="bg-transparent text-sm font-bold outline-none text-gray-900 dark:text-white cursor-pointer min-w-[140px]"
                     >
-                        <option value="default">{t('sort_default') || "Default (Newest)"}</option>
-                        <option value="playCount-desc">Most Viewed</option>
-                        <option value="diggCount-desc">Most Liked</option>
-                        <option value="shareCount-desc">Most Shared</option>
-                        <option value="collectCount-desc">Most Saved</option>
+                        <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white" value="default">{t('sort_default') || "Default (Newest)"}</option>
+                        <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white" value="playCount-desc">{t('views') || "Views"}</option>
+                        <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white" value="diggCount-desc">{t('likes') || "Likes"}</option>
+                        <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white" value="shareCount-desc">{t('shares') || "Shares"}</option>
+                        <option className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white" value="collectCount-desc">{t('saves') || "Saves"}</option>
                     </select>
                 </div>
             </div>
 
-            {/* Grid */}
-            {paginatedPosts.length > 0 ? (
+            {/* Content Grid */}
+            {isLoading ? (
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                        <TikTokSkeleton key={i} />
+                    ))}
+                 </div>
+            ) : paginatedPosts.length > 0 ? (
                 <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
                         <AnimatePresence mode="popLayout">
                             {paginatedPosts.map((post) => (
                                 <motion.div
-                                    key={post.url} // Using post.url as a unique key instead of post.id
+                                    key={post.url} 
                                     layout
-                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
                                     transition={{ duration: 0.2 }}
                                 >
                                     <TikTokCard post={post} />
@@ -198,7 +198,7 @@ const TikTokPage = () => {
                     />
                 </>
             ) : (
-                <div className="bg-white dark:bg-gray-800 rounded-3xl p-12 text-center border border-gray-100 dark:border-gray-700">
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center border border-gray-100 dark:border-gray-700">
                     <EmptyState 
                         title={t('noResults')} 
                         hint={t('noResultsHint')} 
