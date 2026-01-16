@@ -17,6 +17,7 @@ export const translations = {
     block_store: 'حظر المتجر',
     instagram_feature: 'انستقرام',
     tiktok_feature: 'تيك توك', 
+    hidden_items: 'العناصر المخفية',
 
     // FavoritesPage.tsx
     favorites_title: 'المفضلة ({count})',
@@ -30,6 +31,13 @@ export const translations = {
     search_no_results_title: 'لا توجد نتائج',
     search_no_results_desc: 'لم نتمكن من العثور على أي منتجات تطابق الفلاتر الحالية.',
     
+    // HiddenItemsPage.tsx
+    hidden_items_title: 'الأرشيف والمخفي ({count})',
+    hidden_items_subtitle: 'هنا تجد جميع المنتجات والمنشورات التي قمت بإخفائها.',
+    unhide_all: 'إظهار الكل',
+    unhide: 'إلغاء الإخفاء',
+    no_hidden_items: 'لا توجد عناصر مخفية حالياً.',
+
     // TikTokPage.tsx
     tiktok_subtitle: 'استكشف الفيديوهات الأكثر رواجاً والأعلى أداءً.',
     search_user: 'بحث عن حساب...',
@@ -183,7 +191,7 @@ export const translations = {
     chinese: 'الصينية',
     arabic: 'العربية',
     persian: 'الفارسية',
-    french: 'الفرنسية',
+    french: 'الفنسية',
     hindi: 'الهندية',
     no_users_blacklisted: 'لم يتم حظر أي مستخدم حتى الآن.',
 
@@ -217,6 +225,8 @@ export const translations = {
     block_user: 'حظر المستخدم',
     video_error: 'حدث خطأ أثناء تشغيل الفيديو. قد يكون الرابط منتهي الصلاحية.',
     loading_posts: 'جاري تحميل منشورات Instagram...',
+    view_original: 'عرض المنشور الأصلي',
+    open_post: 'فتح المنشور',
   },
   en: {
     rtl: false,
@@ -236,6 +246,7 @@ export const translations = {
     block_store: 'Block Store',
     instagram_feature: 'Instagram',
     tiktok_feature: 'TikTok',
+    hidden_items: 'Hidden Items',
 
     // FavoritesPage.tsx
     favorites_title: 'Favorites ({count})',
@@ -248,6 +259,13 @@ export const translations = {
     clearFilters: 'Clear All Filters',
     search_no_results_title: 'No Results Found',
     search_no_results_desc: 'We couldn\'t find any products matching your current filters.',
+
+    // HiddenItemsPage.tsx
+    hidden_items_title: 'Archive & Hidden ({count})',
+    hidden_items_subtitle: 'All products and posts you have hidden from the main view.',
+    unhide_all: 'Unhide All',
+    unhide: 'Unhide',
+    no_hidden_items: 'No hidden items at the moment.',
     
     // TikTokPage.tsx
     tiktok_subtitle: 'Browse top performing TikTok videos and ads.',
@@ -436,5 +454,7 @@ export const translations = {
     block_user: 'Block User',
     video_error: 'Error playing video. The link may have expired.',
     loading_posts: 'Loading Instagram posts...',
+    view_original: 'View original',
+    open_post: 'Open Post',
   },
 };

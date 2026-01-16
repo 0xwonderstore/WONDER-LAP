@@ -11,10 +11,15 @@ const normalizeHostname = (url: string): string => {
 interface BlacklistState {
   keywords: string[];
   blockedStores: string[]; // This will store normalized hostnames
+  hiddenProducts: string[]; // Store product unique identifiers (IDs or URLs)
   addKeyword: (keyword: string) => void;
   removeKeyword: (keyword: string) => void;
   addStore: (storeUrl: string) => void;
   removeStore: (storeUrl: string) => void;
+  hideProduct: (productId: string) => void;
+  unhideProduct: (productId: string) => void;
+  hideProducts: (productIds: string[]) => void;
+  clearHiddenProducts: () => void;
 }
 
 export const useBlacklistStore = create<BlacklistState>()(
@@ -22,6 +27,7 @@ export const useBlacklistStore = create<BlacklistState>()(
     (set) => ({
       keywords: [],
       blockedStores: [],
+      hiddenProducts: [],
       addKeyword: (keyword) => {
         const cleanedKeyword = keyword.toLowerCase().trim();
         if (cleanedKeyword) {
@@ -48,9 +54,19 @@ export const useBlacklistStore = create<BlacklistState>()(
           blockedStores: state.blockedStores.filter((hostname) => hostname !== normalized),
         }));
       },
+      hideProduct: (productId) => set((state) => ({
+        hiddenProducts: [...new Set([...state.hiddenProducts, productId])]
+      })),
+      unhideProduct: (productId) => set((state) => ({
+        hiddenProducts: state.hiddenProducts.filter(id => id !== productId)
+      })),
+      hideProducts: (productIds) => set((state) => ({
+        hiddenProducts: [...new Set([...state.hiddenProducts, ...productIds])]
+      })),
+      clearHiddenProducts: () => set({ hiddenProducts: [] }),
     }),
     {
-      name: 'blacklist-storage-v2', // Using a new name to avoid conflicts with old data
+      name: 'blacklist-storage-v3', // Incremented version
       storage: createJSONStorage(() => localStorage),
     }
   )

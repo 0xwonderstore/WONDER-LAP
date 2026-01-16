@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { DayPicker, DateRange } from 'react-day-picker';
-import 'react-day-picker/dist/style.css';
 import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
 import {
@@ -17,9 +16,13 @@ import {
   isSameDay,
   addMonths,
 } from 'date-fns';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, ChevronDown, X } from 'lucide-react';
+import { arSA, enUS } from 'date-fns/locale';
+import { Calendar as CalendarIcon, ChevronDown, X, Check } from 'lucide-react';
 
-export type ColorVariant = 'brand' | 'blue' | 'purple' | 'green' | 'orange' | 'pink' | 'teal' | 'indigo';
+// Use standard react-day-picker styles
+import 'react-day-picker/dist/style.css';
+
+export type ColorVariant = 'brand' | 'pink' | 'blue' | 'purple';
 
 interface DateRangePickerProps {
   date: DateRange | undefined;
@@ -27,286 +30,259 @@ interface DateRangePickerProps {
   className?: string;
   icon?: React.ReactNode;
   variant?: ColorVariant;
-  label?: string; // Add label prop for consistency
-  t?: any; // Add t prop for translations
+  label?: string;
 }
 
-const colorStyles: Record<ColorVariant, { 
-    activeRing: string; 
-    activeBorder: string; 
-    text: string; 
-    bg: string; 
-    bgHover: string;
-    badge: string;
-    icon: string;
-    buttonText: string;
-  }> = {
-    brand: { activeRing: 'ring-brand-primary/20', activeBorder: 'border-brand-primary', text: 'text-brand-primary', bg: 'bg-brand-primary/10', bgHover: 'hover:bg-brand-primary/20', badge: 'bg-brand-primary', icon: 'text-brand-primary', buttonText: 'text-gray-900 dark:text-gray-100' },
-    blue: { activeRing: 'ring-blue-500/20', activeBorder: 'border-blue-500', text: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30', bgHover: 'hover:bg-blue-200 dark:hover:bg-blue-900/50', badge: 'bg-blue-600', icon: 'text-blue-600 dark:text-blue-400', buttonText: 'text-gray-900 dark:text-gray-100' },
-    purple: { activeRing: 'ring-purple-500/20', activeBorder: 'border-purple-500', text: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30', bgHover: 'hover:bg-purple-200 dark:hover:bg-purple-900/50', badge: 'bg-purple-600', icon: 'text-purple-600 dark:text-purple-400', buttonText: 'text-gray-900 dark:text-gray-100' },
-    green: { activeRing: 'ring-emerald-500/20', activeBorder: 'border-emerald-500', text: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30', bgHover: 'hover:bg-emerald-200 dark:hover:bg-emerald-900/50', badge: 'bg-emerald-600', icon: 'text-emerald-600 dark:text-emerald-400', buttonText: 'text-gray-900 dark:text-gray-100' },
-    orange: { activeRing: 'ring-orange-500/20', activeBorder: 'border-orange-500', text: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-900/30', bgHover: 'hover:bg-orange-200 dark:hover:bg-orange-900/50', badge: 'bg-orange-600', icon: 'text-orange-600 dark:text-orange-400', buttonText: 'text-gray-900 dark:text-gray-100' },
-    pink: { activeRing: 'ring-pink-500/20', activeBorder: 'border-pink-500', text: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-100 dark:bg-pink-900/30', bgHover: 'hover:bg-pink-200 dark:hover:bg-pink-900/50', badge: 'bg-pink-600', icon: 'text-pink-600 dark:text-pink-400', buttonText: 'text-gray-900 dark:text-gray-100' },
-    teal: { activeRing: 'ring-teal-500/20', activeBorder: 'border-teal-500', text: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-100 dark:bg-teal-900/30', bgHover: 'hover:bg-teal-200 dark:hover:bg-teal-900/50', badge: 'bg-teal-600', icon: 'text-teal-600 dark:text-teal-400', buttonText: 'text-gray-900 dark:text-gray-100' },
-    indigo: { activeRing: 'ring-indigo-500/20', activeBorder: 'border-indigo-500', text: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-100 dark:bg-indigo-900/30', bgHover: 'hover:bg-indigo-200 dark:hover:bg-indigo-900/50', badge: 'bg-indigo-600', icon: 'text-indigo-600 dark:text-indigo-400', buttonText: 'text-gray-900 dark:text-gray-100' }
-  };
+const variantStyles: Record<ColorVariant, { 
+    accent: string; 
+    bg: string;
+    text: string;
+    border: string;
+    ring: string;
+}> = {
+    brand: { accent: '#ec4899', bg: 'bg-pink-50 dark:bg-pink-900/20', text: 'text-pink-600 dark:text-pink-400', border: 'border-pink-200 dark:border-pink-800', ring: 'ring-pink-500/20' },
+    pink: { accent: '#ec4899', bg: 'bg-pink-50 dark:bg-pink-900/20', text: 'text-pink-600 dark:text-pink-400', border: 'border-pink-200 dark:border-pink-800', ring: 'ring-pink-500/20' },
+    blue: { accent: '#3b82f6', bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800', ring: 'ring-blue-500/20' },
+    purple: { accent: '#a855f7', bg: 'bg-purple-50 dark:bg-purple-900/20', text: 'text-purple-600 dark:text-purple-400', border: 'border-purple-200 dark:border-purple-800', ring: 'ring-purple-500/20' },
+};
 
-const DateRangePicker: React.FC<DateRangePickerProps> = ({ date, setDate, className, icon, variant = 'brand', label, t: propT }) => {
+const DateRangePicker: React.FC<DateRangePickerProps> = ({ 
+    date, 
+    setDate, 
+    className = "", 
+    icon, 
+    variant = 'brand',
+    label 
+}) => {
   const { language } = useLanguageStore();
-  const t = propT || translations[language];
+  const t = translations[language];
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedRange, setSelectedRange] = useState<DateRange | undefined>(date);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const styles = colorStyles[variant];
+  const [tempRange, setTempRange] = useState<DateRange | undefined>(date);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const styles = variantStyles[variant];
+  
+  const locale = language === 'ar' ? arSA : enUS;
 
-  // Sync internal state with prop when prop changes
+  // Sync internal state with prop
   useEffect(() => {
-    setSelectedRange(date);
+    setTempRange(date);
   }, [date]);
 
-  // Handle clicks outside to close the picker
+  // Handle outside clicks
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
-        setSelectedRange(date);
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [wrapperRef, date]);
-
-  const handleApply = useCallback(() => {
-    setDate(selectedRange);
-    setIsOpen(false);
-  }, [setDate, selectedRange]);
-
-  const handleReset = useCallback(() => {
-    setSelectedRange(undefined);
-    setDate(undefined);
-    setIsOpen(false);
-  }, [setDate]);
-
-  const suggestionRanges = [
-    { label: t.last7days, getRange: () => {
-        const to = new Date();
-        const from = subDays(to, 6);
-        return { from: startOfDay(from), to: endOfDay(to) };
-    }},
-    { label: t.last30days, getRange: () => {
-        const to = new Date();
-        const from = subDays(to, 29);
-        return { from: startOfDay(from), to: endOfDay(to) };
-    }},
-    { label: t.last90days, getRange: () => {
-        const to = new Date();
-        const from = subDays(to, 89);
-        return { from: startOfDay(from), to: endOfDay(to) };
-    }},
-    { label: t.last180days, getRange: () => {
-        const to = new Date();
-        const from = subDays(to, 179);
-        return { from: startOfDay(from), to: endOfDay(to) };
-    }},
-    { label: t.thisMonth, getRange: () => {
-        const today = new Date();
-        return { from: startOfMonth(today), to: endOfMonth(today) };
-    }},
-    { label: t.lastMonth, getRange: () => {
-        const today = new Date();
-        const lastMonth = subMonths(today, 1);
-        return { from: startOfMonth(lastMonth), to: endOfMonth(lastMonth) };
-    }},
-    { label: t.thisYear, getRange: () => {
-        const today = new Date();
-        return { from: startOfYear(today), to: endOfYear(today) };
-    }},
-    { label: t.lastYear, getRange: () => {
-        const today = new Date();
-        const lastYear = subYears(today, 1);
-        return { from: startOfYear(lastYear), to: endOfYear(lastYear) };
-    }},
-    { label: t.lastSeason, getRange: () => {
-        const today = new Date();
-        const lastYearSameMonth = subYears(today, 1);
-        const from = startOfMonth(lastYearSameMonth);
-        const to = endOfMonth(addMonths(lastYearSameMonth, 3)); // Current month of last year + 3 months
-        return { from: startOfDay(from), to: endOfDay(to) };
-    }},
-  ];
-
-  const handleSuggestionClick = useCallback((getRange: () => DateRange) => {
-    setSelectedRange(getRange());
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const footer = (
-    <div className="p-3 flex justify-between items-center border-t border-gray-200 dark:border-gray-700 mt-4 bg-gray-50 dark:bg-gray-800/50 rounded-b-lg">
-      <button
-        type="button"
-        className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors flex items-center gap-1 group"
-        onClick={handleReset}
-      >
-        <span className="w-2 h-2 rounded-full bg-red-400 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-        {t.resetFilters}
-      </button>
-      <button
-        type="button"
-        className={`px-5 py-2 text-sm font-semibold text-white rounded-lg shadow-md hover:shadow-lg transition-all active:scale-95 ${styles.badge}`}
-        onClick={handleApply}
-      >
-        {t.apply}
-      </button>
-    </div>
-  );
+  const handleApply = () => {
+    setDate(tempRange);
+    setIsOpen(false);
+  };
 
-  const formattedDateRange = () => {
-    if (!date?.from) {
-      return <span className="text-gray-500 dark:text-gray-400 text-sm font-medium truncate">{label || t.all_time || 'All Time'}</span>;
-    }
-    const from = format(date.from, 'LLL dd, y');
-    if (!date.to || isSameDay(date.from, date.to)) {
-      return <span className={`font-bold text-sm ${styles.buttonText}`}>{from}</span>;
-    }
-    const to = format(date.to, 'LLL dd, y');
-    return (
-      <span className={`font-bold text-xs sm:text-sm ${styles.buttonText}`}>
-        {from} <span className="text-gray-400 mx-1 font-normal">-</span> {to}
-      </span>
-    );
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDate(undefined);
+    setTempRange(undefined);
+    setIsOpen(false);
+  };
+
+  const suggestions = [
+    { label: t.today, range: { from: startOfDay(new Date()), to: endOfDay(new Date()) } },
+    { label: t.yesterday, range: { from: startOfDay(subDays(new Date(), 1)), to: endOfDay(subDays(new Date(), 1)) } },
+    { label: t.last7days, range: { from: startOfDay(subDays(new Date(), 6)), to: endOfDay(new Date()) } },
+    { label: t.last30days, range: { from: startOfDay(subDays(new Date(), 29)), to: endOfDay(new Date()) } },
+    { label: t.last90days, range: { from: startOfDay(subDays(new Date(), 89)), to: endOfDay(new Date()) } },
+    { label: t.last180days, range: { from: startOfDay(subDays(new Date(), 179)), to: endOfDay(new Date()) } },
+    { label: t.thisMonth, range: { from: startOfMonth(new Date()), to: endOfMonth(new Date()) } },
+    { label: t.lastMonth, range: { from: startOfMonth(subMonths(new Date(), 1)), to: endOfMonth(subMonths(new Date(), 1)) } },
+    { 
+        label: t.lastSeason, 
+        range: { 
+            from: startOfMonth(subYears(new Date(), 1)), 
+            to: endOfMonth(addMonths(startOfMonth(subYears(new Date(), 1)), 4)) 
+        } 
+    },
+    { label: t.thisYear, range: { from: startOfYear(new Date()), to: endOfYear(new Date()) } },
+    { label: t.lastYear, range: { from: startOfYear(subYears(new Date(), 1)), to: endOfYear(subYears(new Date(), 1)) } },
+  ];
+
+  const applySuggestion = (range: DateRange) => {
+    setTempRange(range);
+    setDate(range); // Suggestions apply immediately
+    setIsOpen(false);
+  };
+
+  const isRangeSelected = (range: DateRange) => {
+    if (!tempRange?.from || !tempRange?.to) return false;
+    return isSameDay(tempRange.from, range.from!) && isSameDay(tempRange.to, range.to!);
+  };
+
+  const formatDisplayDate = () => {
+    if (!date?.from) return t.all_time || 'All Time';
+    const fromStr = format(date.from, 'dd MMM yyyy', { locale });
+    if (!date.to || isSameDay(date.from, date.to)) return fromStr;
+    const toStr = format(date.to, 'dd MMM yyyy', { locale });
+    return `${fromStr} - ${toStr}`;
   };
 
   return (
-    <div className={`relative w-full h-full ${className}`} ref={wrapperRef}>
+    <div className={`relative ${className}`} ref={containerRef}>
+      {/* Trigger Button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full h-full pl-4 pr-3 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-between transition-all duration-300 group relative z-0
-            ${isOpen 
-                ? `ring-4 ${styles.activeRing} ${styles.activeBorder} shadow-lg scale-[1.02]` 
-                : `hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md hover:-translate-y-0.5`
-            }`}
+        className={`w-full h-[46px] px-4 rounded-xl border flex items-center justify-between transition-all duration-200 bg-white dark:bg-gray-800 
+          ${isOpen 
+            ? `border-pink-500 ring-4 ring-pink-500/10 shadow-sm` 
+            : `border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600`
+          }`}
       >
-        <div className="flex items-center gap-3 overflow-hidden flex-1">
-             <div className={`p-2 rounded-xl transition-colors duration-300 ${isOpen ? styles.bg : 'bg-gray-100 dark:bg-gray-700 group-hover:bg-gray-200 dark:group-hover:bg-gray-600'}`}>
-                <span className={`transition-colors duration-300 ${isOpen ? styles.icon : 'text-gray-500 dark:text-gray-400'}`}>
-                    {icon}
-                </span>
+        <div className="flex items-center gap-3 overflow-hidden">
+          <div className={`p-1.5 rounded-lg ${date ? styles.bg : 'bg-gray-100 dark:bg-gray-700'}`}>
+            <div className={date ? styles.text : 'text-gray-400'}>
+                {icon || <CalendarIcon size={18} />}
             </div>
-
-            <div className="flex flex-col items-start overflow-hidden">
-                {date?.from && (
-                     <span className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${styles.text}`}>
-                        {label || t.date || 'Date'}
-                     </span>
-                )}
-                
-                <div className="truncate w-full text-left">
-                    {formattedDateRange()}
-                </div>
-            </div>
+          </div>
+          <div className="flex flex-col items-start overflow-hidden">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight leading-none mb-1">
+                {label || t.date}
+            </span>
+            <span className={`text-sm font-semibold truncate ${date ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500'}`}>
+                {formatDisplayDate()}
+            </span>
+          </div>
         </div>
         
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${isOpen ? styles.bg : 'bg-transparent'}`}>
-             <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${isOpen ? `rotate-180 ${styles.icon}` : 'text-gray-400'}`} />
+        <div className="flex items-center gap-2">
+            {date && (
+                <div 
+                    onClick={handleClear}
+                    className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md text-gray-400 hover:text-red-500 transition-colors"
+                >
+                    <X size={14} />
+                </div>
+            )}
+            <ChevronDown size={16} className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         </div>
       </button>
 
+      {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-3 z-[60] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row overflow-hidden animate-fade-in-up min-w-[320px] sm:min-w-[600px] ring-1 ring-black/5">
-          {/* Suggestions Sidebar */}
-          <div className="w-full sm:w-48 bg-gray-50/80 dark:bg-gray-800/80 border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700 p-3 sm:overflow-y-auto max-h-[200px] sm:max-h-none custom-scrollbar">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-2 flex items-center gap-1">
-                <CalendarIcon className="w-3 h-3" />
-                {t.suggestions}
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-1 gap-1">
-              {suggestionRanges.map((range) => {
-                const suggestionRange = range.getRange();
-                const isSelected = selectedRange?.from && selectedRange?.to &&
-                                 isSameDay(selectedRange.from, suggestionRange.from) &&
-                                 isSameDay(selectedRange.to, suggestionRange.to);
-                return (
-                  <button
-                    key={range.label}
-                    onClick={() => handleSuggestionClick(range.getRange)}
-                    className={`text-left text-sm px-3 py-2 rounded-lg transition-all duration-200 relative overflow-hidden group
-                                ${isSelected 
-                                    ? `${styles.badge} text-white font-medium shadow-md` 
-                                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50'
-                                }`}
+        <div className={`absolute top-full mt-2 z-[100] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 flex flex-col md:flex-row overflow-hidden animate-in fade-in zoom-in duration-200 origin-top
+            ${language === 'ar' ? 'right-0' : 'left-0'}`}
+        >
+          {/* Suggestions List */}
+          <div className="w-full md:w-56 bg-gray-50 dark:bg-gray-800/50 border-b md:border-b-0 md:border-r border-gray-100 dark:border-gray-800 p-3 space-y-1 overflow-y-auto max-h-[400px]">
+             <div className="px-2 pb-2">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t.suggestions}</span>
+             </div>
+             {suggestions.map((item, idx) => (
+                <button
+                    key={idx}
                     type="button"
-                  >
-                    <span className="relative z-10">{range.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+                    onClick={() => applySuggestion(item.range)}
+                    className={`w-full text-right px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-between group
+                        ${isRangeSelected(item.range)
+                            ? 'bg-pink-500 text-white shadow-md'
+                            : 'text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm'
+                        }`}
+                >
+                    <span className={language === 'ar' ? 'order-1' : 'order-2'}>
+                        {isRangeSelected(item.range) && <Check size={14} />}
+                    </span>
+                    <span className={language === 'ar' ? 'order-2' : 'order-1'}>{item.label}</span>
+                </button>
+             ))}
           </div>
 
-          {/* Calendar Area */}
-          <div className="flex-1 p-2 sm:p-4 bg-white dark:bg-gray-800">
+          {/* Calendar Section */}
+          <div className="p-4 flex flex-col bg-white dark:bg-gray-900">
             <DayPicker
-              dir={language === 'ar' ? 'rtl' : 'ltr'}
               mode="range"
-              selected={selectedRange}
-              onSelect={setSelectedRange}
-              footer={footer}
-              showOutsideDays
-              numberOfMonths={1}
-              pagedNavigation
-              components={{
-                IconLeft: ({ ...props }) => <ChevronLeft className={`w-5 h-5 text-gray-400 hover:${styles.icon} transition-colors`} />,
-                IconRight: ({ ...props }) => <ChevronRight className={`w-5 h-5 text-gray-400 hover:${styles.icon} transition-colors`} />,
+              selected={tempRange}
+              onSelect={setTempRange}
+              locale={locale}
+              dir={language === 'ar' ? 'rtl' : 'ltr'}
+              className="m-0 border-none"
+              modifiersClassNames={{
+                selected: 'rdp-day_selected_custom',
+                range_start: 'rdp-day_range_start_custom',
+                range_end: 'rdp-day_range_end_custom',
+                range_middle: 'rdp-day_range_middle_custom',
               }}
-              classNames={{
-                root: 'w-full font-sans',
-                months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0 justify-center',
-                month: 'space-y-4',
-                caption: 'flex justify-center pt-1 relative items-center mb-4',
-                caption_label: 'text-base font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1',
-                nav: 'space-x-1 flex items-center',
-                nav_button: 'h-8 w-8 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors',
-                nav_button_previous: 'absolute left-1',
-                nav_button_next: 'absolute right-1',
-                table: 'w-full border-collapse space-y-1',
-                head_row: 'flex mb-2',
-                head_cell: 'text-gray-400 w-9 font-semibold text-[0.8rem] uppercase tracking-wide',
-                row: 'flex w-full mt-1',
-                cell: `text-center text-sm p-0 relative [&:has([aria-selected])]:${styles.bg} first:[&:has([aria-selected])]:rounded-l-lg last:[&:has([aria-selected])]:rounded-r-lg focus-within:relative focus-within:z-20`,
-                day: 'h-9 w-9 p-0 font-medium aria-selected:opacity-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors text-gray-700 dark:text-gray-300',
-                day_selected: `!${styles.badge} !text-white hover:opacity-90 shadow-md font-bold`,
-                day_today: `bg-gray-100 dark:bg-gray-700 ${styles.text} font-bold border border-dashed border-current opacity-80`,
-                day_outside: 'text-gray-300 dark:text-gray-600 opacity-50',
-                day_disabled: 'text-gray-300 dark:text-gray-600 opacity-50',
-                day_range_middle: `!${styles.bg} !${styles.text} !rounded-none`,
-                day_range_start: `!${styles.badge} !text-white !rounded-l-lg !rounded-r-none`,
-                day_range_end: `!${styles.badge} !text-white !rounded-r-lg !rounded-l-none`,
-                day_hidden: 'invisible',
+              styles={{
+                caption: { color: 'var(--rdp-accent-color)' },
               }}
             />
+            
+            {/* Footer Buttons */}
+            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between gap-4">
+                <button
+                    type="button"
+                    onClick={() => setIsOpen(false)}
+                    className="text-sm font-bold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 px-4 py-2 transition-colors"
+                >
+                    {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                </button>
+                <button
+                    type="button"
+                    onClick={handleApply}
+                    className="bg-pink-500 hover:bg-pink-600 text-white font-bold text-sm px-8 py-2.5 rounded-xl shadow-lg shadow-pink-500/20 transition-all active:scale-95"
+                >
+                    {t.apply}
+                </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Selected Tags (Below) - Clean Pill Design */}
-        {date?.from && (
-            <div className="absolute top-full left-0 mt-3 w-full z-10 pointer-events-none"> 
-                <div className="flex flex-wrap gap-2 pointer-events-auto">
-                    <div className={`flex items-center gap-1.5 ${styles.badge} text-white shadow-lg shadow-gray-200 dark:shadow-black/20 rounded-lg pl-2.5 pr-1 py-1 text-[10px] font-bold uppercase tracking-wider animate-pop-in border border-white/20`}>
-                        <span className="max-w-[150px] truncate">{formattedDateRange()}</span>
-                        <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); setDate(undefined); }}
-                            className="hover:bg-white/20 text-white rounded-md p-0.5 transition-colors"
-                        >
-                            <X size={10} strokeWidth={3} />
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )}
+      {/* Global CSS for DayPicker Overrides */}
+      <style>{`
+        .rdp {
+          --rdp-cell-size: 38px;
+          --rdp-accent-color: #ec4899;
+          --rdp-background-color: #fce7f3;
+          margin: 0;
+        }
+        .rdp-day_selected_custom { 
+          background-color: var(--rdp-accent-color) !important;
+          color: white !important;
+        }
+        .rdp-day_range_middle_custom {
+          background-color: var(--rdp-background-color) !important;
+          color: #be185d !important;
+          border-radius: 0 !important;
+        }
+        .rdp-day_range_start_custom {
+          border-top-right-radius: 0 !important;
+          border-bottom-right-radius: 0 !important;
+        }
+        .rdp-day_range_end_custom {
+          border-top-left-radius: 0 !important;
+          border-bottom-left-radius: 0 !important;
+        }
+        .dark .rdp-day_range_middle_custom {
+          background-color: rgba(236, 72, 153, 0.2) !important;
+          color: #f9a8d4 !important;
+        }
+        .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+          background-color: #f3f4f6;
+        }
+        .dark .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+          background-color: #1f2937;
+        }
+        .rdp-head_cell {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          color: #9ca3af;
+        }
+      `}</style>
     </div>
   );
 };

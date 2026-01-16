@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Heart, Search, EyeOff, ExternalLink, Layers } from 'lucide-react';
+import { Calendar, Heart, Search, EyeOff, ExternalLink, Layers, Trash2 } from 'lucide-react';
 import { Product } from '../types';
 import { formatDate } from '../utils/productUtils';
 import { useFavoritesStore } from '../stores/favoritesStore';
@@ -13,9 +13,10 @@ interface ProductCardProps {
   t: any;
   onNavigateWithFilter: (filter: { store?: string }) => void;
   duplicateCount?: number;
+  onHideProduct?: (productId: string) => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFilter, duplicateCount = 0 }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFilter, duplicateCount = 0, onHideProduct }) => {
   const { toggleFavorite, isFavorite } = useFavoritesStore();
   const { addStore } = useBlacklistStore();
   const { showToast } = useToastStore();
@@ -42,6 +43,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
     }
   };
   
+  const handleHideProduct = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (onHideProduct) {
+        onHideProduct(product.url);
+    }
+  };
+  
   const storeUrl = product.store?.url ? new URL(product.store.url).origin : new URL(product.url).origin;
   const adLibraryUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&q=${encodeURIComponent(storeUrl)}&search_type=keyword_unordered&media_type=all`;
   const imageSearchUrl = `https://lens.google.com/uploadbyurl?url=${encodeURIComponent(product.images?.[0]?.src || '')}`;
@@ -60,9 +69,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
       whileHover={{ y: -2, boxShadow: '0px 5px 15px rgba(0,0,0,0.2)' }}
       className="group relative bg-white dark:bg-[#111111] rounded-3xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 dark:border-[#222] flex flex-col h-full">
       
+      {/* Hide Product Button */}
+      <button 
+        onClick={handleHideProduct}
+        className="absolute top-3 left-3 z-30 p-2 bg-white/90 dark:bg-black/60 backdrop-blur-md rounded-full text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg border border-white/10"
+        title="Hide product"
+      >
+        <Trash2 size={16} />
+      </button>
+
       {/* Duplicate Badge */}
       {duplicateCount > 0 && (
-          <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg border border-white/10">
+          <div className="absolute top-3 left-14 z-20 flex items-center gap-1.5 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg border border-white/10">
               <Layers className="w-3.5 h-3.5" />
               <span>{duplicateCount}</span>
           </div>
@@ -79,12 +97,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
             decoding="async" 
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.5 }}
-            width={400} // Explicit width to help browser layout
-            height={400} // Explicit height
+            width={400} 
+            height={400} 
           />
         </a>
         
-        {/* Overlay Buttons (Visible on Hover or when fav) */}
+        {/* Overlay Buttons */}
         <div className="absolute top-3 right-3 flex flex-col gap-2 translate-x-12 group-hover:translate-x-0 transition-transform duration-300">
             <motion.button 
                 onClick={handleFavoriteClick} 
@@ -160,7 +178,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
         <div className="mt-4 pt-4 border-t border-gray-100 dark:border-[#222] flex justify-between items-center">
              <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">{product.language?.toUpperCase()}</span>
              
-             {/* Date replaced Show button */}
              <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 font-medium">
                 <Calendar className="w-3.5 h-3.5" />
                 <span>{formatDate(product.created_at)}</span>

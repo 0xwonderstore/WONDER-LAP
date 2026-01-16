@@ -1,25 +1,46 @@
-import { useMemo, useCallback, useEffect, useState } from "react";
+import { useMemo } from "react";
 import InstagramCard from "./InstagramCard";
 import Pagination from "./Pagination";
 import { useTranslation } from "react-i18next";
 import InstagramFilterComponent from "./InstagramFilterComponent";
-import { DateRange } from "react-day-picker";
 import { useInstagramBlacklistStore } from "../stores/instagramBlacklistStore";
 import { useInstagramPageStore } from "../stores/instagramPageStore";
-import { Eye } from "lucide-react";
+import { CheckSquare } from "lucide-react";
 import { InstagramPost } from "../types";
 import { instagramLanguageMapping } from '../data/instagramLanguageMapping';
 import LoadingSpinner from "./LoadingSpinner";
 import { useQuery } from "@tanstack/react-query";
 import { loadInstagramPosts } from "../utils/instagramLoader";
+import { startOfDay, endOfDay } from "date-fns";
+import { useToastStore } from "../stores/toastStore";
 
 const InstagramPage = () => {
   const { t } = useTranslation();
-  const { blacklistedUsers, addUser, removeUser } = useInstagramBlacklistStore();
-  const { currentPage, filters, dateRange, sort, sortBy, setCurrentPage, setFilters, setDateRange, setSort, setSortBy, reset } = useInstagramPageStore();
-
-  // Reduced from 100 to 24 for better performance
-  const POSTS_PER_PAGE = 24;
+  const { showToast } = useToastStore();
+  const { 
+    blacklistedUsers, 
+    blacklistedPosts, 
+    addUser, 
+    removeUser, 
+    addPost, 
+    addPosts, 
+  } = useInstagramBlacklistStore();
+  
+  const { 
+    currentPage, 
+    postsPerPage,
+    filters, 
+    dateRange, 
+    sort, 
+    sortBy, 
+    setCurrentPage, 
+    setPostsPerPage,
+    setFilters, 
+    setDateRange, 
+    setSort, 
+    setSortBy, 
+    reset 
+  } = useInstagramPageStore();
 
   const { data: allPosts = [], isLoading: loadingPosts } = useQuery<InstagramPost[]>({
     queryKey: ['instagramPosts'],
@@ -28,97 +49,100 @@ const InstagramPage = () => {
     gcTime: Infinity
   });
 
-  const allUniqueUsernames = useMemo(() => {
-    return [...new Set(allPosts.map((p) => p.username).filter(Boolean))];
-  }, [allPosts]);
-
-  const filteredAndSortedPosts = useMemo(() => {
+  // Base filter: includes duplicates removal
+  const basePosts = useMemo(() => {
     let posts = [...allPosts];
-
-    // Remove duplicates
     const seen = new Set();
     posts = posts.filter(post => {
       const duplicate = seen.has(post.permalink);
       seen.add(post.permalink);
       return !duplicate;
     });
+    return posts;
+  }, [allPosts]);
 
-    // Filter out blacklisted users
-    posts = posts.filter(post => !blacklistedUsers.has(post.username));
+  const allUniqueUsernames = useMemo(() => {
+    return [...new Set(basePosts.map((p) => p.username))].sort();
+  }, [basePosts]);
+
+  const filteredAndSortedPosts = useMemo(() => {
+    let posts = [...basePosts];
+
+    // Re-enabling the blacklist/hidden filter so "Hide All" actually works
+    posts = posts.filter(post => !blacklistedUsers.has(post.username) && !blacklistedPosts.has(post.permalink));
 
     // Apply standard filters
     if (filters.username) {
       posts = posts.filter((p) => p.username === filters.username);
     }
+    
     if (filters.languages && filters.languages.length > 0) {
-      posts = posts.filter((p) => filters.languages.includes(instagramLanguageMapping[p.username]));
+      posts = posts.filter((p) => {
+          const lang = instagramLanguageMapping[p.username];
+          return lang && filters.languages.includes(lang);
+      });
     }
+    
     if (filters.minLikes !== null) {
       posts = posts.filter((p) => p.likes >= filters.minLikes);
     }
-    // Removed Max Likes Filter Logic
-    /* if (filters.maxLikes !== null) {
-      posts = posts.filter((p) => p.likes <= filters.maxLikes);
-    }; */
     
     if (filters.minComments !== null) {
         posts = posts.filter((p) => p.comments >= filters.minComments!);
     }
-    // Only Min Comments logic requested
     
     if (dateRange?.from) {
-      posts = posts.filter((p) => new Date(p.timestamp) >= dateRange.from!);
+      const fromDate = startOfDay(new Date(dateRange.from));
+      posts = posts.filter((p) => new Date(p.timestamp) >= fromDate);
     }
     if (dateRange?.to) {
-      posts = posts.filter((p) => new Date(p.timestamp) <= dateRange.to!);
+      const toDate = endOfDay(new Date(dateRange.to));
+      posts = posts.filter((p) => new Date(p.timestamp) <= toDate);
     }
 
     // Apply sorting
-    if (sort) {
-      posts.sort((a, b) => {
-          const valA = sortBy === 'comments' ? a.comments : a.likes;
-          const valB = sortBy === 'comments' ? b.comments : b.likes;
-          return sort === "asc" ? valA - valB : valB - valA;
-      });
-    } else {
-      posts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    }
+    posts.sort((a, b) => {
+        let valA: number;
+        let valB: number;
+        if (sortBy === 'date') {
+            valA = new Date(a.timestamp).getTime();
+            valB = new Date(b.timestamp).getTime();
+        } else if (sortBy === 'comments') {
+            valA = a.comments;
+            valB = b.comments;
+        } else {
+            valA = a.likes;
+            valB = b.likes;
+        }
+        return sort === "asc" ? valA - valB : valB - valA;
+    });
 
     return posts;
-  }, [filters, dateRange, sort, sortBy, blacklistedUsers, allPosts]);
+  }, [filters, dateRange, sort, sortBy, blacklistedUsers, blacklistedPosts, basePosts]);
 
-  const totalPages = Math.ceil(filteredAndSortedPosts.length / POSTS_PER_PAGE);
-  const paginatedPosts = filteredAndSortedPosts.slice((currentPage - 1) * POSTS_PER_PAGE, currentPage * POSTS_PER_PAGE);
+  const totalPages = Math.ceil(filteredAndSortedPosts.length / postsPerPage);
+  const paginatedPosts = filteredAndSortedPosts.slice((currentPage - 1) * postsPerPage, currentPage * postsPerPage);
 
-  const handleFilterChange = useCallback((newFilters: any) => {
-    setFilters(newFilters);
-    setCurrentPage(1);
-  }, [setFilters, setCurrentPage]);
-  
-  const handleDateChange = useCallback((newDateRange: DateRange | undefined) => {
-      setDateRange(newDateRange);
-      setCurrentPage(1);
-    }, [setDateRange, setCurrentPage]);
+  const handleHideAllInPage = () => {
+    const permalinks = paginatedPosts.map(p => p.permalink);
+    if (permalinks.length > 0) {
+      addPosts(permalinks);
+      showToast(`Hidden ${permalinks.length} posts from current page`, 'removed');
+    }
+  };
 
-  const handleSortChange = useCallback((newSort: "asc" | "desc" | null) => {
-    setSort(newSort);
-    setCurrentPage(1);
-  }, [setSort, setCurrentPage]);
-
-  const handleSortByChange = useCallback((newSortBy: "likes" | "comments") => {
-      setSortBy(newSortBy);
-      setCurrentPage(1);
-  }, [setSortBy, setCurrentPage]);
-  
-  const handleReset = useCallback(() => {
-    reset();
-  }, [reset]);
+  const handleHidePost = (permalink: string) => {
+    addPost(permalink);
+    showToast(`Post hidden successfully`, 'removed');
+  };
 
   const handleBlacklistToggle = (username: string) => {
     if (blacklistedUsers.has(username)) {
       removeUser(username);
+      showToast(`${username} removed from blacklist`, 'success');
     } else {
       addUser(username);
+      showToast(`${username} added to blacklist`, 'removed');
     }
   };
 
@@ -135,33 +159,30 @@ const InstagramPage = () => {
       <InstagramFilterComponent
         usernames={allUniqueUsernames}
         filters={filters}
-        onFilterChange={handleFilterChange}
-        onSortChange={handleSortChange}
-        onSortByChange={handleSortByChange}
-        onReset={handleReset}
+        onFilterChange={setFilters}
+        onSortChange={setSort}
+        onSortByChange={setSortBy}
+        onReset={reset}
         currentSort={sort}
         currentSortBy={sortBy}
         date={dateRange}
-        onDateChange={handleDateChange}
+        onDateChange={setDateRange}
+        postsPerPage={postsPerPage}
+        onPostsPerPageChange={setPostsPerPage}
       />
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-2">{t('blacklist')} ({blacklistedUsers.size})</h3>
-        {blacklistedUsers.size > 0 ? (
-           <div className="flex flex-wrap gap-2">
-            {Array.from(blacklistedUsers).map(user => (
-              <div key={user} className="flex items-center gap-2 bg-gray-200 dark:bg-gray-700 rounded-full px-3 py-1 text-sm">
-                <span>{user}</span>
-                <button onClick={() => handleBlacklistToggle(user)} className="text-red-500 hover:text-red-700 transition-colors">
-                  <Eye size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-           <p className="text-sm text-gray-400 italic">{t('no_users_blacklisted') || 'No users blacklisted'}</p>
-        )}
+      
+      <div className="mb-6 flex justify-end">
+        <button 
+            onClick={handleHideAllInPage}
+            disabled={paginatedPosts.length === 0}
+            className="group flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-2xl text-sm font-bold transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+        >
+            <CheckSquare size={20} className="group-hover:rotate-12 transition-transform" /> 
+            Hide All In Page ({paginatedPosts.length})
+        </button>
       </div>
 
+      {/* Posts Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {paginatedPosts.map((post) => (
           <InstagramCard
@@ -169,19 +190,34 @@ const InstagramPage = () => {
             post={post}
             onBlacklistToggle={handleBlacklistToggle}
             isBlacklisted={blacklistedUsers.has(post.username)}
+            onHidePost={handleHidePost}
           />
         ))}
       </div>
-      <div className="mt-8">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-          itemsPerPage={POSTS_PER_PAGE}
-          totalItems={filteredAndSortedPosts.length}
-          t={t}
-        />
-      </div>
+      
+      {/* Empty State */}
+      {paginatedPosts.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 text-gray-500">
+              <p className="text-xl font-medium">{t('no_results')}</p>
+              <button onClick={reset} className="mt-4 text-blue-500 hover:underline">
+                  {t('resetFilters')}
+              </button>
+          </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-8">
+            <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            itemsPerPage={postsPerPage}
+            totalItems={filteredAndSortedPosts.length}
+            t={t}
+            />
+        </div>
+      )}
     </div>
   );
 };

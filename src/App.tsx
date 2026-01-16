@@ -1,6 +1,6 @@
 import React, { useMemo, Suspense, useCallback, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Moon, Sun, Sparkles, Heart, LayoutDashboard, EyeOff, Instagram, Video } from 'lucide-react';
+import { Moon, Sun, Sparkles, Heart, LayoutDashboard, EyeOff, Instagram, Trash2, CheckSquare } from 'lucide-react';
 import { loadProducts, LoadProductsResult } from './utils/productLoader';
 import { filterProducts, searchProducts } from './utils/productUtils';
 import { useFavoritesStore } from './stores/favoritesStore';
@@ -17,7 +17,9 @@ import FilterComponent from './components/FilterComponent';
 import Toast from './components/Toast';
 import { DateRange } from 'react-day-picker';
 import ProductCardSkeleton from './components/ProductCardSkeleton';
-import { Product } from './types';
+import { Product, InstagramPost } from './types';
+import { useInstagramBlacklistStore } from './stores/instagramBlacklistStore';
+import { loadInstagramPosts } from './utils/instagramLoader';
 
 // --- Lazy Imports ---
 const FavoritesPage = React.lazy(() => import('./components/FavoritesPage'));
@@ -27,9 +29,10 @@ const InstagramPage = React.lazy(() => import('./components/InstagramPage'));
 const TikTokPage = React.lazy(() => import('./components/TikTokPage'));
 const ScrollButtons = React.lazy(() => import('./components/ScrollButtons'));
 const LanguageSwitcher = React.lazy(() => import('./components/LanguageSwitcher'));
+const HiddenItemsPage = React.lazy(() => import('./components/HiddenItemsPage'));
 
 // --- Type Definitions ---
-type Page = 'home' | 'favorites' | 'dashboard' | 'blacklist' | 'instagram' | 'tiktok';
+type Page = 'home' | 'favorites' | 'dashboard' | 'blacklist' | 'instagram' | 'tiktok' | 'hidden';
 type InitialFilter = { name?: string; store?: string | string[]; language?: string | string[] };
 
 const LoadingFallback: React.FC = () => (
@@ -43,8 +46,17 @@ const App: React.FC = () => {
   const [darkMode, setDarkMode] = useLocalStorage('darkMode', false);
   const { language } = useLanguageStore();
   const { favoriteUrls } = useFavoritesStore();
-  const { keywords: blacklistedKeywords, blockedStores } = useBlacklistStore();
-  const { message, type, hideToast } = useToastStore(); // Toast state
+  const { 
+    keywords: blacklistedKeywords, 
+    blockedStores, 
+    hiddenProducts,
+    hideProduct,
+    hideProducts,
+  } = useBlacklistStore();
+  
+  const { blacklistedPosts } = useInstagramBlacklistStore();
+  
+  const { message, type, hideToast, showToast } = useToastStore(); // Toast state
   const [currentPage, setCurrentPage] = useLocalStorage<Page>('currentPage', 'home');
   const [initialFilters, setInitialFilters] = useLocalStorage<InitialFilter | null>('initialFilters', null);
   
@@ -52,15 +64,22 @@ const App: React.FC = () => {
   const { data: productData, isLoading } = useQuery<LoadProductsResult>({
     queryKey: ['products'],
     queryFn: loadProducts,
-    staleTime: Infinity, // Never stale to prevent reloading
-    gcTime: Infinity, // Keep in cache as long as possible
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
+  const { data: allInstagramPosts = [] } = useQuery<InstagramPost[]>({
+    queryKey: ['instagramPosts'],
+    queryFn: loadInstagramPosts,
+    staleTime: Infinity,
+    gcTime: Infinity
   });
 
   const uniqueProducts: Product[] = useMemo(() => productData?.uniqueProducts || [], [productData]);
   const allProductsRaw: Product[] = useMemo(() => productData?.allProducts || [], [productData]);
   const totalBeforeFilter = productData?.totalBeforeFilter || 0;
 
-  const t = translations[language];
+  const t = translations[language] as any;
 
   // --- Effects ---
   useEffect(() => {
@@ -122,7 +141,9 @@ const App: React.FC = () => {
   const filteredProducts = useMemo(() => {
     let products = uniqueProducts;
 
-    // 1. Blacklist
+    // 1. Blacklist & Hidden Products
+    const hiddenSet = new Set(hiddenProducts);
+    products = products.filter(p => !hiddenSet.has(p.url));
     products = filterProducts(products, blacklistedKeywords, blockedStores);
 
     // 2. User Filters
@@ -147,7 +168,7 @@ const App: React.FC = () => {
          if (!a.created_at || !b.created_at) return 0;
          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
-  }, [uniqueProducts, blacklistedKeywords, blockedStores, filters, dateRange]);
+  }, [uniqueProducts, blacklistedKeywords, blockedStores, hiddenProducts, filters, dateRange]);
 
 
   // --- Pagination Logic ---
@@ -174,6 +195,11 @@ const App: React.FC = () => {
       setProductsPage(1);
   };
 
+  const handleHideAllInPage = () => {
+    const ids = currentProducts.map(p => p.url);
+    hideProducts(ids);
+    showToast(`Hidden ${ids.length} products from current page`, 'removed');
+  };
 
   const HeaderButton: React.FC<{ onClick: () => void; className?: string; tooltip: string; 'aria-label': string; children?: React.ReactNode; count?: number }> = 
     ({ onClick, className, tooltip, children, count, ...props }) => (
@@ -195,10 +221,22 @@ const App: React.FC = () => {
       case 'blacklist': return <BlacklistPage />;
       case 'instagram': return <InstagramPage />;
       case 'tiktok': return <TikTokPage />;
+      case 'hidden': return <HiddenItemsPage products={uniqueProducts} instagramPosts={allInstagramPosts} />;
       default: 
         return (
             <div className="animate-fade-in-up relative z-10">
-                 {/* Re-integrated Filter Component */}
+                 {/* Product Hide All Button Only */}
+                 <div className="mb-4 flex justify-end">
+                    <button 
+                        onClick={handleHideAllInPage}
+                        disabled={currentProducts.length === 0}
+                        className="flex items-center gap-2 px-6 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-2xl text-xs font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-lg disabled:opacity-50 disabled:pointer-events-none"
+                    >
+                        <CheckSquare size={16} /> Hide All In Page ({currentProducts.length})
+                    </button>
+                 </div>
+
+                 {/* Filter Component */}
                  <FilterComponent 
                     t={t}
                     stores={uniqueStores}
@@ -227,7 +265,7 @@ const App: React.FC = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {currentProducts.map(p => (
                                     <div key={p.url} className="animate-fade-in-up" style={{ animationDelay: `${Math.random() * 0.3}s`, animationFillMode: 'both' }}>
-                                        <ProductCard product={p} t={t} onNavigateWithFilter={navigateToHomeWithFilter} />
+                                        <ProductCard product={p} t={t} onNavigateWithFilter={navigateToHomeWithFilter} onHideProduct={hideProduct} />
                                     </div>
                                 ))}
                             </div>
@@ -255,8 +293,10 @@ const App: React.FC = () => {
   const isBlacklistActive = currentPage === 'blacklist';
   const isInstagramActive = currentPage === 'instagram';
   const isTikTokActive = currentPage === 'tiktok';
+  const isHiddenActive = currentPage === 'hidden';
 
   const favoritesCount = favoriteUrls.size;
+  const hiddenCount = hiddenProducts.length + blacklistedPosts.size;
 
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col">
@@ -299,7 +339,6 @@ const App: React.FC = () => {
             <HeaderButton onClick={() => navigateTo('dashboard')} className={isDashboardActive ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.dashboard} aria-label="Dashboard"><LayoutDashboard className={`w-5 h-5 transition-transform duration-200 ${isDashboardActive ? 'rotate-6' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isDashboardActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.dashboard}</span></HeaderButton>
             <HeaderButton onClick={() => navigateTo('instagram')} className={isInstagramActive ? 'bg-pink-100 dark:bg-pink-900/50 text-pink-600 dark:text-pink-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.instagram_feature} aria-label="Instagram"><Instagram className={`w-5 h-5 transition-transform duration-200 ${isInstagramActive ? 'rotate-6' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isInstagramActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.instagram_feature}</span></HeaderButton>
             
-            {/* TikTok Button with Logo */}
             <HeaderButton onClick={() => navigateTo('tiktok')} className={isTikTokActive ? 'bg-cyan-100 dark:bg-cyan-900/50 text-cyan-600 dark:text-cyan-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.tiktok_feature} aria-label="TikTok">
                <svg viewBox="0 0 24 24" fill="currentColor" className={`w-5 h-5 transition-transform duration-200 ${isTikTokActive ? 'rotate-6' : ''}`}>
                   <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
@@ -309,7 +348,11 @@ const App: React.FC = () => {
 
             <HeaderButton onClick={() => navigateTo('blacklist')} className={isBlacklistActive ? 'bg-gray-200 dark:bg-gray-700 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.blacklist} aria-label="Blacklist"><EyeOff className={`w-5 h-5 transition-transform duration-200 ${isBlacklistActive ? 'text-gray-800 dark:text-gray-200' : ''}`} /><span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isBlacklistActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.blacklist}</span></HeaderButton>
             
-            {/* Favorites Button with count prop */}
+            <HeaderButton onClick={() => navigateTo('hidden')} className={isHiddenActive ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-400 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.hidden_items} aria-label="Hidden Items" count={hiddenCount}>
+              <Trash2 className={`w-5 h-5 transition-all duration-200 ${isHiddenActive ? 'rotate-0' : '-rotate-12'}`} />
+              <span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isHiddenActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.hidden_items}</span>
+            </HeaderButton>
+
             <HeaderButton onClick={() => navigateTo('favorites')} className={isFavoritesActive ? 'bg-red-100 dark:bg-red-900/50 text-red-500 py-2 px-3 scale-110' : 'p-2 bg-light-surface dark:bg-dark-surface'} tooltip={t.favorites} aria-label="Favorites" count={favoritesCount}>
               <Heart className={`w-5 h-5 transition-all duration-200 ${isFavoritesActive ? 'fill-red-500 text-red-500 rotate-0' : 'text-current -rotate-12'}`} />
               <span className={`text-sm font-semibold whitespace-nowrap transition-all duration-300 ${isFavoritesActive ? 'w-auto opacity-100' : 'w-0 opacity-0'}`}>{t.favorites}</span>

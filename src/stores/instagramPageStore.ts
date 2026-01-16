@@ -1,9 +1,10 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, StorageValue } from 'zustand/middleware';
 import { DateRange } from 'react-day-picker';
 
 interface InstagramPageState {
   currentPage: number;
+  postsPerPage: number;
   filters: {
     username: string;
     minLikes: number | null;
@@ -13,29 +14,31 @@ interface InstagramPageState {
     languages: string[];
   };
   dateRange: DateRange | undefined;
-  sort: 'asc' | 'desc' | null;
-  sortBy: 'likes' | 'comments'; // New field to determine what to sort by
+  sort: 'asc' | 'desc';
+  sortBy: 'likes' | 'comments' | 'date';
   setCurrentPage: (page: number) => void;
+  setPostsPerPage: (count: number) => void;
   setFilters: (newFilters: Partial<InstagramPageState['filters']>) => void;
   setDateRange: (dateRange: DateRange | undefined) => void;
-  setSort: (sort: 'asc' | 'desc' | null) => void;
-  setSortBy: (sortBy: 'likes' | 'comments') => void; // New action
+  setSort: (sort: 'asc' | 'desc') => void;
+  setSortBy: (sortBy: 'likes' | 'comments' | 'date') => void;
   reset: () => void;
 }
 
 const initialState = {
   currentPage: 1,
+  postsPerPage: 24,
   filters: {
     username: "",
-    minLikes: null,
+    minLikes: 77,
     maxLikes: null,
-    minComments: null,
+    minComments: 3,
     maxComments: null,
     languages: [],
   },
   dateRange: undefined,
-  sort: null,
-  sortBy: 'likes' as const, // Default to likes
+  sort: 'desc' as const,
+  sortBy: 'date' as const,
 };
 
 export const useInstagramPageStore = create<InstagramPageState>()(
@@ -43,6 +46,7 @@ export const useInstagramPageStore = create<InstagramPageState>()(
     (set) => ({
       ...initialState,
       setCurrentPage: (page) => set({ currentPage: page }),
+      setPostsPerPage: (count) => set({ postsPerPage: count, currentPage: 1 }),
       setFilters: (newFilters) => set((state) => ({ filters: { ...state.filters, ...newFilters } })),
       setDateRange: (dateRange) => set({ dateRange }),
       setSort: (sort) => set({ sort }),
@@ -51,14 +55,34 @@ export const useInstagramPageStore = create<InstagramPageState>()(
     }),
     {
       name: 'instagram-page-storage',
-      version: 3, // Increment version for migration
-      partialize: (state) => {
-        const { dateRange, ...rest } = state;
-        return rest;
+      version: 6,
+      storage: {
+        getItem: (name) => {
+          const str = localStorage.getItem(name);
+          if (!str) return null;
+          try {
+            const data = JSON.parse(str);
+            // Convert string dates back to Date objects
+            if (data.state.dateRange) {
+              if (data.state.dateRange.from) {
+                data.state.dateRange.from = new Date(data.state.dateRange.from);
+              }
+              if (data.state.dateRange.to) {
+                data.state.dateRange.to = new Date(data.state.dateRange.to);
+              }
+            }
+            return data;
+          } catch (e) {
+            return null;
+          }
+        },
+        setItem: (name, value) => {
+          localStorage.setItem(name, JSON.stringify(value));
+        },
+        removeItem: (name) => localStorage.removeItem(name),
       },
       migrate: (persistedState: any, version: number) => {
         if (version < 2) {
-            // Default sortBy to 'likes' for older versions
             persistedState.sortBy = 'likes';
         }
         
@@ -73,11 +97,25 @@ export const useInstagramPageStore = create<InstagramPageState>()(
         }
         
         if (version < 3) {
-            // Initialize minComments and maxComments
             if (persistedState.filters) {
                 persistedState.filters.minComments = null;
                 persistedState.filters.maxComments = null;
             }
+        }
+
+        if (version < 4) {
+            persistedState.postsPerPage = 24;
+            if (!persistedState.sortBy || persistedState.sortBy === 'likes') {
+                persistedState.sortBy = 'date';
+                persistedState.sort = 'desc';
+            }
+        }
+
+        if (version < 5) {
+          if (persistedState.filters) {
+            persistedState.filters.minLikes = 77;
+            persistedState.filters.minComments = 3;
+          }
         }
         
         return persistedState as InstagramPageState;

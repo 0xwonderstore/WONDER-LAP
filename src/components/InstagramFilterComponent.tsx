@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DateRange } from 'react-day-picker';
-import DateRangePicker from './DateRangePicker'; // Default import
+import DateRangePicker from './DateRangePicker';
 import Select from './Select';
 import MultiSelect from './MultiSelect';
 import { Disclosure, Transition } from '@headlessui/react';
@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 import { 
   ArrowUp, ArrowDown, X, Filter, ChevronDown, User, 
   Globe, Calendar as CalendarIcon, Heart, ArrowUpDown, 
-  MessageCircle, Sparkles, CheckCircle2, Trash2
+  MessageCircle, Sparkles, CheckCircle2, Trash2, LayoutGrid
 } from 'lucide-react';
 
 interface InstagramFilterComponentProps {
@@ -23,14 +23,15 @@ interface InstagramFilterComponentProps {
     languages: string[];
   };
   onFilterChange: (filters: Partial<InstagramFilterComponentProps['filters']>) => void;
-  onSortChange: (sort: 'asc' | 'desc' | null) => void;
-  onSortByChange: (sortBy: 'likes' | 'comments') => void;
+  onSortChange: (sort: 'asc' | 'desc') => void;
+  onSortByChange: (sortBy: 'likes' | 'comments' | 'date') => void;
   onReset: () => void;
-  currentSort: 'asc' | 'desc' | null;
-  currentSortBy: 'likes' | 'comments';
+  currentSort: 'asc' | 'desc';
+  currentSortBy: 'likes' | 'comments' | 'date';
   date: DateRange | undefined;
   onDateChange: (date: DateRange | undefined) => void;
-  setDate?: (date: DateRange | undefined) => void; 
+  postsPerPage: number;
+  onPostsPerPageChange: (count: number) => void;
 }
 
 const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
@@ -44,35 +45,34 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
   currentSortBy,
   date,
   onDateChange,
+  postsPerPage,
+  onPostsPerPageChange,
 }) => {
   const { t } = useTranslation();
   const [activeCount, setActiveCount] = useState(0);
 
-  // Calculate active filters for badge
   useEffect(() => {
     let count = 0;
     if (filters.username) count++;
-    if (filters.minLikes !== null) count++;
-    if (filters.minComments !== null) count++;
+    if (filters.minLikes !== null && filters.minLikes !== 77) count++;
+    if (filters.minComments !== null && filters.minComments !== 3) count++;
     if (filters.languages.length > 0) count++;
     if (date) count++;
     setActiveCount(count);
   }, [filters, date]);
 
-  const handleInputChange = (e: any) => {
-    const name = e.target.name;
-    const value = e.target.value;
-    onFilterChange({ [name]: value });
+  const handleUsernameChange = (value: string) => {
+    onFilterChange({ username: value });
   };
 
   const handleLikesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    onFilterChange({ [name]: value === '' ? null : Number(value) });
+    const { value } = e.target;
+    onFilterChange({ minLikes: value === '' ? null : Number(value) });
   };
 
   const handleCommentsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const { name, value } = e.target;
-      onFilterChange({ [name]: value === '' ? null : Number(value) });
+      const { value } = e.target;
+      onFilterChange({ minComments: value === '' ? null : Number(value) });
   };
 
   const handleLanguagesChange = (selectedLanguages: string[]) => {
@@ -81,7 +81,7 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
   
   const usernameOptions = [
     { value: '', label: `${t('all_users')} (${usernames.length})` },
-    ...usernames.sort().map(user => ({ value: user, label: user }))
+    ...usernames.map(user => ({ value: user, label: user }))
   ];
 
   const languageOptions = [
@@ -96,12 +96,16 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
     { value: 'hi', label: t('hindi') },
   ];
 
-  // Helper for input container styles
+  const postsPerPageOptions = [
+    { value: '24', label: '24' },
+    { value: '48', label: '48' },
+    { value: '96', label: '96' }
+  ];
+
   const inputContainerClass = "space-y-2";
   const labelClass = "text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5 ml-1";
-  const inputWrapperClass = "relative h-[46px]"; // Fixed height wrapper
+  const inputWrapperClass = "relative h-[46px]";
 
-    // Helper to render active filter badges
     const renderActiveFilterBadges = () => {
         const badges = [];
         if (filters.username) {
@@ -131,21 +135,21 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
             </span>
           );
         }
-        if (filters.minLikes !== null) {
+        if (filters.minLikes !== null && filters.minLikes !== 77) {
              badges.push(
             <span key="likes" className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
                <Heart className="w-3 h-3 mr-1" />
               Likes &ge; {filters.minLikes}
-               <button onClick={(e) => { e.stopPropagation(); onFilterChange({ minLikes: null }); }} className="ml-1 text-red-600 hover:text-red-800 dark:text-red-400"><X className="w-3 h-3" /></button>
+               <button onClick={(e) => { e.stopPropagation(); onFilterChange({ minLikes: 77 }); }} className="ml-1 text-red-600 hover:text-red-800 dark:text-red-400"><X className="w-3 h-3" /></button>
             </span>
           );
         }
-        if (filters.minComments !== null) {
+        if (filters.minComments !== null && filters.minComments !== 3) {
             badges.push(
            <span key="comments" className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
               <MessageCircle className="w-3 h-3 mr-1" />
              Comments &ge; {filters.minComments}
-              <button onClick={(e) => { e.stopPropagation(); onFilterChange({ minComments: null }); }} className="ml-1 text-purple-600 hover:text-purple-800 dark:text-purple-400"><X className="w-3 h-3" /></button>
+              <button onClick={(e) => { e.stopPropagation(); onFilterChange({ minComments: 3 }); }} className="ml-1 text-purple-600 hover:text-purple-800 dark:text-purple-400"><X className="w-3 h-3" /></button>
            </span>
          );
        }
@@ -159,7 +163,6 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
         {({ open }) => (
           <div className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-300 ${open ? 'ring-2 ring-brand-primary/5 border-transparent' : ''}`}>
              
-             {/* Header */}
             <Disclosure.Button className="w-full px-6 py-4 flex justify-between items-center bg-transparent hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-2xl transition-colors outline-none focus:ring-2 focus:ring-inset focus:ring-brand-primary/20">
               <div className="flex items-center gap-3 overflow-hidden">
                  <div className={`p-2.5 rounded-xl transition-colors ${open ? 'bg-gradient-to-tr from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/20' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>
@@ -167,7 +170,6 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
                  </div>
                  <div className="flex flex-col items-start gap-0.5">
                     <span className="text-base font-bold text-gray-800 dark:text-gray-100 tracking-tight">Instagram {t('filters')}</span>
-                    {/* Active Filter Summary */}
                     <div className="flex flex-wrap gap-2 min-h-[1.25rem]">
                         {!open && activeCount > 0 ? (
                             <div className="flex flex-wrap gap-1.5 animate-fade-in">
@@ -186,7 +188,6 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
               </div>
             </Disclosure.Button>
 
-            {/* Panel Content */}
             <Transition
               enter="transition duration-200 ease-out"
               enterFrom="transform scale-95 opacity-0"
@@ -196,27 +197,21 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
               leaveTo="transform scale-95 opacity-0"
             >
               <Disclosure.Panel className="px-6 pb-6 pt-2">
-                 {/* Filters Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-                     {/* Username Filter */}
                     <div className={inputContainerClass}>
                         <label className={labelClass}>
                             <User className="w-3.5 h-3.5" /> {t('select_user')}
                         </label>
                         <div className={inputWrapperClass}>
                             <Select 
-                                id="username" 
-                                name="username" 
                                 value={filters.username} 
-                                onChange={handleInputChange} 
+                                onChange={handleUsernameChange} 
                                 options={usernameOptions} 
                                 className="h-full"
-                                placeholder={t('all_users')}
                             />
                         </div>
                     </div>
 
-                    {/* Date Picker */}
                     <div className={inputContainerClass}>
                         <label className={labelClass}>
                             <CalendarIcon className="w-3.5 h-3.5" /> {t('date_posted')}
@@ -231,7 +226,6 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
                         </div>
                     </div>
 
-                    {/* Language Filter */}
                     <div className={inputContainerClass}>
                         <label className={labelClass}>
                             <Globe className="w-3.5 h-3.5" /> {t('select_language')}
@@ -247,9 +241,7 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
                         </div>
                     </div>
                 
-                    {/* Likes & Comments Group */}
                     <div className="col-span-1 grid grid-cols-2 gap-4">
-                        {/* Likes Filter */}
                         <div className={inputContainerClass}>
                             <label className={labelClass}>
                                 <Heart className="w-3.5 h-3.5" /> {t('min_likes')}
@@ -258,19 +250,26 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
                                 <input
                                     type="number"
                                     name="minLikes"
-                                    placeholder="0"
+                                    placeholder="77"
                                     value={filters.minLikes ?? ''}
                                     onChange={handleLikesChange}
                                     className="w-full h-[46px] pl-4 pr-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none text-sm font-medium text-gray-700 dark:text-gray-200 placeholder-gray-400 transition-all shadow-sm"
                                     min="0"
                                 />
+                                {filters.minLikes !== null && filters.minLikes !== 77 && (
+                                    <button 
+                                        onClick={() => onFilterChange({ minLikes: 77 })}
+                                        className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                )}
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
                                     <Heart size={14} />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Comments Filter */}
                         <div className={inputContainerClass}>
                             <label className={labelClass}>
                                 <MessageCircle className="w-3.5 h-3.5" /> {t('min_comments')}
@@ -279,12 +278,20 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
                                 <input
                                     type="number"
                                     name="minComments"
-                                    placeholder="0"
+                                    placeholder="3"
                                     value={filters.minComments ?? ''}
                                     onChange={handleCommentsChange}
                                     className="w-full h-[46px] pl-4 pr-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none text-sm font-medium text-gray-700 dark:text-gray-200 placeholder-gray-400 transition-all shadow-sm"
                                     min="0"
                                 />
+                                {filters.minComments !== null && filters.minComments !== 3 && (
+                                    <button 
+                                        onClick={() => onFilterChange({ minComments: 3 })}
+                                        className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                )}
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
                                     <MessageCircle size={14} />
                                 </div>
@@ -293,7 +300,6 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
                     </div>
                 </div>
 
-                {/* Active Filters Row (Expanded) */}
                 {activeCount > 0 && (
                     <div className="flex flex-wrap items-center gap-2 mb-6 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-xl border border-gray-100 dark:border-gray-700/50">
                         <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 mr-2 flex items-center gap-1">
@@ -311,49 +317,67 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
                     </div>
                 )}
 
-                 {/* Footer / Controls */}
-                 <div className="flex flex-col sm:flex-row justify-between items-center pt-5 border-t border-gray-100 dark:border-gray-700 gap-4">
-                     {/* Sort Options */}
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap">
-                            <ArrowUpDown className="w-3.5 h-3.5" /> {t('sort_by')}:
-                        </span>
-                        
-                        <div className="flex items-center gap-2 flex-wrap">
-                            {/* Sort Criteria */}
-                             <div className="flex p-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
-                                {[
-                                    { id: 'likes', icon: Heart, label: t('likes') },
-                                    { id: 'comments', icon: MessageCircle, label: t('comments') }
-                                ].map((item) => (
-                                    <button
-                                        key={item.id}
-                                        onClick={() => onSortByChange(item.id as 'likes' | 'comments')}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 ${currentSortBy === item.id 
-                                            ? 'bg-white dark:bg-gray-600 text-brand-primary shadow-sm ring-1 ring-black/5' 
-                                            : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
-                                    >
-                                        <item.icon size={13} className={currentSortBy === item.id ? 'fill-current' : ''} />
-                                        <span className="hidden sm:inline">{item.label}</span>
-                                    </button>
-                                ))}
-                            </div>
+                 <div className="flex flex-col lg:flex-row justify-between items-center pt-5 border-t border-gray-100 dark:border-gray-700 gap-6">
+                    <div className="flex flex-wrap items-center gap-6 w-full lg:w-auto">
+                        <div className="flex items-center gap-3">
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap">
+                                <ArrowUpDown className="w-3.5 h-3.5" /> {t('sort_by')}:
+                            </span>
                             
-                            {/* Sort Direction */}
+                            <div className="flex items-center gap-2">
+                                <div className="flex p-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
+                                    {[
+                                        { id: 'date', icon: CalendarIcon, label: t('date') },
+                                        { id: 'likes', icon: Heart, label: t('likes') },
+                                        { id: 'comments', icon: MessageCircle, label: t('comments') }
+                                    ].map((item) => (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => onSortByChange(item.id as any)}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 ${currentSortBy === item.id 
+                                                ? 'bg-white dark:bg-gray-600 text-brand-primary shadow-sm ring-1 ring-black/5' 
+                                                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                                        >
+                                            <item.icon size={13} className={currentSortBy === item.id ? 'fill-current' : ''} />
+                                            <span className="hidden sm:inline">{item.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                                
+                                <div className="flex p-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
+                                    {[
+                                        { id: 'desc', icon: ArrowDown, label: t('descending') },
+                                        { id: 'asc', icon: ArrowUp, label: t('ascending') }
+                                    ].map((item) => (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => onSortChange(item.id as 'asc' | 'desc')}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 ${currentSort === item.id 
+                                                ? 'bg-white dark:bg-gray-600 text-brand-primary shadow-sm ring-1 ring-black/5' 
+                                                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                                            title={item.label}
+                                        >
+                                            <item.icon size={13} />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap">
+                                <LayoutGrid className="w-3.5 h-3.5" /> {t('show')}:
+                            </span>
                             <div className="flex p-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
-                                 {[
-                                    { id: 'desc', icon: ArrowDown, label: t('descending') },
-                                    { id: 'asc', icon: ArrowUp, label: t('ascending') }
-                                ].map((item) => (
+                                {postsPerPageOptions.map((option) => (
                                     <button
-                                        key={item.id}
-                                        onClick={() => onSortChange(item.id as 'asc' | 'desc')}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 ${currentSort === item.id 
-                                            ? 'bg-white dark:bg-gray-600 text-brand-primary shadow-sm ring-1 ring-black/5' 
+                                        key={option.value}
+                                        onClick={() => onPostsPerPageChange(Number(option.value))}
+                                        className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 ${postsPerPage === Number(option.value)
+                                            ? 'bg-white dark:bg-gray-600 text-brand-primary shadow-sm ring-1 ring-black/5'
                                             : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
-                                        title={item.label}
                                     >
-                                        <item.icon size={13} />
+                                        {option.label}
                                     </button>
                                 ))}
                             </div>
