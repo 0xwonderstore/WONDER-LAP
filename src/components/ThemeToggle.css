@@ -1,0 +1,119 @@
+/* The switch - the box around the slider */
+.ui-switch {
+  --switch-width: 64px;
+  --switch-height: 32px;
+  --circle-diameter: 24px;
+  --circle-offset: 4px;
+  --transition-time: 0.4s;
+  --sun-color: #ffd700;
+  --moon-color: #f5f3ce;
+  --sky-day: #87ceeb;
+  --sky-night: #2c3e50;
+  
+  display: inline-block;
+  width: var(--switch-width);
+  height: var(--switch-height);
+  position: relative;
+}
+
+/* Hide default HTML checkbox */
+.ui-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--sky-day);
+  transition: var(--transition-time);
+  border-radius: 34px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.circle {
+  position: absolute;
+  content: "";
+  height: var(--circle-diameter);
+  width: var(--circle-diameter);
+  left: var(--circle-offset);
+  bottom: var(--circle-offset);
+  background-color: var(--sun-color);
+  transition: var(--transition-time) cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2), 0 0 10px var(--sun-color);
+  z-index: 2;
+}
+
+/* Day clouds */
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+  top: 8px;
+  left: 35px;
+  box-shadow: 5px 0 0 white, 2px -3px 0 white, 8px -3px 0 white;
+  opacity: 1;
+  transition: var(--transition-time);
+}
+
+/* Night stars */
+.slider::after {
+  content: "★";
+  position: absolute;
+  color: white;
+  font-size: 8px;
+  top: 5px;
+  left: 10px;
+  opacity: 0;
+  transition: var(--transition-time);
+  text-shadow: 15px 10px 0 white, 20px 2px 0 white;
+}
+
+input:checked + .slider {
+  background-color: var(--sky-night);
+}
+
+input:checked + .slider .circle {
+  transform: translateX(calc(var(--switch-width) - var(--circle-diameter) - (var(--circle-offset) * 2)));
+  background-color: var(--moon-color);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset -4px -2px 0 0px #d1d1d1;
+}
+
+input:checked + .slider::before {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+input:checked + .slider::after {
+  opacity: 1;
+}
+
+/* Additional Moon detail */
+.circle::after {
+    content: '';
+    position: absolute;
+    top: 20%;
+    left: 20%;
+    width: 20%;
+    height: 20%;
+    background: rgba(0,0,0,0.1);
+    border-radius: 50%;
+    opacity: 0;
+    transition: var(--transition-time);
+}
+
+input:checked + .slider .circle::after {
+    opacity: 1;
+    box-shadow: 8px 4px 0 rgba(0,0,0,0.1), 4px 10px 0 rgba(0,0,0,0.1);
+}

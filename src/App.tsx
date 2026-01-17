@@ -20,6 +20,7 @@ import ProductCardSkeleton from './components/ProductCardSkeleton';
 import { Product, InstagramPost } from './types';
 import { useInstagramBlacklistStore } from './stores/instagramBlacklistStore';
 import { loadInstagramPosts } from './utils/instagramLoader';
+import ThemeToggle from './components/ThemeToggle';
 
 // --- Lazy Imports ---
 const FavoritesPage = React.lazy(() => import('./components/FavoritesPage'));
@@ -248,30 +249,7 @@ const App: React.FC = () => {
             <NavbarButton className="btn-hidden" onClick={() => navigateTo('hidden')} isActive={currentPage === 'hidden'} icon={<Trash2 size={20} />} label={t.hidden_items} count={hiddenProducts.length + blacklistedPosts.size} />
             <NavbarButton className="btn-favorites" onClick={() => navigateTo('favorites')} isActive={currentPage === 'favorites'} icon={<Heart size={20} className={currentPage === 'favorites' ? 'fill-white' : ''} />} label={t.favorites} count={favoriteUrls.size} />
             
-            {/* Theme Toggle */}
-            <label className="theme-switch">
-                <input type="checkbox" className="theme-switch__checkbox" checked={darkMode} onChange={() => setDarkMode(d => !d)} />
-                <div className="theme-switch__container">
-                    <div className="theme-switch__clouds"></div>
-                    <div className="theme-switch__stars-container">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none">
-                            <path d="M43 20L44.5 16.5L48 15L44.5 13.5L43 10L41.5 13.5L38 15L41.5 16.5L43 20Z" fill="currentColor"/>
-                            <path d="M103 26L104.5 22.5L108 21L104.5 19.5L103 16L101.5 19.5L98 21L101.5 22.5L103 26Z" fill="currentColor"/>
-                            <path d="M22 35L22.75 33.25L24.5 32.5L22.75 31.75L22 30L21.25 31.75L19.5 32.5L21.25 33.25L22 35Z" fill="currentColor"/>
-                            <path d="M125 15L125.75 13.25L127.5 12.5L125.75 11.75L125 10L124.25 11.75L122.5 12.5L124.25 13.25L125 15Z" fill="currentColor"/>
-                        </svg>
-                    </div>
-                    <div className="theme-switch__circle-container">
-                        <div className="theme-switch__sun-moon-container">
-                            <div className="theme-switch__moon">
-                                <div className="theme-switch__spot"></div>
-                                <div className="theme-switch__spot"></div>
-                                <div className="theme-switch__spot"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </label>
+            <ThemeToggle darkMode={darkMode} setDarkMode={setDarkMode} />
           </div>
         </header>
         <Suspense fallback={<LoadingFallback />}>{renderContent()}</Suspense>
