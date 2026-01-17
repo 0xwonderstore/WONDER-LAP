@@ -1,0 +1,74 @@
+.archive-button {
+  --width: 100px;
+  --height: 32px;
+  --tooltip-height: 30px;
+  --tooltip-width: 70px;
+  --gap-between-tooltip-to-button: 18px;
+  --button-color: #6366f1;
+  --tooltip-color: #fff;
+  width: var(--width);
+  height: var(--height);
+  background: var(--button-color);
+  position: relative;
+  text-align: center;
+  border-radius: 8px;
+  font-family: "Tajawal", sans-serif;
+  transition: background 0.3s;
+  border: none;
+  cursor: pointer;
+}
+
+.archive-button-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.archive-text {
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  transition: all 0.3s;
+}
+
+.archive-icon {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--button-color);
+  color: #fff;
+  transition: all 0.3s;
+  border-radius: 8px;
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.archive-button:hover {
+  background: #4f46e5;
+}
+
+.archive-button:hover .archive-text {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.archive-button:hover .archive-icon {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.archive-button:active {
+  transform: scale(0.95);
+}
+
+.dark .archive-button {
+  --button-color: #4338ca;
+}
+.dark .archive-button:hover {
+  background: #3730a3;
+}

@@ -217,10 +217,12 @@ const InstagramPage = () => {
         <button 
             onClick={handleHideAllInPage}
             disabled={paginatedPosts.length === 0}
-            className="uiverse-hide-button"
+            className="uiverse-hide-button bg-red-600 hover:bg-red-700 !w-auto !px-6 !rounded-full group"
         >
-            <div className="uiverse-nav-icon"><CheckSquare size={20} /></div>
-            <span className="uiverse-nav-label">Hide All In Page ({paginatedPosts.length})</span>
+            <div className="uiverse-nav-icon transition-transform group-hover:scale-110"><CheckSquare size={22} /></div>
+            <span className="ml-3 text-white font-bold text-sm tracking-wide whitespace-nowrap">
+                {t('hide_all_page', { count: paginatedPosts.length })}
+            </span>
         </button>
       </div>
 

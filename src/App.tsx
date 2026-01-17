@@ -21,6 +21,7 @@ import { Product, InstagramPost } from './types';
 import { useInstagramBlacklistStore } from './stores/instagramBlacklistStore';
 import { loadInstagramPosts } from './utils/instagramLoader';
 import ThemeToggle from './components/ThemeToggle';
+import { useTranslation } from 'react-i18next';
 
 // --- Lazy Imports ---
 const FavoritesPage = React.lazy(() => import('./components/FavoritesPage'));
@@ -45,6 +46,7 @@ const LoadingFallback: React.FC = () => (
 );
 
 const App: React.FC = () => {
+  const { t: translate } = useTranslation();
   const [darkMode, setDarkMode] = useLocalStorage('darkMode', false);
   const { language } = useLanguageStore();
   const { favoriteUrls } = useFavoritesStore();
@@ -213,9 +215,15 @@ const App: React.FC = () => {
         return (
             <div className="animate-fade-in-up relative z-10">
                  <div className="mb-8 flex justify-end">
-                    <button onClick={() => processPendingHides(currentProducts.map(p => p.url))} disabled={currentProducts.length === 0} className="uiverse-hide-button">
-                        <div className="uiverse-nav-icon"><CheckSquare size={20} /></div>
-                        <span className="uiverse-nav-label">Hide All In Page ({currentProducts.length})</span>
+                    <button 
+                        onClick={() => processPendingHides(currentProducts.map(p => p.url))} 
+                        disabled={currentProducts.length === 0} 
+                        className="uiverse-hide-button bg-red-600 hover:bg-red-700 !w-auto !px-6 !rounded-full group"
+                    >
+                        <div className="uiverse-nav-icon transition-transform group-hover:scale-110"><CheckSquare size={22} /></div>
+                        <span className="ml-3 text-white font-bold text-sm tracking-wide whitespace-nowrap">
+                           {translate('hide_all_page', { count: currentProducts.length })}
+                        </span>
                     </button>
                  </div>
                  <FilterComponent t={t} stores={uniqueStores} languages={availableLanguages} languageCounts={languageCounts} filters={filters} date={dateRange} setDate={setDateRange} onFilterChange={handleFilterChange} onResetFilters={handleResetFilters} viewMode={viewMode} onViewModeChange={setViewMode} productsPerPage={productsPerPage} onPostsPerPageChange={setProductsPerPage} />

@@ -18,6 +18,7 @@ export const translations = {
     instagram_feature: 'انستقرام',
     tiktok_feature: 'تيك توك', 
     hidden_items: 'الأرشيف',
+    hide_all_page: 'أرشفة الصفحة ({count})',
 
     // FavoritesPage.tsx
     favorites_title: 'المفضلة ({count})',
@@ -252,6 +253,7 @@ export const translations = {
     instagram_feature: 'Instagram',
     tiktok_feature: 'TikTok',
     hidden_items: 'Archive',
+    hide_all_page: 'Archive Page ({count})',
 
     // FavoritesPage.tsx
     favorites_title: 'Favorites ({count})',
