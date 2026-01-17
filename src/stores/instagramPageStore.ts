@@ -30,9 +30,9 @@ const initialState = {
   postsPerPage: 24,
   filters: {
     username: "",
-    minLikes: 77,
+    minLikes: 0,
     maxLikes: null,
-    minComments: 3,
+    minComments: 0,
     maxComments: null,
     languages: [],
   },
@@ -55,7 +55,7 @@ export const useInstagramPageStore = create<InstagramPageState>()(
     }),
     {
       name: 'instagram-page-storage',
-      version: 6,
+      version: 7, // Incremented version to apply changes for everyone
       storage: {
         getItem: (name) => {
           const str = localStorage.getItem(name);
@@ -82,42 +82,12 @@ export const useInstagramPageStore = create<InstagramPageState>()(
         removeItem: (name) => localStorage.removeItem(name),
       },
       migrate: (persistedState: any, version: number) => {
-        if (version < 2) {
-            persistedState.sortBy = 'likes';
-        }
-        
-        if (version === 0 && persistedState && persistedState.filters) {
-          if (typeof persistedState.filters.language === 'string') {
-            persistedState.filters.languages = persistedState.filters.language ? [persistedState.filters.language] : [];
-            delete persistedState.filters.language;
-          }
-          if (!Array.isArray(persistedState.filters.languages)) {
-            persistedState.filters.languages = [];
-          }
-        }
-        
-        if (version < 3) {
-            if (persistedState.filters) {
-                persistedState.filters.minComments = null;
-                persistedState.filters.maxComments = null;
-            }
-        }
-
-        if (version < 4) {
-            persistedState.postsPerPage = 24;
-            if (!persistedState.sortBy || persistedState.sortBy === 'likes') {
-                persistedState.sortBy = 'date';
-                persistedState.sort = 'desc';
-            }
-        }
-
-        if (version < 5) {
+        if (version < 7) {
           if (persistedState.filters) {
-            persistedState.filters.minLikes = 77;
-            persistedState.filters.minComments = 3;
+            persistedState.filters.minLikes = 0;
+            persistedState.filters.minComments = 0;
           }
         }
-        
         return persistedState as InstagramPageState;
       },
     }

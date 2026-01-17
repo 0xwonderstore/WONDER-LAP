@@ -54,8 +54,8 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
   useEffect(() => {
     let count = 0;
     if (filters.username) count++;
-    if (filters.minLikes !== null && filters.minLikes !== 77) count++;
-    if (filters.minComments !== null && filters.minComments !== 3) count++;
+    if (filters.minLikes !== null && filters.minLikes !== 0) count++;
+    if (filters.minComments !== null && filters.minComments !== 0) count++;
     if (filters.languages.length > 0) count++;
     if (date) count++;
     setActiveCount(count);
@@ -135,21 +135,21 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
             </span>
           );
         }
-        if (filters.minLikes !== null && filters.minLikes !== 77) {
+        if (filters.minLikes !== null && filters.minLikes !== 0) {
              badges.push(
             <span key="likes" className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
                <Heart className="w-3 h-3 mr-1" />
               Likes &ge; {filters.minLikes}
-               <button onClick={(e) => { e.stopPropagation(); onFilterChange({ minLikes: 77 }); }} className="ml-1 text-red-600 hover:text-red-800 dark:text-red-400"><X className="w-3 h-3" /></button>
+               <button onClick={(e) => { e.stopPropagation(); onFilterChange({ minLikes: 0 }); }} className="ml-1 text-red-600 hover:text-red-800 dark:text-red-400"><X className="w-3 h-3" /></button>
             </span>
           );
         }
-        if (filters.minComments !== null && filters.minComments !== 3) {
+        if (filters.minComments !== null && filters.minComments !== 0) {
             badges.push(
            <span key="comments" className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
               <MessageCircle className="w-3 h-3 mr-1" />
              Comments &ge; {filters.minComments}
-              <button onClick={(e) => { e.stopPropagation(); onFilterChange({ minComments: 3 }); }} className="ml-1 text-purple-600 hover:text-purple-800 dark:text-purple-400"><X className="w-3 h-3" /></button>
+              <button onClick={(e) => { e.stopPropagation(); onFilterChange({ minComments: 0 }); }} className="ml-1 text-purple-600 hover:text-purple-800 dark:text-purple-400"><X className="w-3 h-3" /></button>
            </span>
          );
        }
@@ -250,15 +250,15 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
                                 <input
                                     type="number"
                                     name="minLikes"
-                                    placeholder="77"
+                                    placeholder="0"
                                     value={filters.minLikes ?? ''}
                                     onChange={handleLikesChange}
                                     className="w-full h-[46px] pl-4 pr-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none text-sm font-medium text-gray-700 dark:text-gray-200 placeholder-gray-400 transition-all shadow-sm"
                                     min="0"
                                 />
-                                {filters.minLikes !== null && filters.minLikes !== 77 && (
+                                {filters.minLikes !== null && filters.minLikes !== 0 && (
                                     <button 
-                                        onClick={() => onFilterChange({ minLikes: 77 })}
+                                        onClick={() => onFilterChange({ minLikes: 0 })}
                                         className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
                                     >
                                         <X size={12} />
@@ -278,15 +278,15 @@ const InstagramFilterComponent: React.FC<InstagramFilterComponentProps> = ({
                                 <input
                                     type="number"
                                     name="minComments"
-                                    placeholder="3"
+                                    placeholder="0"
                                     value={filters.minComments ?? ''}
                                     onChange={handleCommentsChange}
                                     className="w-full h-[46px] pl-4 pr-3 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none text-sm font-medium text-gray-700 dark:text-gray-200 placeholder-gray-400 transition-all shadow-sm"
                                     min="0"
                                 />
-                                {filters.minComments !== null && filters.minComments !== 3 && (
+                                {filters.minComments !== null && filters.minComments !== 0 && (
                                     <button 
-                                        onClick={() => onFilterChange({ minComments: 3 })}
+                                        onClick={() => onFilterChange({ minComments: 0 })}
                                         className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
                                     >
                                         <X size={12} />

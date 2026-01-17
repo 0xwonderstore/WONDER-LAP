@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useRef } from "react";
 import InstagramCard from "./InstagramCard";
 import Pagination from "./Pagination";
 import { useTranslation } from "react-i18next";
@@ -16,7 +16,12 @@ import { useToastStore } from "../stores/toastStore";
 
 const InstagramPage = () => {
   const { t } = useTranslation();
-  const { showToast } = useToastStore();
+  const { showToast, hideToast } = useToastStore();
+  
+  const [pendingHideIds, setPendingHideIds] = useState<Set<string>>(new Set());
+  const pendingHideIdsRef = useRef<Set<string>>(new Set());
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const { 
     blacklistedUsers, 
     blacklistedPosts, 
@@ -49,27 +54,36 @@ const InstagramPage = () => {
     gcTime: Infinity
   });
 
-  // Base filter: includes duplicates removal
+  // Re-implementing Duplicate Removal based on permalink
   const basePosts = useMemo(() => {
     let posts = [...allPosts];
     const seen = new Set();
-    posts = posts.filter(post => {
+    return posts.filter(post => {
       const duplicate = seen.has(post.permalink);
       seen.add(post.permalink);
       return !duplicate;
     });
-    return posts;
   }, [allPosts]);
 
   const allUniqueUsernames = useMemo(() => {
-    return [...new Set(basePosts.map((p) => p.username))].sort();
+    const usernames = new Set<string>();
+    for (let i = 0; i < basePosts.length; i++) {
+        usernames.add(basePosts[i].username);
+    }
+    return Array.from(usernames).sort();
   }, [basePosts]);
 
   const filteredAndSortedPosts = useMemo(() => {
     let posts = [...basePosts];
 
-    // Re-enabling the blacklist/hidden filter so "Hide All" actually works
-    posts = posts.filter(post => !blacklistedUsers.has(post.username) && !blacklistedPosts.has(post.permalink));
+    // Filter out blacklisted AND pending-to-be-hidden posts
+    if (blacklistedUsers.size > 0 || blacklistedPosts.size > 0 || pendingHideIds.size > 0) {
+        posts = posts.filter(post => 
+            !blacklistedUsers.has(post.username) && 
+            !blacklistedPosts.has(post.permalink) &&
+            !pendingHideIds.has(post.permalink)
+        );
+    }
 
     // Apply standard filters
     if (filters.username) {
@@ -83,11 +97,11 @@ const InstagramPage = () => {
       });
     }
     
-    if (filters.minLikes !== null) {
-      posts = posts.filter((p) => p.likes >= filters.minLikes);
+    if (filters.minLikes !== null && filters.minLikes > 0) {
+      posts = posts.filter((p) => p.likes >= filters.minLikes!);
     }
     
-    if (filters.minComments !== null) {
+    if (filters.minComments !== null && filters.minComments > 0) {
         posts = posts.filter((p) => p.comments >= filters.minComments!);
     }
     
@@ -118,22 +132,42 @@ const InstagramPage = () => {
     });
 
     return posts;
-  }, [filters, dateRange, sort, sortBy, blacklistedUsers, blacklistedPosts, basePosts]);
+  }, [filters, dateRange, sort, sortBy, blacklistedUsers, blacklistedPosts, pendingHideIds, basePosts]);
 
   const totalPages = Math.ceil(filteredAndSortedPosts.length / postsPerPage);
   const paginatedPosts = filteredAndSortedPosts.slice((currentPage - 1) * postsPerPage, currentPage * postsPerPage);
 
+  const processPendingHides = (ids: string[]) => {
+    if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+    ids.forEach(id => pendingHideIdsRef.current.add(id));
+    setPendingHideIds(new Set(pendingHideIdsRef.current));
+
+    showToast(`Hiding ${pendingHideIdsRef.current.size} posts...`, 'undo', 5000, () => {
+        pendingHideIdsRef.current.clear();
+        setPendingHideIds(new Set());
+        if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+    });
+
+    hideTimeoutRef.current = setTimeout(() => {
+        const finalIds = Array.from(pendingHideIdsRef.current);
+        if (finalIds.length > 0) {
+            addPosts(finalIds);
+        }
+        pendingHideIdsRef.current.clear();
+        setPendingHideIds(new Set());
+        hideToast();
+    }, 5000);
+  };
+
   const handleHideAllInPage = () => {
     const permalinks = paginatedPosts.map(p => p.permalink);
     if (permalinks.length > 0) {
-      addPosts(permalinks);
-      showToast(`Hidden ${permalinks.length} posts from current page`, 'removed');
+      processPendingHides(permalinks);
     }
   };
 
   const handleHidePost = (permalink: string) => {
-    addPost(permalink);
-    showToast(`Post hidden successfully`, 'removed');
+    processPendingHides([permalink]);
   };
 
   const handleBlacklistToggle = (username: string) => {

@@ -12,14 +12,12 @@
     background-attachment: fixed; 
   }
 
-  /* Light Mode Background */
   body:not(.dark) {
      background-size: 200% 200%;
      background-image: linear-gradient(to right bottom, #f3e8ff, #e9d5ff, #f3e8ff);
      animation: move-bg 20s ease-in-out infinite;
   }
   
-  /* Dark Mode Background with Colored Shapes */
   .dark body {
     background-color: #000000;
     background-image: 
@@ -29,214 +27,177 @@
     background-size: 150% 150%;
     animation: move-shapes 15s ease-in-out infinite alternate;
   }
-
-  a, button, [role="button"] {
-    cursor: pointer;
-  }
-  
-  input, textarea {
-    cursor: text;
-  }
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* --- Uiverse Inspired Navbar Buttons with Dynamic Colors --- */
+.uiverse-nav-button {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: rgb(20, 20, 20);
+  border: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.164);
+  cursor: pointer;
+  transition-duration: .3s;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
 }
 
-::-webkit-scrollbar-track {
-  @apply bg-transparent;
+.dark .uiverse-nav-button {
+    background-color: #1a1a1a;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4);
 }
 
-::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 dark:bg-gray-800 rounded-full transition-colors;
+.uiverse-nav-icon {
+  width: 20px;
+  height: 20px;
+  transition-duration: .3s;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400 dark:bg-gray-700;
+.uiverse-nav-button:hover {
+  width: 140px;
+  border-radius: 50px;
+  transition-duration: .3s;
 }
 
-/* Animations */
+/* Dynamic Hover Colors via CSS Variables */
+.uiverse-nav-button:hover {
+    background: var(--hover-bg, #784ba0);
+}
+
+.uiverse-nav-button:hover .uiverse-nav-icon {
+  width: 40px;
+  transition-duration: .3s;
+  transform: translateY(60%);
+}
+
+.uiverse-nav-label {
+  position: absolute;
+  top: -20px;
+  color: white;
+  transition-duration: .3s;
+  font-size: 2px;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.uiverse-nav-button:hover .uiverse-nav-label {
+  font-size: 11px;
+  opacity: 1;
+  transform: translateY(32px);
+  transition-duration: .3s;
+}
+
+/* Active State Styles */
+.uiverse-nav-button.active {
+    background: var(--hover-bg, #784ba0);
+    box-shadow: 0 0 20px var(--glow-color, rgba(120, 75, 160, 0.5));
+}
+
+.nav-badge-uiverse {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: white;
+    color: var(--badge-color, #ff3cac);
+    font-size: 9px;
+    font-weight: 900;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 11;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Specific Button Color Palettes */
+.btn-dashboard {
+    --hover-bg: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    --glow-color: rgba(59, 130, 246, 0.5);
+    --badge-color: #2563eb;
+}
+
+.btn-instagram {
+    --hover-bg: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    --glow-color: rgba(220, 39, 67, 0.5);
+    --badge-color: #dc2743;
+}
+
+.btn-tiktok {
+    --hover-bg: linear-gradient(45deg, #00f2ea 0%, #ff0050 100%);
+    --glow-color: rgba(0, 242, 234, 0.4);
+    --badge-color: #ff0050;
+}
+
+.btn-blacklist {
+    --hover-bg: linear-gradient(135deg, #475569 0%, #1e293b 100%);
+    --glow-color: rgba(71, 85, 105, 0.5);
+    --badge-color: #1e293b;
+}
+
+.btn-hidden {
+    --hover-bg: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    --glow-color: rgba(245, 158, 11, 0.5);
+    --badge-color: #d97706;
+}
+
+.btn-favorites {
+    --hover-bg: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+    --glow-color: rgba(239, 68, 68, 0.5);
+    --badge-color: #b91c1c;
+}
+
+/* Hide All Page Button - Red Version */
+.uiverse-hide-button {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: rgb(220, 38, 38);
+  border: none;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition-duration: .3s;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+}
+
+.uiverse-hide-button:hover {
+  width: 180px;
+  border-radius: 50px;
+  background-color: rgb(185, 28, 28);
+}
+
+.uiverse-hide-button:hover .uiverse-nav-icon {
+  transform: translateY(60%);
+}
+
+.uiverse-hide-button:hover .uiverse-nav-label {
+  font-size: 11px;
+  transform: translateY(32px);
+}
+
 @layer utilities {
-  /* Existing animations */
-  @keyframes fade-in-up {
-    0% { opacity: 0; transform: translateY(10px); }
-    100% { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes fade-in {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
-  }
-
-  @keyframes scale-in {
-    0% { opacity: 0; transform: scale(0.95); }
-    100% { opacity: 1; transform: scale(1); }
-  }
-
-  @keyframes slide-right {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(4px); }
-  }
-
-  @keyframes text-shimmer {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 100% 50%; }
-  }
-
-  @keyframes blob {
-    0% { transform: translate(0px, 0px) scale(1); }
-    33% { transform: translate(30px, -50px) scale(1.1); }
-    66% { transform: translate(-20px, 20px) scale(0.9); }
-    100% { transform: translate(0px, 0px) scale(1); }
-  }
-
-  /* New Animations */
-  @keyframes pop-in {
-    0% { opacity: 0; transform: scale(0.5); }
-    70% { transform: scale(1.1); }
-    100% { opacity: 1; transform: scale(1); }
-  }
-
-  @keyframes shimmer-border {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-
   @keyframes move-bg {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
   }
-
-  @keyframes move-shapes {
-    0% { background-position: 0% 0%; }
-    100% { background-position: 50% 50%; }
-  }
-
-  /* Utility Classes */
-  .animate-fade-in-up {
-    animation: fade-in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-
-  .animate-fade-in {
-    animation: fade-in 0.3s ease-out forwards;
-  }
-
-  .animate-scale-in {
-    animation: scale-in 0.2s ease-out forwards;
-  }
-
-  .animate-pop-in {
-    animation: pop-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  }
-  
-  .animate-text-shimmer {
-    animation: text-shimmer 3s linear infinite;
-  }
-
-  .animate-blob {
-    animation: blob 7s infinite;
-  }
-
-  .animation-delay-2000 {
-    animation-delay: 2s;
-  }
-
-  .animation-delay-4000 {
-    animation-delay: 4s;
-  }
-}
-
-/* Component Specific Styles */
-
-/* Glassmorphism Card Style - NEW */
-.glass-card {
-  @apply bg-white dark:bg-black/40 backdrop-blur-xl border border-gray-100 dark:border-white/10 shadow-lg;
-}
-
-.glass-card-hover {
-  @apply hover:bg-white/90 dark:hover:bg-black/60 transition-all duration-300;
-}
-
-/* Dynamic Border for Inputs (when focused) */
-.dynamic-border-focus {
-  position: relative;
-  z-index: 0;
-  overflow: hidden;
-}
-
-.dynamic-border-focus::before {
-  content: '';
-  position: absolute;
-  top: -2px; left: -2px; right: -2px; bottom: -2px;
-  background: linear-gradient(45deg, #ec4899, #8b5cf6, #ec4899);
-  background-size: 200% 200%;
-  z-index: -1;
-  border-radius: inherit;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  animation: shimmer-border 3s ease infinite;
-}
-
-.dynamic-border-focus:focus-within::before {
-  opacity: 1;
-}
-
-/* Glassmorphism Card (Optional use) */
-.glass-panel {
-  @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border border-white/20 shadow-lg;
-}
-
-/* Background Patterns */
-.bg-grid-pattern {
-  background-image: linear-gradient(to right, rgba(229, 231, 235, 0.5) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(229, 231, 235, 0.5) 1px, transparent 1px);
-  background-size: 40px 40px;
-  mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
-  -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
-}
-
-.dark .bg-grid-pattern {
-  background-image: linear-gradient(to right, rgba(55, 65, 81, 0.5) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(55, 65, 81, 0.5) 1px, transparent 1px);
-}
-
-/* Button Glow Effect */
-.glow-effect {
-  position: relative;
-  overflow: hidden;
-}
-
-.glow-effect::after {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, transparent 70%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.glow-effect:hover::after {
-  opacity: 1;
-}
-
-/* Custom styles for RTL date inputs */
-.custom-date-input:not([value])::-webkit-datetime-edit-text {
-  color: transparent;
-}
-.custom-date-input:not([value])::before {
-  content: attr(placeholder);
-  color: #9ca3af;
-}
-html[dir="rtl"] .custom-date-input {
-  text-align: right;
-}
-html[dir="rtl"] .custom-date-input::-webkit-calendar-picker-indicator {
-  position: absolute;
-  left: 0.75rem;
-  right: auto;
 }
