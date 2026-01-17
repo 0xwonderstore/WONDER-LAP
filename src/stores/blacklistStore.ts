@@ -13,11 +13,13 @@ interface BlacklistState {
   hideProducts: (urls: string[]) => void;
   unhideProduct: (url: string) => void;
   clearHiddenProducts: () => void;
+  exportBlacklist: () => string;
+  importBlacklist: (json: string) => number;
 }
 
 export const useBlacklistStore = create<BlacklistState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       keywords: [],
       blockedStores: [],
       hiddenProducts: [],
@@ -58,6 +60,34 @@ export const useBlacklistStore = create<BlacklistState>()(
           hiddenProducts: state.hiddenProducts.filter((u) => u !== url),
         })),
       clearHiddenProducts: () => set({ hiddenProducts: [] }),
+      
+      exportBlacklist: () => {
+        const state = get();
+        return JSON.stringify({
+            hiddenProducts: state.hiddenProducts,
+            // We can export keywords/stores too if needed, but requested focus is on hidden items list
+            // keywords: state.keywords,
+            // blockedStores: state.blockedStores
+        }, null, 2);
+      },
+      
+      importBlacklist: (json) => {
+        try {
+            const data = JSON.parse(json);
+            if (Array.isArray(data.hiddenProducts)) {
+                set((state) => {
+                    const newSet = new Set(state.hiddenProducts);
+                    data.hiddenProducts.forEach((url: string) => newSet.add(url));
+                    return { hiddenProducts: Array.from(newSet) };
+                });
+                return data.hiddenProducts.length;
+            }
+            return 0;
+        } catch (e) {
+            console.error("Import failed", e);
+            return 0;
+        }
+      }
     }),
     {
       name: 'blacklist-storage',

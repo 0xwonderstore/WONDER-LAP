@@ -47,15 +47,20 @@ const TikTokCard: React.FC<TikTokCardProps> = ({ post }) => {
     setIsPlaying(true);
   };
 
-  const handleFavoriteClick = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleFavoriteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
     toggleFavorite(post.url);
-    if (!favorite) {
-        showToast(t('added_to_favorites'), 'added');
-    } else {
+    if (!e.target.checked) {
         showToast(t('removed_from_favorites'), 'removed');
+    } else {
+        showToast(t('added_to_favorites'), 'added');
     }
+  };
+
+  const handleCopyLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(post.url);
+    // showToast(t('link_copied'), 'success');
   };
 
   return (
@@ -124,6 +129,35 @@ const TikTokCard: React.FC<TikTokCardProps> = ({ post }) => {
                 </div>
             </>
         )}
+        
+        {/* Overlay Buttons */}
+        <div className="absolute top-2 right-2 flex flex-col gap-2 z-20 translate-x-12 group-hover:translate-x-0 transition-transform duration-300">
+            <div onClick={(e) => e.stopPropagation()} className="glass-btn-wrapper">
+                <label className="ui-bookmark relative z-20 flex items-center justify-center w-full h-full">
+                    <input type="checkbox" checked={favorite} onChange={handleFavoriteChange} />
+                    <div className="bookmark">
+                        <svg viewBox="0 0 32 32" className="w-full h-full p-0.5">
+                        <path d="M6 4C4.89543 4 4 4.89543 4 6V28L16 18L28 28V6C28 4.89543 27.1046 4 26 4H6Z" />
+                        </svg>
+                    </div>
+                </label>
+            </div>
+            
+            <button className="copy" onClick={handleCopyLink}>
+                <span className="tooltip" data-text-initial="Copy" data-text-end="Copied!"></span>
+                <span className="clipboard">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                           <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </span>
+                    <span className="checkmark">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </span>
+            </button>
+        </div>
       </div>
 
       {/* Stats Footer */}
@@ -146,18 +180,14 @@ const TikTokCard: React.FC<TikTokCardProps> = ({ post }) => {
                  <span className="text-[10px] font-bold">{formatNumber(post.shareCount)}</span>
             </div>
              
-             {/* Functional Save Button */}
-             <button 
-                onClick={handleFavoriteClick}
-                className={`flex items-center gap-1 group/save transition-all duration-300 ${favorite ? 'text-brand-primary' : 'text-gray-600 dark:text-gray-300 hover:text-brand-primary'}`}
+             {/* Read-only Save Stat */}
+             <div 
+                className={`flex items-center gap-1 text-gray-600 dark:text-gray-300`}
                 title={t('tiktok_saves') || "Saves"}
              >
-                 <Bookmark 
-                    size={14} 
-                    className={`transition-all ${favorite ? 'fill-brand-primary text-brand-primary' : 'group-hover/save:scale-110'}`} 
-                 />
+                 <Bookmark size={14} />
                  <span className="text-[10px] font-bold">{formatNumber(post.collectCount)}</span>
-             </button>
+             </div>
         </div>
 
         <a 

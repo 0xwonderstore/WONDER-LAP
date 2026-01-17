@@ -29,7 +29,364 @@
   }
 }
 
-/* --- Uiverse Inspired Navbar Buttons with Dynamic Colors --- */
+/* --- Animated Border Card --- */
+.animated-border-card {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden; 
+  z-index: 0;
+  padding: 3px; 
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.animated-border-card::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%; 
+  height: 200%;
+  background-image: linear-gradient(180deg, transparent 50%, rgb(0, 183, 255), rgb(255, 48, 255));
+  animation: rotBGimg 3s linear infinite;
+  transform: translate(-50%, -50%);
+  z-index: -2;
+  opacity: 0; 
+  transition: opacity 0.3s ease;
+}
+
+.animated-border-card:hover::before {
+  opacity: 1;
+}
+
+.dark .animated-border-card::before {
+  background-image: linear-gradient(180deg, transparent 50%, #ec4899, #8b5cf6, #3b82f6);
+}
+
+@keyframes rotBGimg {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.animated-border-card > .card-content {
+  background: var(--card-bg, #ffffff);
+  width: 100%;
+  height: 100%;
+  border-radius: 17px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.dark .animated-border-card > .card-content {
+  background: #111111;
+}
+
+/* --- UI Bookmark Button --- */
+.ui-bookmark {
+  --icon-size: 24px;
+  --icon-secondary-color: rgb(77, 77, 77);
+  --icon-hover-color: rgb(97, 97, 97);
+  --icon-primary-color: gold;
+  --icon-circle-border: 1px solid var(--icon-primary-color);
+  --icon-circle-size: 35px;
+  --icon-anmt-duration: 0.3s;
+}
+
+.dark .ui-bookmark {
+  --icon-secondary-color: rgb(200, 200, 200);
+  --icon-hover-color: rgb(255, 255, 255);
+}
+
+.ui-bookmark input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.ui-bookmark .bookmark {
+  width: var(--icon-size);
+  height: auto;
+  fill: var(--icon-secondary-color);
+  cursor: pointer;
+  -webkit-transition: 0.2s;
+  -o-transition: 0.2s;
+  transition: 0.2s;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  position: relative;
+  -webkit-transform-origin: top;
+  -ms-transform-origin: top;
+  transform-origin: top;
+}
+
+.bookmark::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  -webkit-box-shadow: 0 30px 0 -4px var(--icon-primary-color), 30px 0 0 -4px var(--icon-primary-color), 0 -30px 0 -4px var(--icon-primary-color), -30px 0 0 -4px var(--icon-primary-color), -22px 22px 0 -4px var(--icon-primary-color), -22px -22px 0 -4px var(--icon-primary-color), 22px -22px 0 -4px var(--icon-primary-color), 22px 22px 0 -4px var(--icon-primary-color);
+  box-shadow: 0 30px 0 -4px var(--icon-primary-color), 30px 0 0 -4px var(--icon-primary-color), 0 -30px 0 -4px var(--icon-primary-color), -30px 0 0 -4px var(--icon-primary-color), -22px 22px 0 -4px var(--icon-primary-color), -22px -22px 0 -4px var(--icon-primary-color), 22px -22px 0 -4px var(--icon-primary-color), 22px 22px 0 -4px var(--icon-primary-color);
+  border-radius: 50%;
+  -webkit-transform: scale(0);
+  -ms-transform: scale(0);
+  transform: scale(0);
+}
+
+.bookmark::before {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  border: var(--icon-circle-border);
+  opacity: 0;
+}
+
+/* actions */
+
+.ui-bookmark:hover .bookmark {
+  fill: var(--icon-hover-color);
+}
+
+.ui-bookmark input:checked + .bookmark::after {
+  -webkit-animation: circles var(--icon-anmt-duration) cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: circles var(--icon-anmt-duration) cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  -webkit-animation-delay: var(--icon-anmt-duration);
+  animation-delay: var(--icon-anmt-duration);
+}
+
+.ui-bookmark input:checked + .bookmark {
+  fill: var(--icon-primary-color);
+  -webkit-animation: bookmark var(--icon-anmt-duration) forwards;
+  animation: bookmark var(--icon-anmt-duration) forwards;
+  -webkit-transition-delay: 0.3s;
+  -o-transition-delay: 0.3s;
+  transition-delay: 0.3s;
+}
+
+.ui-bookmark input:checked + .bookmark::before {
+  -webkit-animation: circle var(--icon-anmt-duration) cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: circle var(--icon-anmt-duration) cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  -webkit-animation-delay: var(--icon-anmt-duration);
+  animation-delay: var(--icon-anmt-duration);
+}
+
+@-webkit-keyframes bookmark {
+  50% { -webkit-transform: scaleY(0.6); transform: scaleY(0.6); }
+  100% { -webkit-transform: scaleY(1); transform: scaleY(1); }
+}
+
+@keyframes bookmark {
+  50% { -webkit-transform: scaleY(0.6); transform: scaleY(0.6); }
+  100% { -webkit-transform: scaleY(1); transform: scaleY(1); }
+}
+
+@-webkit-keyframes circle {
+  from { width: 0; height: 0; opacity: 0; }
+  90% { width: var(--icon-circle-size); height: var(--icon-circle-size); opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes circle {
+  from { width: 0; height: 0; opacity: 0; }
+  90% { width: var(--icon-circle-size); height: var(--icon-circle-size); opacity: 1; }
+  to { opacity: 0; }
+}
+
+@-webkit-keyframes circles {
+  from { -webkit-transform: scale(0); transform: scale(0); }
+  40% { opacity: 1; }
+  to { -webkit-transform: scale(0.8); transform: scale(0.8); opacity: 0; }
+}
+
+@keyframes circles {
+  from { -webkit-transform: scale(0); transform: scale(0); }
+  40% { opacity: 1; }
+  to { -webkit-transform: scale(0.8); transform: scale(0.8); opacity: 0; }
+}
+
+/* --- UI Copy/Share Button --- */
+.copy {
+  /* button */
+  --button-bg: rgba(255, 255, 255, 0.8);
+  --button-hover-bg: #ffffff;
+  --button-text-color: #333333;
+  --button-hover-text-color: #3b82f6;
+  --button-border-radius: 9999px; /* Fully rounded */
+  --button-diameter: 36px;
+  --button-outline-width: 1px;
+  --button-outline-color: rgb(141, 141, 141);
+  /* tooltip */
+  --tooltip-bg: #f4f3f3;
+  --toolptip-border-radius: 4px;
+  --tooltip-font-family: 'Tajawal', sans-serif;
+  --tooltip-font-size: 12px;
+  --tootip-text-color: rgb(50, 50, 50);
+  --tooltip-padding-x: 7px;
+  --tooltip-padding-y: 7px;
+  --tooltip-offset: 8px;
+}
+
+.dark .copy {
+    --button-bg: rgba(0, 0, 0, 0.6);
+    --button-hover-bg: rgba(0, 0, 0, 0.8);
+    --button-text-color: #e5e5e5;
+    --button-outline-color: #d4d4d8;
+    --button-hover-text-color: #60a5fa;
+}
+
+.copy {
+  box-sizing: border-box;
+  width: var(--button-diameter);
+  height: var(--button-diameter);
+  border-radius: var(--button-border-radius);
+  background-color: var(--button-bg);
+  color: var(--button-text-color);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  outline: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(8px); /* Modern glass effect */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.copy:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.copy:active {
+  transform: scale(0.95);
+}
+
+.tooltip {
+  position: absolute;
+  opacity: 0;
+  visibility: hidden;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font: var(--tooltip-font-size) var(--tooltip-font-family);
+  color: var(--tootip-text-color);
+  background: var(--tooltip-bg);
+  padding: var(--tooltip-padding-y) var(--tooltip-padding-x);
+  border-radius: var(--toolptip-border-radius);
+  pointer-events: none;
+  transition: all var(--tooltip-transition-duration, 0.3s) cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  z-index: 100;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.tooltip::before {
+  content: attr(data-text-initial);
+}
+
+.tooltip::after {
+  content: "";
+  position: absolute;
+  bottom: calc(var(--tooltip-padding-y) / 2 * -1);
+  width: var(--tooltip-padding-y);
+  height: var(--tooltip-padding-y);
+  background: inherit;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  z-index: -999;
+  pointer-events: none;
+}
+
+.copy svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.copy .clipboard,
+.copy .checkmark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.copy .checkmark {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5);
+}
+
+.copy:focus:not(:focus-visible) .clipboard {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5);
+}
+
+.copy:focus:not(:focus-visible) .checkmark {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+
+/* actions */
+
+.copy:hover .tooltip,
+.copy:focus:not(:focus-visible) .tooltip {
+  opacity: 1;
+  visibility: visible;
+  top: calc((100% + var(--tooltip-offset)) * -1);
+}
+
+.copy:focus:not(:focus-visible) .tooltip::before {
+  content: attr(data-text-end);
+}
+
+.copy:hover,
+.copy:focus {
+  background-color: var(--button-hover-bg);
+}
+
+.copy:hover svg {
+  color: var(--button-hover-text-color);
+}
+
+/* Glass wrapper for Bookmark to match Copy button style if needed */
+.glass-btn-wrapper {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.dark .glass-btn-wrapper {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.glass-btn-wrapper:hover {
+  background-color: #ffffff;
+  transform: scale(1.05);
+}
+.dark .glass-btn-wrapper:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* --- Uiverse Inspired Navbar Buttons --- */
 .uiverse-nav-button {
   width: 50px;
   height: 50px;
@@ -43,7 +400,6 @@
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.164);
   cursor: pointer;
   transition-duration: .3s;
-  overflow: hidden;
   position: relative;
   flex-shrink: 0;
 }
@@ -68,11 +424,7 @@
   width: 140px;
   border-radius: 50px;
   transition-duration: .3s;
-}
-
-/* Dynamic Hover Colors via CSS Variables */
-.uiverse-nav-button:hover {
-    background: var(--hover-bg, #784ba0);
+  background: var(--hover-bg, #784ba0);
 }
 
 .uiverse-nav-button:hover .uiverse-nav-icon {
@@ -91,6 +443,8 @@
   text-transform: uppercase;
   white-space: nowrap;
   z-index: 2;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .uiverse-nav-button:hover .uiverse-nav-label {
@@ -100,68 +454,43 @@
   transition-duration: .3s;
 }
 
-/* Active State Styles */
 .uiverse-nav-button.active {
     background: var(--hover-bg, #784ba0);
     box-shadow: 0 0 20px var(--glow-color, rgba(120, 75, 160, 0.5));
 }
 
-.nav-badge-uiverse {
+/* Simple, clean badge */
+.nav-badge-simple {
     position: absolute;
-    top: 5px;
-    right: 5px;
+    top: -2px;
+    right: -2px;
     background: white;
     color: var(--badge-color, #ff3cac);
-    font-size: 9px;
-    font-weight: 900;
-    min-width: 16px;
-    height: 16px;
-    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 800;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 11;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    border: 2px solid #1a1a1a; 
+}
+.dark .nav-badge-simple {
+    border-color: #1a1a1a;
 }
 
-/* Specific Button Color Palettes */
-.btn-dashboard {
-    --hover-bg: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    --glow-color: rgba(59, 130, 246, 0.5);
-    --badge-color: #2563eb;
-}
+/* Button Colors */
+.btn-dashboard { --hover-bg: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); --glow-color: rgba(59, 130, 246, 0.5); --badge-color: #2563eb; }
+.btn-instagram { --hover-bg: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); --glow-color: rgba(220, 39, 67, 0.5); --badge-color: #dc2743; }
+.btn-tiktok { --hover-bg: linear-gradient(45deg, #00f2ea 0%, #ff0050 100%); --glow-color: rgba(0, 242, 234, 0.4); --badge-color: #ff0050; }
+.btn-blacklist { --hover-bg: linear-gradient(135deg, #475569 0%, #1e293b 100%); --glow-color: rgba(71, 85, 105, 0.5); --badge-color: #1e293b; }
+.btn-hidden { --hover-bg: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); --glow-color: rgba(245, 158, 11, 0.5); --badge-color: #d97706; }
+.btn-favorites { --hover-bg: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); --glow-color: rgba(239, 68, 68, 0.5); --badge-color: #b91c1c; }
 
-.btn-instagram {
-    --hover-bg: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-    --glow-color: rgba(220, 39, 67, 0.5);
-    --badge-color: #dc2743;
-}
-
-.btn-tiktok {
-    --hover-bg: linear-gradient(45deg, #00f2ea 0%, #ff0050 100%);
-    --glow-color: rgba(0, 242, 234, 0.4);
-    --badge-color: #ff0050;
-}
-
-.btn-blacklist {
-    --hover-bg: linear-gradient(135deg, #475569 0%, #1e293b 100%);
-    --glow-color: rgba(71, 85, 105, 0.5);
-    --badge-color: #1e293b;
-}
-
-.btn-hidden {
-    --hover-bg: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    --glow-color: rgba(245, 158, 11, 0.5);
-    --badge-color: #d97706;
-}
-
-.btn-favorites {
-    --hover-bg: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-    --glow-color: rgba(239, 68, 68, 0.5);
-    --badge-color: #b91c1c;
-}
-
-/* Hide All Page Button - Red Version */
+/* Hide Button */
 .uiverse-hide-button {
   width: 50px;
   height: 50px;
@@ -174,25 +503,46 @@
   justify-content: center;
   cursor: pointer;
   transition-duration: .3s;
-  overflow: hidden;
   position: relative;
   box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
 }
+.uiverse-hide-button:hover { width: 180px; border-radius: 50px; background-color: rgb(185, 28, 28); }
+.uiverse-hide-button:hover .uiverse-nav-icon { transform: translateY(60%); }
+.uiverse-hide-button:hover .uiverse-nav-label { font-size: 11px; transform: translateY(32px); }
 
-.uiverse-hide-button:hover {
-  width: 180px;
-  border-radius: 50px;
-  background-color: rgb(185, 28, 28);
+/* Content Spinner */
+.content-spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  width: 100%;
 }
-
-.uiverse-hide-button:hover .uiverse-nav-icon {
-  transform: translateY(60%);
+.spinner {
+  background-image: linear-gradient(rgb(186, 66, 255) 35%, rgb(0, 225, 255));
+  width: 100px;
+  height: 100px;
+  animation: spinning82341 1.7s linear infinite;
+  text-align: center;
+  border-radius: 50%;
+  filter: blur(1px);
+  box-shadow: 0px -5px 20px 0px rgb(186, 66, 255), 0px 5px 20px 0px rgb(0, 225, 255);
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-
-.uiverse-hide-button:hover .uiverse-nav-label {
-  font-size: 11px;
-  transform: translateY(32px);
+.spinner1 {
+  background-color: rgb(36, 36, 36);
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  filter: blur(10px);
+  position: absolute;
 }
+.dark .spinner1 { background-color: #1a1a1a; }
+.light .spinner1 { background-color: #f3e8ff; }
+@keyframes spinning82341 { to { transform: rotate(360deg); } }
 
 @layer utilities {
   @keyframes move-bg {

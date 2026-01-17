@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import InstagramCard from "./InstagramCard";
 import Pagination from "./Pagination";
 import { useTranslation } from "react-i18next";
@@ -25,10 +25,9 @@ const InstagramPage = () => {
   const { 
     blacklistedUsers, 
     blacklistedPosts, 
-    addUser, 
-    removeUser, 
-    addPost, 
     addPosts, 
+    addUser,
+    removeUser
   } = useInstagramBlacklistStore();
   
   const { 
@@ -54,29 +53,35 @@ const InstagramPage = () => {
     gcTime: Infinity
   });
 
-  // Re-implementing Duplicate Removal based on permalink
+  // Robust Unique Posts Calculation
   const basePosts = useMemo(() => {
-    let posts = [...allPosts];
-    const seen = new Set();
-    return posts.filter(post => {
-      const duplicate = seen.has(post.permalink);
-      seen.add(post.permalink);
-      return !duplicate;
-    });
+    if (!allPosts || allPosts.length === 0) return [];
+    
+    // Create a Map to ensure uniqueness by permalink, keeping the first occurrence
+    const uniquePostsMap = new Map<string, InstagramPost>();
+    for (const post of allPosts) {
+      if (!uniquePostsMap.has(post.permalink)) {
+        uniquePostsMap.set(post.permalink, post);
+      }
+    }
+    return Array.from(uniquePostsMap.values());
   }, [allPosts]);
 
   const allUniqueUsernames = useMemo(() => {
     const usernames = new Set<string>();
-    for (let i = 0; i < basePosts.length; i++) {
-        usernames.add(basePosts[i].username);
+    for (const post of basePosts) {
+        usernames.add(post.username);
     }
     return Array.from(usernames).sort();
   }, [basePosts]);
 
   const filteredAndSortedPosts = useMemo(() => {
-    let posts = [...basePosts];
+    // If loading or no posts, return empty
+    if (basePosts.length === 0) return [];
 
-    // Filter out blacklisted AND pending-to-be-hidden posts
+    let posts = basePosts;
+
+    // 1. Blacklist & Pending Filter
     if (blacklistedUsers.size > 0 || blacklistedPosts.size > 0 || pendingHideIds.size > 0) {
         posts = posts.filter(post => 
             !blacklistedUsers.has(post.username) && 
@@ -85,7 +90,7 @@ const InstagramPage = () => {
         );
     }
 
-    // Apply standard filters
+    // 2. Standard Filters
     if (filters.username) {
       posts = posts.filter((p) => p.username === filters.username);
     }
@@ -97,6 +102,7 @@ const InstagramPage = () => {
       });
     }
     
+    // Explicitly handle 0 as "no filter" for likes/comments
     if (filters.minLikes !== null && filters.minLikes > 0) {
       posts = posts.filter((p) => p.likes >= filters.minLikes!);
     }
@@ -114,8 +120,10 @@ const InstagramPage = () => {
       posts = posts.filter((p) => new Date(p.timestamp) <= toDate);
     }
 
-    // Apply sorting
-    posts.sort((a, b) => {
+    // 3. Sorting
+    // Use a copy for sorting
+    const sortedPosts = [...posts];
+    sortedPosts.sort((a, b) => {
         let valA: number;
         let valB: number;
         if (sortBy === 'date') {
@@ -131,7 +139,7 @@ const InstagramPage = () => {
         return sort === "asc" ? valA - valB : valB - valA;
     });
 
-    return posts;
+    return sortedPosts;
   }, [filters, dateRange, sort, sortBy, blacklistedUsers, blacklistedPosts, pendingHideIds, basePosts]);
 
   const totalPages = Math.ceil(filteredAndSortedPosts.length / postsPerPage);
@@ -209,10 +217,10 @@ const InstagramPage = () => {
         <button 
             onClick={handleHideAllInPage}
             disabled={paginatedPosts.length === 0}
-            className="group flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-2xl text-sm font-bold transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+            className="uiverse-hide-button"
         >
-            <CheckSquare size={20} className="group-hover:rotate-12 transition-transform" /> 
-            Hide All In Page ({paginatedPosts.length})
+            <div className="uiverse-nav-icon"><CheckSquare size={20} /></div>
+            <span className="uiverse-nav-label">Hide All In Page ({paginatedPosts.length})</span>
         </button>
       </div>
 

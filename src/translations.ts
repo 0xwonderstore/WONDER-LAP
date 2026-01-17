@@ -17,7 +17,7 @@ export const translations = {
     block_store: 'حظر المتجر',
     instagram_feature: 'انستقرام',
     tiktok_feature: 'تيك توك', 
-    hidden_items: 'العناصر المخفية',
+    hidden_items: 'الأرشيف',
 
     // FavoritesPage.tsx
     favorites_title: 'المفضلة ({count})',
@@ -33,10 +33,15 @@ export const translations = {
     
     // HiddenItemsPage.tsx
     hidden_items_title: 'الأرشيف والمخفي ({count})',
-    hidden_items_subtitle: 'هنا تجد جميع المنتجات والمنشورات التي قمت بإخفائها.',
-    unhide_all: 'إظهار الكل',
-    unhide: 'إلغاء الإخفاء',
+    hidden_items_subtitle: 'إدارة العناصر التي قمت بإخفائها وتصدير/استيراد القائمة.',
+    unhide_all: 'استعادة الكل',
+    unhide: 'استعادة',
     no_hidden_items: 'لا توجد عناصر مخفية حالياً.',
+    export_data: 'تصدير القائمة',
+    import_data: 'استيراد القائمة',
+    export_success: 'تم تصدير القائمة بنجاح!',
+    import_success: 'تم استيراد {count} عنصر بنجاح!',
+    import_error: 'حدث خطأ أثناء استيراد الملف.',
 
     // TikTokPage.tsx
     tiktok_subtitle: 'استكشف الفيديوهات الأكثر رواجاً والأعلى أداءً.',
@@ -246,7 +251,7 @@ export const translations = {
     block_store: 'Block Store',
     instagram_feature: 'Instagram',
     tiktok_feature: 'TikTok',
-    hidden_items: 'Hidden Items',
+    hidden_items: 'Archive',
 
     // FavoritesPage.tsx
     favorites_title: 'Favorites ({count})',
@@ -262,10 +267,15 @@ export const translations = {
 
     // HiddenItemsPage.tsx
     hidden_items_title: 'Archive & Hidden ({count})',
-    hidden_items_subtitle: 'All products and posts you have hidden from the main view.',
+    hidden_items_subtitle: 'Manage hidden items and export/import your list.',
     unhide_all: 'Unhide All',
     unhide: 'Unhide',
     no_hidden_items: 'No hidden items at the moment.',
+    export_data: 'Export List',
+    import_data: 'Import List',
+    export_success: 'List exported successfully!',
+    import_success: 'Successfully imported {count} items!',
+    import_error: 'Error importing file.',
     
     // TikTokPage.tsx
     tiktok_subtitle: 'Browse top performing TikTok videos and ads.',

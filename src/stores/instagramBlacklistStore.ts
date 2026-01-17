@@ -10,11 +10,13 @@ interface InstagramBlacklistState {
   removePost: (permalink: string) => void;
   addPosts: (permalinks: string[]) => void;
   clearBlacklistedPosts: () => void;
+  exportInstagramBlacklist: () => string;
+  importInstagramBlacklist: (json: string) => number;
 }
 
 export const useInstagramBlacklistStore = create<InstagramBlacklistState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       blacklistedUsers: new Set(),
       blacklistedPosts: new Set(),
       addUser: (username) =>
@@ -44,6 +46,32 @@ export const useInstagramBlacklistStore = create<InstagramBlacklistState>()(
           return { blacklistedPosts: newSet };
         }),
       clearBlacklistedPosts: () => set({ blacklistedPosts: new Set() }),
+      
+      exportInstagramBlacklist: () => {
+          const state = get();
+          return JSON.stringify({
+              blacklistedPosts: Array.from(state.blacklistedPosts),
+              // blacklistedUsers: Array.from(state.blacklistedUsers)
+          }, null, 2);
+      },
+      
+      importInstagramBlacklist: (json) => {
+          try {
+              const data = JSON.parse(json);
+              if (Array.isArray(data.blacklistedPosts)) {
+                  set((state) => {
+                      const newSet = new Set(state.blacklistedPosts);
+                      data.blacklistedPosts.forEach((url: string) => newSet.add(url));
+                      return { blacklistedPosts: newSet };
+                  });
+                  return data.blacklistedPosts.length;
+              }
+              return 0;
+          } catch (e) {
+              console.error("Import failed", e);
+              return 0;
+          }
+      }
     }),
     {
       name: 'instagram-blacklist-storage-v2',

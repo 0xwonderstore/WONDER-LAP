@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useRef, Suspense, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Moon, Sun, Sparkles, Heart, LayoutDashboard, EyeOff, Instagram, Trash2, CheckSquare } from 'lucide-react';
+import { Sparkles, Heart, LayoutDashboard, EyeOff, Instagram, Trash2, CheckSquare } from 'lucide-react';
 import { loadProducts, LoadProductsResult } from './utils/productLoader';
 import { filterProducts, searchProducts } from './utils/productUtils';
 import { useFavoritesStore } from './stores/favoritesStore';
@@ -36,8 +36,10 @@ type Page = 'home' | 'favorites' | 'dashboard' | 'blacklist' | 'instagram' | 'ti
 type InitialFilter = { name?: string; store?: string | string[]; language?: string | string[] };
 
 const LoadingFallback: React.FC = () => (
-  <div className="flex justify-center items-center h-96">
-    <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-primary border-t-transparent"></div>
+  <div className="content-spinner-container">
+    <div className="spinner">
+      <div className="spinner1"></div>
+    </div>
   </div>
 );
 
@@ -65,7 +67,7 @@ const App: React.FC = () => {
     queryKey: ['instagramPosts'],
     queryFn: loadInstagramPosts,
     staleTime: Infinity,
-    gcTime: Infinity
+    gcTime: Infinity,
   });
 
   const uniqueProducts: Product[] = useMemo(() => productData?.uniqueProducts || [], [productData]);
@@ -107,17 +109,53 @@ const App: React.FC = () => {
 
   const filteredProducts = useMemo(() => {
     let products = uniqueProducts;
-    const hiddenSet = new Set(hiddenProducts);
-    products = products.filter(p => !hiddenSet.has(p.url) && !pendingProductIds.has(p.url));
-    products = filterProducts(products, blacklistedKeywords, blockedStores);
+    
+    // Safety check for huge arrays
+    if (!products || products.length === 0) return [];
+
+    // Re-enabled Hidden/Blacklist filtering
+    const hiddenSet = new Set(hiddenProducts || []);
+    
+    products = products.filter(p => {
+        // Safe check for URL existence
+        if (!p.url) return false;
+        
+        // Skip hidden and pending items
+        if (hiddenSet.has(p.url)) return false;
+        if (pendingProductIds.has(p.url)) return false;
+        
+        // Basic blacklist check (Stores)
+        if (blockedStores && blockedStores.includes(p.vendor)) return false;
+        
+        // Keyword check (simplified for performance)
+        if (blacklistedKeywords && blacklistedKeywords.length > 0) {
+            const titleLower = p.title ? p.title.toLowerCase() : '';
+            if (blacklistedKeywords.some(k => titleLower.includes(k.toLowerCase()))) return false;
+        }
+        return true;
+    });
+
     if (filters.name) products = searchProducts(products, filters.name);
     // @ts-ignore
-    if (filters.store.length > 0) products = products.filter(p => filters.store.includes(p.vendor));
+    if (filters.store && filters.store.length > 0) products = products.filter(p => filters.store.includes(p.vendor));
     // @ts-ignore
-    if (filters.language.length > 0) products = products.filter(p => filters.language.includes(p.language));
-    if (dateRange?.from) products = products.filter(p => new Date(p.created_at) >= dateRange.from!);
-    if (dateRange?.to) products = products.filter(p => new Date(p.created_at) <= dateRange.to!);
-    return products.sort((a, b) => (new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()));
+    if (filters.language && filters.language.length > 0) products = products.filter(p => filters.language.includes(p.language));
+    
+    if (dateRange?.from) {
+        const fromTime = dateRange.from.getTime();
+        products = products.filter(p => new Date(p.created_at).getTime() >= fromTime);
+    }
+    if (dateRange?.to) {
+        const toTime = dateRange.to.getTime();
+        products = products.filter(p => new Date(p.created_at).getTime() <= toTime);
+    }
+    
+    // Sort a copy to be safe
+    return [...products].sort((a, b) => {
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return dateB - dateA;
+    });
   }, [uniqueProducts, blacklistedKeywords, blockedStores, hiddenProducts, pendingProductIds, filters, dateRange]);
 
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
@@ -146,12 +184,19 @@ const App: React.FC = () => {
     }, 5000);
   };
 
+  const handleHideProduct = (url: string) => {
+    processPendingHides([url]);
+  };
+
+  // --- Simplified Navbar Button ---
   const NavbarButton: React.FC<{ onClick: () => void; isActive: boolean; icon: React.ReactNode; label: string; count?: number; className?: string }> = 
     ({ onClick, isActive, icon, label, count, className }) => (
     <button className={`uiverse-nav-button ${className} ${isActive ? 'active' : ''}`} onClick={onClick}>
        <div className="uiverse-nav-icon">{icon}</div>
        <span className="uiverse-nav-label">{label}</span>
-       {count !== undefined && count > 0 && <span className="nav-badge-uiverse">{count}</span>}
+       {count !== undefined && count > 0 && (
+         <span className="nav-badge-simple">{count}</span>
+       )}
     </button>
   );
 
@@ -175,7 +220,7 @@ const App: React.FC = () => {
                  <FilterComponent t={t} stores={uniqueStores} languages={availableLanguages} languageCounts={languageCounts} filters={filters} date={dateRange} setDate={setDateRange} onFilterChange={handleFilterChange} onResetFilters={handleResetFilters} viewMode={viewMode} onViewModeChange={setViewMode} productsPerPage={productsPerPage} onPostsPerPageChange={setProductsPerPage} />
                 {isLoading ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">{Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}</div> : currentProducts.length > 0 ? (
                     <>
-                        {viewMode === 'grid' ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">{currentProducts.map(p => <div key={p.url} className="animate-fade-in-up"><ProductCard product={p} t={t} onNavigateWithFilter={navigateToHomeWithFilter} onHideProduct={(url) => processPendingHides([url])} /></div>)}</div> : <ProductTable products={currentProducts} t={t} onNavigateWithFilter={navigateToHomeWithFilter} />}
+                        {viewMode === 'grid' ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">{currentProducts.map(p => <div key={p.url} className="animate-fade-in-up"><ProductCard product={p} t={t} onNavigateWithFilter={navigateToHomeWithFilter} /></div>)}</div> : <ProductTable products={currentProducts} t={t} onNavigateWithFilter={navigateToHomeWithFilter} />}
                         <Pagination currentPage={productsPage} totalPages={totalPages} onPageChange={setProductsPage} totalItems={filteredProducts.length} itemsPerPage={productsPerPage} />
                     </>
                 ) : <EmptyState title={t.noResults} hint={t.noResultsHint} />}
@@ -203,9 +248,30 @@ const App: React.FC = () => {
             <NavbarButton className="btn-hidden" onClick={() => navigateTo('hidden')} isActive={currentPage === 'hidden'} icon={<Trash2 size={20} />} label={t.hidden_items} count={hiddenProducts.length + blacklistedPosts.size} />
             <NavbarButton className="btn-favorites" onClick={() => navigateTo('favorites')} isActive={currentPage === 'favorites'} icon={<Heart size={20} className={currentPage === 'favorites' ? 'fill-white' : ''} />} label={t.favorites} count={favoriteUrls.size} />
             
-            <button onClick={() => setDarkMode(d => !d)} className="w-[50px] h-[50px] rounded-full bg-white dark:bg-gray-800 flex items-center justify-center shadow-lg hover:scale-110 transition-all border border-gray-100 dark:border-gray-700">
-                {darkMode ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-900" />}
-            </button>
+            {/* Theme Toggle */}
+            <label className="theme-switch">
+                <input type="checkbox" className="theme-switch__checkbox" checked={darkMode} onChange={() => setDarkMode(d => !d)} />
+                <div className="theme-switch__container">
+                    <div className="theme-switch__clouds"></div>
+                    <div className="theme-switch__stars-container">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none">
+                            <path d="M43 20L44.5 16.5L48 15L44.5 13.5L43 10L41.5 13.5L38 15L41.5 16.5L43 20Z" fill="currentColor"/>
+                            <path d="M103 26L104.5 22.5L108 21L104.5 19.5L103 16L101.5 19.5L98 21L101.5 22.5L103 26Z" fill="currentColor"/>
+                            <path d="M22 35L22.75 33.25L24.5 32.5L22.75 31.75L22 30L21.25 31.75L19.5 32.5L21.25 33.25L22 35Z" fill="currentColor"/>
+                            <path d="M125 15L125.75 13.25L127.5 12.5L125.75 11.75L125 10L124.25 11.75L122.5 12.5L124.25 13.25L125 15Z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <div className="theme-switch__circle-container">
+                        <div className="theme-switch__sun-moon-container">
+                            <div className="theme-switch__moon">
+                                <div className="theme-switch__spot"></div>
+                                <div className="theme-switch__spot"></div>
+                                <div className="theme-switch__spot"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </label>
           </div>
         </header>
         <Suspense fallback={<LoadingFallback />}>{renderContent()}</Suspense>
