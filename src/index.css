@@ -14,18 +14,18 @@
 
   body:not(.dark) {
      background-size: 200% 200%;
-     background-image: linear-gradient(to right bottom, #f3e8ff, #e9d5ff, #f3e8ff);
-     animation: move-bg 20s ease-in-out infinite;
+     background-image: linear-gradient(to right bottom, #ffffff, #f8fafc, #f0f9ff);
+     animation: move-bg 30s ease-in-out infinite;
   }
   
   .dark body {
     background-color: #000000;
     background-image: 
-        radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.2) 0%, transparent 50%), 
-        radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.2) 0%, transparent 50%), 
-        radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%);
+        radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%), 
+        radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.15) 0%, transparent 50%), 
+        radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
     background-size: 150% 150%;
-    animation: move-shapes 15s ease-in-out infinite alternate;
+    animation: move-shapes 20s ease-in-out infinite alternate;
   }
 }
 
@@ -212,19 +212,18 @@
   to { -webkit-transform: scale(0.8); transform: scale(0.8); opacity: 0; }
 }
 
-/* --- UI Copy/Share Button --- */
+/* --- UI Copy/Share Button (Optimized) --- */
 .copy {
-  /* button */
-  --button-bg: rgba(255, 255, 255, 0.8);
+  --button-bg: rgba(255, 255, 255, 0.95);
   --button-hover-bg: #ffffff;
   --button-text-color: #333333;
   --button-hover-text-color: #3b82f6;
-  --button-border-radius: 9999px; /* Fully rounded */
+  --button-border-radius: 9999px;
   --button-diameter: 36px;
   --button-outline-width: 1px;
-  --button-outline-color: rgb(141, 141, 141);
+  --button-outline-color: rgb(229, 231, 235);
   /* tooltip */
-  --tooltip-bg: #f4f3f3;
+  --tooltip-bg: #ffffff;
   --toolptip-border-radius: 4px;
   --tooltip-font-family: 'Tajawal', sans-serif;
   --tooltip-font-size: 12px;
@@ -232,6 +231,22 @@
   --tooltip-padding-x: 7px;
   --tooltip-padding-y: 7px;
   --tooltip-offset: 8px;
+  
+  box-sizing: border-box;
+  width: var(--button-diameter);
+  height: var(--button-diameter);
+  border-radius: var(--button-border-radius);
+  background-color: var(--button-bg);
+  color: var(--button-text-color);
+  border: 1px solid var(--button-outline-color);
+  cursor: pointer;
+  position: relative;
+  outline: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
 }
 
 .dark .copy {
@@ -240,25 +255,6 @@
     --button-text-color: #e5e5e5;
     --button-outline-color: #d4d4d8;
     --button-hover-text-color: #60a5fa;
-}
-
-.copy {
-  box-sizing: border-box;
-  width: var(--button-diameter);
-  height: var(--button-diameter);
-  border-radius: var(--button-border-radius);
-  background-color: var(--button-bg);
-  color: var(--button-text-color);
-  border: none;
-  cursor: pointer;
-  position: relative;
-  outline: none;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  backdrop-filter: blur(8px); /* Modern glass effect */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
 }
 
 .copy:hover {
@@ -286,7 +282,8 @@
   pointer-events: none;
   transition: all var(--tooltip-transition-duration, 0.3s) cubic-bezier(0.68, -0.55, 0.265, 1.55);
   z-index: 100;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f3f4f6;
 }
 
 .tooltip::before {
@@ -304,6 +301,8 @@
   transform: translateX(-50%) rotate(45deg);
   z-index: -999;
   pointer-events: none;
+  border-bottom: 1px solid #f3f4f6;
+  border-right: 1px solid #f3f4f6;
 }
 
 .copy svg {
@@ -322,24 +321,11 @@
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.copy .checkmark {
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.5);
-}
-
-.copy:focus:not(:focus-visible) .clipboard {
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.5);
-}
-
-.copy:focus:not(:focus-visible) .checkmark {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-}
-
+.copy .checkmark { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+.copy:focus:not(:focus-visible) .clipboard { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+.copy:focus:not(:focus-visible) .checkmark { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
 /* actions */
-
 .copy:hover .tooltip,
 .copy:focus:not(:focus-visible) .tooltip {
   opacity: 1;
@@ -360,27 +346,30 @@
   color: var(--button-hover-text-color);
 }
 
-/* Glass wrapper for Bookmark to match Copy button style if needed */
+/* Glass wrapper for Bookmark */
 .glass-btn-wrapper {
   width: 36px;
   height: 36px;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid #e5e7eb;
   border-radius: 50%;
   backdrop-filter: blur(8px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   transition: all 0.3s ease;
 }
 
 .dark .glass-btn-wrapper {
   background-color: rgba(0, 0, 0, 0.6);
+  border-color: #3f3f46;
 }
 
 .glass-btn-wrapper:hover {
   background-color: #ffffff;
   transform: scale(1.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 .dark .glass-btn-wrapper:hover {
   background-color: rgba(0, 0, 0, 0.8);
@@ -391,13 +380,13 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: rgb(20, 20, 20);
-  border: none;
+  background-color: #ffffff;
+  border: 1px solid #f3f4f6;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.164);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   transition-duration: .3s;
   position: relative;
@@ -406,6 +395,7 @@
 
 .dark .uiverse-nav-button {
     background-color: #1a1a1a;
+    border-color: #333;
     box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.4);
 }
 
@@ -413,24 +403,28 @@
   width: 20px;
   height: 20px;
   transition-duration: .3s;
-  color: white;
+  color: #4b5563;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
 }
 
+.dark .uiverse-nav-icon { color: white; }
+
 .uiverse-nav-button:hover {
   width: 140px;
   border-radius: 50px;
   transition-duration: .3s;
   background: var(--hover-bg, #784ba0);
+  border-color: transparent;
 }
 
 .uiverse-nav-button:hover .uiverse-nav-icon {
   width: 40px;
   transition-duration: .3s;
   transform: translateY(60%);
+  color: white;
 }
 
 .uiverse-nav-label {
@@ -457,9 +451,11 @@
 .uiverse-nav-button.active {
     background: var(--hover-bg, #784ba0);
     box-shadow: 0 0 20px var(--glow-color, rgba(120, 75, 160, 0.5));
+    border-color: transparent;
 }
+.uiverse-nav-button.active .uiverse-nav-icon { color: white; }
 
-/* Simple, clean badge */
+/* Badge */
 .nav-badge-simple {
     position: absolute;
     top: -2px;
@@ -475,11 +471,12 @@
     align-items: center;
     justify-content: center;
     z-index: 11;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    border: 2px solid #1a1a1a; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border: 2px solid #ffffff; 
 }
 .dark .nav-badge-simple {
     border-color: #1a1a1a;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
 /* Button Colors */
@@ -510,7 +507,7 @@
 .uiverse-hide-button:hover .uiverse-nav-icon { transform: translateY(60%); }
 .uiverse-hide-button:hover .uiverse-nav-label { font-size: 11px; transform: translateY(32px); }
 
-/* Content Spinner */
+/* --- New Search Bar Loader (Uiverse.io by vinodjangid07) --- */
 .content-spinner-container {
   display: flex;
   justify-content: center;
@@ -518,31 +515,67 @@
   min-height: 400px;
   width: 100%;
 }
-.spinner {
-  background-image: linear-gradient(rgb(186, 66, 255) 35%, rgb(0, 225, 255));
-  width: 100px;
-  height: 100px;
-  animation: spinning82341 1.7s linear infinite;
-  text-align: center;
-  border-radius: 50%;
-  filter: blur(1px);
-  box-shadow: 0px -5px 20px 0px rgb(186, 66, 255), 0px 5px 20px 0px rgb(0, 225, 255);
-  position: relative;
+
+.loader {
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
 }
-.spinner1 {
-  background-color: rgb(36, 36, 36);
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  filter: blur(10px);
+.loaderMiniContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 130px;
+  height: fit-content;
+}
+.barContainer {
+  width: 100%;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 10px;
+  background-position: left;
+}
+.bar {
+  width: 100%;
+  height: 8px;
+  background: linear-gradient(
+    to right,
+    rgb(161, 94, 255),
+    rgb(217, 190, 255),
+    rgb(161, 94, 255)
+  );
+  background-size: 200% 100%;
+  border-radius: 10px;
+  animation: bar ease-in-out 3s infinite alternate-reverse;
+}
+@keyframes bar {
+  0% { background-position: left; }
+  100% { background-position: right; }
+}
+.bar2 { width: 50%; }
+.svgIcon {
   position: absolute;
+  left: -25px;
+  margin-top: 18px;
+  z-index: 2;
+  width: 70%;
+  animation: search ease-in-out 3s infinite alternate-reverse;
 }
-.dark .spinner1 { background-color: #1a1a1a; }
-.light .spinner1 { background-color: #f3e8ff; }
-@keyframes spinning82341 { to { transform: rotate(360deg); } }
+@keyframes search {
+  0% { transform: translateX(0%) rotate(70deg); }
+  100% { transform: translateX(100px) rotate(10deg); }
+}
+.svgIcon circle,
+.svgIcon line {
+  stroke: rgb(162, 55, 255);
+}
+.svgIcon circle {
+  fill: rgba(98, 65, 142, 0.238);
+}
 
 @layer utilities {
   @keyframes move-bg {

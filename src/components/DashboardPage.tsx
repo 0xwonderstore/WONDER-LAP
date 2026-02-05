@@ -1,55 +1,38 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Product, StoreRow, KeywordItem, LanguageItem, ActiveView } from '../types';
-import { TrendingUp, Package, Store, Globe, Tag, Download, Filter } from 'lucide-react';
-import { subDays, format, parseISO, eachDayOfInterval } from 'date-fns';
-import SegmentedControl from './SegmentedControl';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Package, TrendingUp, Filter, Instagram, Facebook, Activity, Layers, Tag, Globe, Languages, Download, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Product, InstagramPost, FacebookPost } from '../types';
 import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
-import { useDashboardStore } from '../stores/dashboardStore';
-import DashboardSettings from './DashboardSettings';
+import { useDashboardData } from '../hooks/useDashboardData';
 import KpiCard from './dashboard/KpiCard';
 import Chart from './dashboard/Chart';
+import SmartInstagramTable from './dashboard/SmartInstagramTable';
+import SmartFacebookTable from './dashboard/SmartFacebookTable'; // Import new component
 import { StoreTable, KeywordList, LanguageList } from './dashboard/TabbedLists';
-import { KpiCardSkeleton, ChartSkeleton, TableSkeleton } from './dashboard/DashboardSkeletons';
+import { useQuery } from '@tanstack/react-query';
+import { loadInstagramPosts } from '../utils/instagramLoader';
+import { loadFacebookPosts } from '../utils/facebookLoader'; // Import loader
+import DashboardSettings from './DashboardSettings';
 
-// --- Animation Variants ---
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.07, delayChildren: 0.1 },
-  },
+const fadeIn = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
 };
 
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100 } },
-};
-
-
-// --- Type Definitions ---
-interface DashboardPageProps {
-  products: Product[];
-  allProductsRaw: Product[];
-  totalBeforeFilter: number;
-  onNavigateWithFilter: (filter: { name?: string; store?: string; language?: string }) => void;
-  isLoading: boolean;
-}
-
-// --- Utility Function ---
-const exportToCsv = (data: StoreRow[], filename: string) => {
-  if (data.length === 0) return;
+const exportToCsv = (data: any[], filename: string) => {
+  if (!data || data.length === 0) return;
   const headers = Object.keys(data[0]);
   const csvRows = [headers.join(',')];
   for (const row of data) {
     const values = headers.map(header => {
-      const escaped = ('' + row[header as keyof StoreRow]).replace(/"/g, '\\"');
+      const val = row[header as keyof any];
+      const escaped = ('' + (val !== null && val !== undefined ? val : '')).replace(/"/g, '\\"');
       return `"${escaped}"`;
     });
     csvRows.push(values.join(','));
   }
-  const csvString = csvRows.join('\\n');
+  const csvString = csvRows.join('\n');
   const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
@@ -59,188 +42,180 @@ const exportToCsv = (data: StoreRow[], filename: string) => {
   document.body.removeChild(link);
 };
 
-// --- Main Component ---
-const DashboardPage: React.FC<DashboardPageProps> = ({ products, allProductsRaw, totalBeforeFilter, onNavigateWithFilter, isLoading }) => {
+const EnhancedKpiCard = ({ title, value, icon, color, growth }: any) => (
+    <div className={`bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 relative overflow-hidden group hover:shadow-md transition-all duration-300`}>
+        <div className={`absolute top-0 right-0 w-24 h-24 bg-${color}-500/5 rounded-bl-full transition-transform group-hover:scale-110`}></div>
+        <div className="relative z-10 flex justify-between items-start">
+            <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{title}</p>
+                <h3 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">{value.toLocaleString()}</h3>
+                
+                {growth !== undefined && (
+                    <div className={`flex items-center gap-1 mt-2 text-xs font-bold ${growth >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {growth >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                        <span>{Math.abs(growth).toFixed(1)}% vs last 30d</span>
+                    </div>
+                )}
+            </div>
+            <div className={`p-3 rounded-xl bg-${color}-50 dark:bg-${color}-900/20 text-${color}-500 shadow-sm`}>
+                {icon}
+            </div>
+        </div>
+    </div>
+);
+
+interface DashboardPageProps {
+  products: Product[];
+  allProductsRaw: Product[];
+  totalBeforeFilter: number;
+  onNavigateWithFilter: any;
+  isLoading: boolean;
+}
+
+const DashboardPage: React.FC<DashboardPageProps> = ({ products, onNavigateWithFilter }) => {
   const { language } = useLanguageStore();
-  const { tabVisibility } = useDashboardStore();
-  const t = translations[language];
+  const t = translations[language] as any;
+  const [activeTab, setActiveTab] = useState<'instagram' | 'facebook' | 'stores' | 'keywords' | 'languages'>('instagram');
 
-  const availableTabs = useMemo(() => [
-    { id: 'stores' as ActiveView, label: t.dashboard_topStores, icon: <Store size={18} /> },
-    { id: 'keywords' as ActiveView, label: t.dashboard_topKeywords, icon: <Tag size={18} /> },
-    { id: 'languages' as ActiveView, label: t.dashboard_topLanguages, icon: <Globe size={18} /> },
-  ].filter(tab => tabVisibility[tab.id as keyof typeof tabVisibility]), [t, tabVisibility]);
+  const { data: instagramPosts = [] } = useQuery<InstagramPost[]>({
+    queryKey: ['instagramPosts'],
+    queryFn: loadInstagramPosts,
+    staleTime: Infinity,
+    gcTime: Infinity
+  });
 
-  const [activeView, setActiveView] = useState<ActiveView>('stores');
+  const { data: facebookPosts = [] } = useQuery<FacebookPost[]>({
+    queryKey: ['facebookPosts'],
+    queryFn: loadFacebookPosts,
+    staleTime: Infinity,
+    gcTime: Infinity
+  });
 
-  useEffect(() => {
-    if (availableTabs.length > 0 && !availableTabs.some(tab => tab.id === activeView)) {
-      setActiveView(availableTabs[0].id);
-    } else if (availableTabs.length === 0) {
-      // Handle case where no tabs are visible, maybe set a default or show a message
-    }
-  }, [availableTabs, activeView]);
+  const { 
+      kpi, 
+      chartData, 
+      visibleInstagramAccounts, 
+      allInstagramAccounts,
+      allFacebookPages, // Get FB data
+      topStores, 
+      topLanguages,
+      topKeywords 
+  } = useDashboardData(products, instagramPosts, facebookPosts);
 
-
-  const { kpiData, storeTableData, keywordData, languageData, chartData } = useMemo(() => {
-    if (!products || !allProductsRaw) {
-        return { kpiData: { totalProducts: 0, totalStores: 0, newProducts30d: 0 }, storeTableData: [], keywordData: [], languageData: [], chartData: [] };
-    }
-
-    const now = new Date();
-    const thirtyDaysAgo = subDays(now, 30);
-    const sixtyDaysAgo = subDays(now, 60);
-    const ninetyDaysAgo = subDays(now, 90);
-    const oneEightyDaysAgo = subDays(now, 180);
-
-    const getRecentProductReducer = (period: Date) => {
-        return products.reduce((acc, p) => {
-            if (p.vendor && p.created_at && parseISO(p.created_at) >= period) {
-                acc[p.vendor] = (acc[p.vendor] || 0) + 1;
-            }
-            return acc;
-        }, {} as {[k: string]: number});
-    };
-
-    const storeNewProductCounts30d = getRecentProductReducer(thirtyDaysAgo);
-    const storeNewProductCounts60d = getRecentProductReducer(sixtyDaysAgo);
-    const storeNewProductCounts90d = getRecentProductReducer(ninetyDaysAgo);
-    const storeNewProductCounts180d = getRecentProductReducer(oneEightyDaysAgo);
-
-    const uniqueStores = new Set(products.map(p => p.vendor).filter(Boolean));
-    const storeProductCounts = allProductsRaw.reduce((acc, p) => { if(p.vendor) acc[p.vendor] = (acc[p.vendor] || 0) + 1; return acc; }, {} as {[k: string]: number});
-    
-    const productDatesByStore = products.reduce((acc, p) => {
-        if (p.vendor && p.created_at) {
-            if (!acc[p.vendor]) acc[p.vendor] = [];
-            acc[p.vendor].push(parseISO(p.created_at));
-        }
-        return acc;
-    }, {} as {[key: string]: Date[]});
-
-    const storeDateInfo = Object.entries(productDatesByStore).reduce((acc, [vendor, dates]) => {
-        dates.sort((a, b) => a.getTime() - b.getTime());
-        acc[vendor] = { first: dates[0], last: dates[dates.length - 1] };
-        return acc;
-    }, {} as {[key: string]: {first: Date, last: Date}});
-
-    const keywordCounts = products.reduce((acc, p) => {
-        (p.name || '').toLowerCase().split(/[\\s,،-]+/).forEach(word => {
-            if (word && word.length > 3 && !/\\d/.test(word)) {
-                acc.set(word, (acc.get(word) || 0) + 1);
-            }
-        });
-        return acc;
-    }, new Map<string, number>());
-
-    const productsByDate = products.reduce((acc, product) => {
-        if (product.created_at) {
-            const date = format(parseISO(product.created_at), 'yyyy-MM-dd');
-            acc[date] = (acc[date] || 0) + 1;
-        }
-        return acc;
-    }, {} as {[key: string]: number});
-
-    const calculatedChartData = eachDayOfInterval({ start: thirtyDaysAgo, end: now }).map(date => ({
-        date: format(date, 'MMM dd'),
-        count: productsByDate[format(date, 'yyyy-MM-dd')] || 0,
-    }));
-
-    return {
-        kpiData: { totalProducts: products.length, totalStores: uniqueStores.size, newProducts30d: Object.values(storeNewProductCounts30d).reduce((a, b) => a + b, 0) },
-        storeTableData: Object.entries(storeProductCounts)
-            .map(([vendor, count]): StoreRow => {
-                const newProducts30d = storeNewProductCounts30d[vendor] || 0;
-                const newProducts60d = storeNewProductCounts60d[vendor] || 0;
-                const newProducts90d = storeNewProductCounts90d[vendor] || 0;
-                const newProducts180d = storeNewProductCounts180d[vendor] || 0;
-
-                return {
-                    vendor,
-                    totalProducts: count,
-                    newProducts30d,
-                    newProducts60d,
-                    newProducts90d,
-                    newProducts180d,
-                    newProducts30dPercentage: count > 0 ? (newProducts30d / count) * 100 : 0,
-                    newProducts60dPercentage: count > 0 ? (newProducts60d / count) * 100 : 0,
-                    newProducts90dPercentage: count > 0 ? (newProducts90d / count) * 100 : 0,
-                    newProducts180dPercentage: count > 0 ? (newProducts180d / count) * 100 : 0,
-                    activityRate30d: count > 0 ? (newProducts30d / count) * 100 : 0,
-                    activityRate60d: count > 0 ? (newProducts60d / count) * 100 : 0,
-                    activityRate90d: count > 0 ? (newProducts90d / count) * 100 : 0,
-                    activityRate180d: count > 0 ? (newProducts180d / count) * 100 : 0,
-                    lastProductAdded: storeDateInfo[vendor] ? format(storeDateInfo[vendor].last, 'yyyy-MM-dd') : 'N/A',
-                    firstProductAdded: storeDateInfo[vendor] ? format(storeDateInfo[vendor].first, 'yyyy-MM-dd') : 'N/A',
-                }
-            })
-            .sort((a, b) => b.totalProducts - a.totalProducts),
-        keywordData: Array.from(keywordCounts.entries()).map(([text, value]): KeywordItem => ({ text, value })).sort((a,b) => b.value - a.value).slice(0, 20),
-        languageData: Object.entries(products.reduce((acc, p) => { if(p.language) acc[p.language] = (acc[p.language] || 0) + 1; return acc; }, {} as {[k: string]: number}))
-          .map(([code, count]): LanguageItem => ({ code, count })).sort((a, b) => b.count - a.count).slice(0, 20),
-        chartData: calculatedChartData
-    };
-  }, [products, allProductsRaw]);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => <motion.div variants={itemVariants} key={i}><KpiCardSkeleton /></motion.div>)}
-        </motion.div>
-        <motion.div variants={itemVariants}><ChartSkeleton /></motion.div>
-        <motion.div variants={itemVariants} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-          <TableSkeleton />
-        </motion.div>
-      </div>
-    );
-  }
+  const handleExport = () => {
+      if (activeTab === 'stores') exportToCsv(topStores, 'stores_data.csv');
+      else if (activeTab === 'instagram') {
+          const exportData = allInstagramAccounts.map(acc => ({
+              ...acc,
+              firstPost: acc.firstPost ? acc.firstPost.toISOString().split('T')[0] : '',
+              lastPost: acc.lastPost ? acc.lastPost.toISOString().split('T')[0] : '',
+              timestamps: ''
+          }));
+          exportToCsv(exportData, 'instagram_accounts_full.csv');
+      } else if (activeTab === 'facebook') {
+          const exportData = allFacebookPages.map(acc => ({
+              ...acc,
+              firstPost: acc.firstPost ? acc.firstPost.toISOString().split('T')[0] : '',
+              lastPost: acc.lastPost ? acc.lastPost.toISOString().split('T')[0] : '',
+              timestamps: ''
+          }));
+          exportToCsv(exportData, 'facebook_pages_full.csv');
+      } else if (activeTab === 'keywords') {
+          exportToCsv(topKeywords, 'top_keywords.csv');
+      }
+  };
 
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6 pb-12">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KpiCard title={t.dashboard_totalProductsAll} value={totalBeforeFilter} icon={<Package />} color="rose" />
-        <KpiCard title={t.dashboard_totalProductsUnique} value={kpiData.totalProducts} icon={<Filter />} color="amber" />
-        <KpiCard title={t.dashboard_newProducts30d} value={kpiData.newProducts30d} icon={<TrendingUp />} color="teal" />
-        <KpiCard title={t.dashboard_totalStores} value={kpiData.totalStores} icon={<Store />} color="indigo" />
+    <motion.div 
+       initial="hidden" 
+       animate="visible" 
+       variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
+       className="space-y-8 pb-12"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+         <motion.div variants={fadeIn}>
+            <EnhancedKpiCard title={t.dashboard_totalProductsAll} value={kpi.totalProducts} icon={<Package />} color="indigo" />
+         </motion.div>
+         <motion.div variants={fadeIn}>
+            <EnhancedKpiCard title={t.instagram_feature} value={kpi.totalPosts} icon={<Instagram />} color="pink" />
+         </motion.div>
+         <motion.div variants={fadeIn}>
+            <EnhancedKpiCard title={t.dashboard_newProducts30d} value={kpi.newProducts30d} icon={<TrendingUp />} color="teal" growth={kpi.productsGrowth} />
+         </motion.div>
+         <motion.div variants={fadeIn}>
+            <EnhancedKpiCard title="Total Languages" value={kpi.totalLanguages} icon={<Languages />} color="orange" />
+         </motion.div>
       </div>
 
-      {/* Chart Section */}
-      <motion.div variants={itemVariants}>
-        <Chart data={chartData} title={t.productsTrend} />
+      <motion.div variants={fadeIn}>
+         <Chart data={chartData} title={t.productsTrend} t={t} />
       </motion.div>
 
-      {/* Table Section */}
-      <motion.div variants={itemVariants} className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg">
-        <div className="p-6 flex flex-col sm:flex-row justify-between items-center border-b border-gray-100 dark:border-gray-700 gap-4">
-          {availableTabs.length > 0 && <SegmentedControl tabs={availableTabs} activeTab={activeView} onTabChange={setActiveView} />}
-          <div className="flex items-center gap-3">
-            {activeView === 'stores' && 
-              <button 
-                onClick={() => exportToCsv(storeTableData, 'stores_data.csv')} 
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium text-sm"
-              >
-                <Download size={18} /> 
-                <span className="hidden sm:inline">{t.exportData}</span>
-              </button>
-            }
-            <DashboardSettings />
-          </div>
+      <motion.div variants={fadeIn} className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-gray-800 p-2 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <div className="flex flex-wrap justify-center sm:justify-start gap-1 w-full sm:w-auto">
+                {[
+                    { id: 'instagram', label: t.instagram_feature, icon: <Instagram size={16} /> },
+                    { id: 'facebook', label: 'Facebook', icon: <Facebook size={16} /> }, // New Tab
+                    { id: 'stores', label: t.store, icon: <Layers size={16} /> },
+                    { id: 'keywords', label: 'Keywords', icon: <Filter size={16} /> },
+                    { id: 'languages', label: t.language_filter, icon: <Globe size={16} /> }
+                ].map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as any)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
+                            activeTab === tab.id 
+                            ? 'bg-indigo-600 text-white shadow-md' 
+                            : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-400'
+                        }`}
+                    >
+                        {tab.icon} {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end px-2">
+                {(activeTab === 'stores' || activeTab === 'instagram' || activeTab === 'facebook' || activeTab === 'keywords') && (
+                    <button 
+                        onClick={handleExport}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors font-medium text-xs border border-gray-200 dark:border-gray-600"
+                    >
+                        <Download size={14} /> 
+                        <span>{t.exportData || 'Export CSV'}</span>
+                    </button>
+                )}
+                {activeTab === 'stores' && <DashboardSettings />}
+            </div>
         </div>
-        <AnimatePresence mode="wait">
-          <motion.div 
-            key={activeView} 
-            initial={{ opacity: 0, y: 10 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            exit={{ opacity: 0, y: -10 }} 
-            transition={{ duration: 0.2 }}
-          >
-            {activeView === 'stores' && <StoreTable data={storeTableData} t={t} onNavigateWithFilter={onNavigateWithFilter} totalProductsSum={totalBeforeFilter} />}
-            {activeView === 'keywords' && <KeywordList data={keywordData} t={t} onNavigateWithFilter={onNavigateWithFilter} />}
-            {activeView === 'languages' && <LanguageList data={languageData} t={t} onNavigateWithFilter={onNavigateWithFilter} />}
-          </motion.div>
-        </AnimatePresence>
+
+        <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+        >
+            {activeTab === 'instagram' && <SmartInstagramTable accounts={visibleInstagramAccounts} t={t} />}
+            
+            {activeTab === 'facebook' && <SmartFacebookTable pages={allFacebookPages} t={t} />} {/* New Table */}
+            
+            {activeTab === 'stores' && (
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <StoreTable data={topStores as any} t={t} onNavigateWithFilter={onNavigateWithFilter} totalProductsSum={kpi.totalProducts} />
+                </div>
+            )}
+            {activeTab === 'keywords' && (
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                   <KeywordList data={topKeywords} t={t} onNavigateWithFilter={onNavigateWithFilter} />
+                </div>
+            )}
+            {activeTab === 'languages' && (
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <LanguageList data={topLanguages} t={t} onNavigateWithFilter={onNavigateWithFilter} />
+                </div>
+            )}
+        </motion.div>
       </motion.div>
     </motion.div>
   );

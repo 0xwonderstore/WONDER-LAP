@@ -1,8 +1,8 @@
 import React, { useMemo, useState, useRef, Suspense, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Sparkles, Heart, LayoutDashboard, EyeOff, Instagram, Trash2, CheckSquare } from 'lucide-react';
+import { Sparkles, Heart, LayoutDashboard, EyeOff, Instagram, Trash2, CheckSquare, Facebook } from 'lucide-react';
 import { loadProducts, LoadProductsResult } from './utils/productLoader';
-import { filterProducts, searchProducts } from './utils/productUtils';
+import { searchProducts } from './utils/productUtils';
 import { useFavoritesStore } from './stores/favoritesStore';
 import { useLanguageStore } from './stores/languageStore';
 import { useBlacklistStore } from './stores/blacklistStore';
@@ -17,30 +17,45 @@ import FilterComponent from './components/FilterComponent';
 import Toast from './components/Toast';
 import { DateRange } from 'react-day-picker';
 import ProductCardSkeleton from './components/ProductCardSkeleton';
-import { Product, InstagramPost } from './types';
+import { Product, InstagramPost, FacebookPost } from './types';
 import { useInstagramBlacklistStore } from './stores/instagramBlacklistStore';
 import { loadInstagramPosts } from './utils/instagramLoader';
+import { loadFacebookPosts } from './utils/facebookLoader'; // Import
 import ThemeToggle from './components/ThemeToggle';
 import { useTranslation } from 'react-i18next';
 
-// --- Lazy Imports ---
+// Lazy load heavy pages
 const FavoritesPage = React.lazy(() => import('./components/FavoritesPage'));
 const DashboardPage = React.lazy(() => import('./components/DashboardPage'));
 const BlacklistPage = React.lazy(() => import('./components/BlacklistPage'));
 const InstagramPage = React.lazy(() => import('./components/InstagramPage'));
-const TikTokPage = React.lazy(() => import('./components/TikTokPage'));
+const FacebookPage = React.lazy(() => import('./components/FacebookPage'));
 const ScrollButtons = React.lazy(() => import('./components/ScrollButtons'));
 const LanguageSwitcher = React.lazy(() => import('./components/LanguageSwitcher'));
 const HiddenItemsPage = React.lazy(() => import('./components/HiddenItemsPage'));
 
-// --- Type Definitions ---
-type Page = 'home' | 'favorites' | 'dashboard' | 'blacklist' | 'instagram' | 'tiktok' | 'hidden';
+type Page = 'home' | 'favorites' | 'dashboard' | 'blacklist' | 'instagram' | 'facebook' | 'hidden';
 type InitialFilter = { name?: string; store?: string | string[]; language?: string | string[] };
 
-const LoadingFallback: React.FC = () => (
+// Optimized Loading Fallback (Search Bar Loader)
+const LoadingFallback = () => (
   <div className="content-spinner-container">
-    <div className="spinner">
-      <div className="spinner1"></div>
+    <div className="loader">
+      <div className="loaderMiniContainer">
+        <div className="barContainer">
+          <span className="bar"></span>
+          <span className="bar bar2"></span>
+        </div>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 101 105"
+          className="svgIcon"
+        >
+          <circle r="40" cy="40" cx="40"></circle>
+          <line y2="100" x2="100" y1="60" x1="60"></line>
+        </svg>
+      </div>
     </div>
   </div>
 );
@@ -59,18 +74,26 @@ const App: React.FC = () => {
   const pendingProductIdsRef = useRef<Set<string>>(new Set());
   const productHideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Prefetch data on mount
   const { data: productData, isLoading } = useQuery<LoadProductsResult>({
     queryKey: ['products'],
     queryFn: loadProducts,
-    staleTime: Infinity,
-    gcTime: Infinity,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 
   const { data: allInstagramPosts = [] } = useQuery<InstagramPost[]>({
     queryKey: ['instagramPosts'],
     queryFn: loadInstagramPosts,
-    staleTime: Infinity,
-    gcTime: Infinity,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+  });
+
+  const { data: allFacebookPosts = [] } = useQuery<FacebookPost[]>({
+    queryKey: ['facebookPosts'],
+    queryFn: loadFacebookPosts,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 
   const uniqueProducts: Product[] = useMemo(() => productData?.uniqueProducts || [], [productData]);
@@ -102,8 +125,16 @@ const App: React.FC = () => {
     }
   }, [initialFilters, setInitialFilters, setProductsPage]);
 
-  const uniqueStores = useMemo(() => [...new Set(uniqueProducts.map(p => p.vendor).filter(Boolean))], [uniqueProducts]);
-  const availableLanguages = useMemo(() => [...new Set(uniqueProducts.map(p => p.language).filter(Boolean))], [uniqueProducts]);
+  const uniqueStores = useMemo(() => {
+      if (!uniqueProducts) return [];
+      return [...new Set(uniqueProducts.map(p => p.vendor).filter(Boolean))];
+  }, [uniqueProducts]);
+
+  const availableLanguages = useMemo(() => {
+      if (!uniqueProducts) return [];
+      return [...new Set(uniqueProducts.map(p => p.language).filter(Boolean))];
+  }, [uniqueProducts]);
+
   const languageCounts = useMemo(() => {
     const counts: { [key: string]: number } = {};
     uniqueProducts.forEach(p => { if (p.language) counts[p.language] = (counts[p.language] || 0) + 1; });
@@ -112,28 +143,23 @@ const App: React.FC = () => {
 
   const filteredProducts = useMemo(() => {
     let products = uniqueProducts;
-    
-    // Safety check for huge arrays
     if (!products || products.length === 0) return [];
 
-    // Re-enabled Hidden/Blacklist filtering
-    const hiddenSet = new Set(hiddenProducts || []);
-    
+    const hiddenSet = new Set(hiddenProducts);
+    const blockedStoresSet = new Set(blockedStores);
+    const pendingSet = pendingProductIds;
+
     products = products.filter(p => {
-        // Safe check for URL existence
         if (!p.url) return false;
-        
-        // Skip hidden and pending items
         if (hiddenSet.has(p.url)) return false;
-        if (pendingProductIds.has(p.url)) return false;
+        if (pendingSet.has(p.url)) return false;
+        if (blockedStoresSet.has(p.vendor)) return false;
         
-        // Basic blacklist check (Stores)
-        if (blockedStores && blockedStores.includes(p.vendor)) return false;
-        
-        // Keyword check (simplified for performance)
         if (blacklistedKeywords && blacklistedKeywords.length > 0) {
             const titleLower = p.title ? p.title.toLowerCase() : '';
-            if (blacklistedKeywords.some(k => titleLower.includes(k.toLowerCase()))) return false;
+            for (const k of blacklistedKeywords) {
+                if (titleLower.includes(k.toLowerCase())) return false;
+            }
         }
         return true;
     });
@@ -153,7 +179,6 @@ const App: React.FC = () => {
         products = products.filter(p => new Date(p.created_at).getTime() <= toTime);
     }
     
-    // Sort a copy to be safe
     return [...products].sort((a, b) => {
         const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
         const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
@@ -164,20 +189,31 @@ const App: React.FC = () => {
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
   const currentProducts = filteredProducts.slice((productsPage - 1) * productsPerPage, productsPage * productsPerPage);
 
-  const navigateTo = (page: Page) => setCurrentPage(prev => (prev === page ? 'home' : page));
+  const navigateTo = useCallback((page: Page) => setCurrentPage(prev => (prev === page ? 'home' : page)), [setCurrentPage]);
   const navigateToHomeWithFilter = useCallback((filter: InitialFilter) => { setInitialFilters(filter); setCurrentPage('home'); }, [setInitialFilters, setCurrentPage]);
-  const handleFilterChange = (key: string, value: any) => { setFilters(prev => ({ ...prev, [key]: value })); setProductsPage(1); };
-  const handleResetFilters = () => { setFilters({ name: '', store: [], language: [] }); setDateRange(undefined); setProductsPage(1); };
+  
+  const handleFilterChange = useCallback((key: string, value: any) => { 
+      setFilters(prev => ({ ...prev, [key]: value })); 
+      setProductsPage(1); 
+  }, [setProductsPage]);
+
+  const handleResetFilters = useCallback(() => { 
+      setFilters({ name: '', store: [], language: [] }); 
+      setDateRange(undefined); 
+      setProductsPage(1); 
+  }, [setProductsPage]);
 
   const processPendingHides = (ids: string[]) => {
     if (productHideTimeoutRef.current) clearTimeout(productHideTimeoutRef.current);
     ids.forEach(id => pendingProductIdsRef.current.add(id));
     setPendingProductIds(new Set(pendingProductIdsRef.current));
-    showToast(`Hiding ${pendingProductIdsRef.current.size} items...`, 'undo', 5000, () => {
+    
+    showToast(translate('archiving_in_progress', { count: pendingProductIdsRef.current.size }), 'undo', 5000, () => {
        pendingProductIdsRef.current.clear();
        setPendingProductIds(new Set());
        if (productHideTimeoutRef.current) clearTimeout(productHideTimeoutRef.current);
     });
+    
     productHideTimeoutRef.current = setTimeout(() => {
        const finalIds = Array.from(pendingProductIdsRef.current);
        if (finalIds.length > 0) hideProducts(finalIds);
@@ -187,11 +223,6 @@ const App: React.FC = () => {
     }, 5000);
   };
 
-  const handleHideProduct = (url: string) => {
-    processPendingHides([url]);
-  };
-
-  // --- Simplified Navbar Button ---
   const NavbarButton: React.FC<{ onClick: () => void; isActive: boolean; icon: React.ReactNode; label: string; count?: number; className?: string }> = 
     ({ onClick, isActive, icon, label, count, className }) => (
     <button className={`uiverse-nav-button ${className} ${isActive ? 'active' : ''}`} onClick={onClick}>
@@ -205,11 +236,11 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (currentPage) {
-      case 'favorites': return <FavoritesPage allProducts={filteredProducts} onNavigateWithFilter={navigateToHomeWithFilter} />;
+      case 'favorites': return <FavoritesPage allProducts={filteredProducts} instagramPosts={allInstagramPosts} facebookPosts={allFacebookPosts} onNavigateWithFilter={navigateToHomeWithFilter} />;
       case 'dashboard': return <DashboardPage products={filteredProducts} allProductsRaw={allProductsRaw} totalBeforeFilter={totalBeforeFilter} onNavigateWithFilter={navigateToHomeWithFilter} isLoading={isLoading} />;
       case 'blacklist': return <BlacklistPage />;
       case 'instagram': return <InstagramPage />;
-      case 'tiktok': return <TikTokPage />;
+      case 'facebook': return <FacebookPage />;
       case 'hidden': return <HiddenItemsPage products={uniqueProducts} instagramPosts={allInstagramPosts} />;
       default: 
         return (
@@ -248,11 +279,11 @@ const App: React.FC = () => {
              <h1 className="text-4xl font-black tracking-tighter bg-gradient-to-r from-brand-primary via-purple-500 to-pink-500 bg-clip-text text-transparent animate-text-shimmer bg-[length:200%_auto]" dir="ltr">WONDER LAB</h1>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <Suspense fallback={<div className="w-24 h-10 rounded-full bg-gray-200 animate-pulse" />}><LanguageSwitcher /></Suspense>
+            <Suspense fallback={<div className="w-24 h-10 rounded-full bg-gray-100 animate-pulse" />}><LanguageSwitcher /></Suspense>
             
             <NavbarButton className="btn-dashboard" onClick={() => navigateTo('dashboard')} isActive={currentPage === 'dashboard'} icon={<LayoutDashboard size={20} />} label={t.dashboard} />
+            <NavbarButton className="btn-facebook" onClick={() => navigateTo('facebook')} isActive={currentPage === 'facebook'} icon={<Facebook size={20} />} label={t.facebook_feature} />
             <NavbarButton className="btn-instagram" onClick={() => navigateTo('instagram')} isActive={currentPage === 'instagram'} icon={<Instagram size={20} />} label={t.instagram_feature} />
-            <NavbarButton className="btn-tiktok" onClick={() => navigateTo('tiktok')} isActive={currentPage === 'tiktok'} icon={<svg viewBox="0 0 24 24" fill="currentColor" className="w-[20px] h-[20px]"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" /></svg>} label={t.tiktok_feature} />
             <NavbarButton className="btn-blacklist" onClick={() => navigateTo('blacklist')} isActive={currentPage === 'blacklist'} icon={<EyeOff size={20} />} label={t.blacklist} />
             <NavbarButton className="btn-hidden" onClick={() => navigateTo('hidden')} isActive={currentPage === 'hidden'} icon={<Trash2 size={20} />} label={t.hidden_items} count={hiddenProducts.length + blacklistedPosts.size} />
             <NavbarButton className="btn-favorites" onClick={() => navigateTo('favorites')} isActive={currentPage === 'favorites'} icon={<Heart size={20} className={currentPage === 'favorites' ? 'fill-white' : ''} />} label={t.favorites} count={favoriteUrls.size} />

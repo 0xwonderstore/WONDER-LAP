@@ -7,6 +7,7 @@ import { useFavoritesStore } from '../stores/favoritesStore';
 import { useBlacklistStore } from '../stores/blacklistStore';
 import { useToastStore } from '../stores/toastStore';
 import MetaIcon from './MetaIcon';
+import { WhatsappShareButton, WhatsappIcon } from 'react-share';
 
 interface ProductCardProps {
   product: Product;
@@ -93,6 +94,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, t, onNavigateWithFil
                             </svg>
                         </div>
                     </label>
+                </div>
+
+                {/* Whatsapp Share Button */}
+                <div onClick={(e) => e.stopPropagation()} className="glass-btn-wrapper overflow-hidden flex items-center justify-center">
+                    <WhatsappShareButton 
+                        url={product.url} 
+                        title={`Check out this product: ${product.name}`}
+                        separator=" - "
+                        className="flex items-center justify-center w-full h-full"
+                    >
+                        <WhatsappIcon size={24} round={true} bgStyle={{ fill: 'transparent' }} iconFillColor="#25D366" />
+                    </WhatsappShareButton>
                 </div>
 
                 {/* Copy Link Button */}

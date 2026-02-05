@@ -31,32 +31,14 @@ export interface InstagramPost {
     timestamp: string;
 }
 
-export interface TikTokPost {
-    desc?: string; // Optional
-    createTime: string;
-    
-    // Author
-    author: string; 
-    authorAvatar?: string; // Optional
-    
-    // Video Metadata
-    cover: string;
-    duration: number;
-    url: string; 
-    
-    // Stats
-    playCount: number;
-    diggCount: number; 
-    commentCount: number;
-    shareCount: number;
-    collectCount: number; 
-    
-    // Meta
-    isAd: boolean;
-    diversification: string;
-    music?: string; // Optional
-    isOriginalMusic: boolean;
-    hashtags: string[];
+export interface FacebookPost {
+    username: string;
+    permalink: string;
+    media_type: 'image' | 'video';
+    likes: number;
+    comments: number;
+    shares: number;
+    timestamp: string;
 }
 
 export interface StoreRow {
@@ -77,6 +59,7 @@ export interface StoreRow {
   lastProductAdded: string;
   firstProductAdded: string;
   language?: string;
+  avgDailyProducts?: string;
 }
 
 export interface KeywordItem {

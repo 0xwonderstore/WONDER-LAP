@@ -14,7 +14,8 @@ interface BlacklistState {
   unhideProduct: (url: string) => void;
   clearHiddenProducts: () => void;
   exportBlacklist: () => string;
-  importBlacklist: (json: string) => number;
+  exportBlacklistToCSV: () => string;
+  importBlacklist: (input: string) => number;
 }
 
 export const useBlacklistStore = create<BlacklistState>()(
@@ -52,7 +53,9 @@ export const useBlacklistStore = create<BlacklistState>()(
       hideProducts: (urls) =>
         set((state) => {
             const currentSet = new Set(state.hiddenProducts);
-            urls.forEach(url => currentSet.add(url));
+            urls.forEach(url => {
+                if (url && url.trim().length > 0) currentSet.add(url.trim());
+            });
             return { hiddenProducts: Array.from(currentSet) };
         }),
       unhideProduct: (url) =>
@@ -65,22 +68,59 @@ export const useBlacklistStore = create<BlacklistState>()(
         const state = get();
         return JSON.stringify({
             hiddenProducts: state.hiddenProducts,
-            // We can export keywords/stores too if needed, but requested focus is on hidden items list
-            // keywords: state.keywords,
-            // blockedStores: state.blockedStores
         }, null, 2);
       },
+
+      exportBlacklistToCSV: () => {
+          const state = get();
+          // Add BOM for Excel to recognize UTF-8, though URLs usually ASCII
+          // Simple CSV: Header row, then data
+          const header = "Product URL\n";
+          const rows = state.hiddenProducts.map(url => `"${url.replace(/"/g, '""')}"`).join("\n");
+          return header + rows;
+      },
       
-      importBlacklist: (json) => {
+      importBlacklist: (input: string) => {
         try {
-            const data = JSON.parse(json);
-            if (Array.isArray(data.hiddenProducts)) {
+            let urlsToAdd: string[] = [];
+
+            // Attempt to parse as JSON first (backward compatibility)
+            try {
+                if (input.trim().startsWith('{') || input.trim().startsWith('[')) {
+                    const data = JSON.parse(input);
+                    if (Array.isArray(data.hiddenProducts)) {
+                        urlsToAdd = data.hiddenProducts;
+                    } else if (Array.isArray(data)) {
+                        urlsToAdd = data;
+                    }
+                } else {
+                    throw new Error("Not JSON");
+                }
+            } catch (jsonError) {
+                // Treat as CSV / Text
+                // Split by newline
+                const lines = input.split('\n');
+                urlsToAdd = lines.map(line => {
+                    // Remove quotes if present from CSV format
+                    let cleanLine = line.trim();
+                    if (cleanLine.startsWith('"') && cleanLine.endsWith('"')) {
+                        cleanLine = cleanLine.substring(1, cleanLine.length - 1).replace(/""/g, '"');
+                    }
+                    // Skip header if it matches known header
+                    if (cleanLine.toLowerCase() === 'product url') return '';
+                    return cleanLine;
+                }).filter(l => l.length > 0);
+            }
+
+            if (urlsToAdd.length > 0) {
                 set((state) => {
                     const newSet = new Set(state.hiddenProducts);
-                    data.hiddenProducts.forEach((url: string) => newSet.add(url));
+                    urlsToAdd.forEach((url: string) => {
+                        if (typeof url === 'string' && url.length > 0) newSet.add(url.trim());
+                    });
                     return { hiddenProducts: Array.from(newSet) };
                 });
-                return data.hiddenProducts.length;
+                return urlsToAdd.length;
             }
             return 0;
         } catch (e) {

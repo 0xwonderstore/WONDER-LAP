@@ -1,0 +1,29 @@
+[
+  {
+    "username": "Fashion Trends",
+    "permalink": "https://www.facebook.com/fashiontrends/posts/101",
+    "media_type": "image",
+    "likes": 1250,
+    "comments": 340,
+    "shares": 85,
+    "timestamp": "2023-10-27T10:00:00Z"
+  },
+  {
+    "username": "Gadget World",
+    "permalink": "https://www.facebook.com/reel/886947394253722/",
+    "media_type": "video",
+    "likes": 890,
+    "comments": 120,
+    "shares": 45,
+    "timestamp": "2023-10-26T15:30:00Z"
+  },
+  {
+    "username": "Home Decor",
+    "permalink": "https://www.facebook.com/homedecor/posts/103",
+    "media_type": "image",
+    "likes": 2100,
+    "comments": 560,
+    "shares": 230,
+    "timestamp": "2023-10-25T09:45:00Z"
+  }
+]

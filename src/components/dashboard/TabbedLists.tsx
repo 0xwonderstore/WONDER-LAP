@@ -51,26 +51,43 @@ interface StoreTableProps {
   totalProductsSum: number;
 }
 
-const PositiveChangeCell: React.FC<{ value: number }> = ({ value }) => (
-    <span className={`font-bold text-sm ${value > 0 ? 'text-teal-500' : 'text-gray-400 dark:text-gray-500'}`}>{value > 0 ? `+${value}` : '-'}</span>
-);
+const PositiveChangeCell: React.FC<{ value: number }> = ({ value }) => {
+    // Safety check for undefined or null value
+    if (value === undefined || value === null) {
+        return <span className="font-bold text-sm text-gray-400 dark:text-gray-500">-</span>;
+    }
+    return (
+        <span className={`font-bold text-sm ${value > 0 ? 'text-teal-500' : 'text-gray-400 dark:text-gray-500'}`}>{value > 0 ? `+${value}` : '-'}</span>
+    );
+};
 
-const PercentageCell: React.FC<{ value: number }> = ({ value }) => (
-  <span className={`font-bold text-sm ${value > 10 ? 'text-green-500' : value > 0 ? 'text-yellow-500' : 'text-gray-400 dark:text-gray-500'}`}>
-    {value.toFixed(1)}%
-  </span>
-);
+const PercentageCell: React.FC<{ value: number }> = ({ value }) => {
+  // Safety check for undefined or null value
+  if (value === undefined || value === null) {
+      return <span className="font-bold text-sm text-gray-400 dark:text-gray-500">0.0%</span>;
+  }
+  return (
+    <span className={`font-bold text-sm ${value > 10 ? 'text-green-500' : value > 0 ? 'text-yellow-500' : 'text-gray-400 dark:text-gray-500'}`}>
+      {value.toFixed(1)}%
+    </span>
+  );
+};
 
-const ProgressBarCell: React.FC<{ value: number; colorClass: string }> = ({ value, colorClass }) => (
-  <div className="w-full min-w-[100px]">
-    <div className="flex justify-between mb-1">
-      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{value.toFixed(1)}%</span>
+const ProgressBarCell: React.FC<{ value: number; colorClass: string }> = ({ value, colorClass }) => {
+  // Safety check to ensure value is a number
+  const safeValue = typeof value === 'number' ? value : 0;
+  
+  return (
+    <div className="w-full min-w-[100px]">
+      <div className="flex justify-between mb-1">
+        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{safeValue.toFixed(1)}%</span>
+      </div>
+      <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+        <div className={`h-2 rounded-full ${colorClass}`} style={{ width: `${Math.min(safeValue, 100)}%` }}></div>
+      </div>
     </div>
-    <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-      <div className={`h-2 rounded-full ${colorClass}`} style={{ width: `${Math.min(value, 100)}%` }}></div>
-    </div>
-  </div>
-);
+  );
+};
 
 
 export const StoreTable: React.FC<StoreTableProps> = ({ data, t, onNavigateWithFilter, totalProductsSum }) => {
@@ -83,8 +100,8 @@ export const StoreTable: React.FC<StoreTableProps> = ({ data, t, onNavigateWithF
       header: t.storeName,
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-300 font-bold text-sm">{row.original.vendor.substring(0, 2).toUpperCase()}</div>
-          <span onClick={() => onNavigateWithFilter({ store: row.original.vendor })} className="cursor-pointer font-bold text-gray-800 dark:text-gray-100 hover:text-indigo-500 transition-colors truncate max-w-[150px]">{row.original.vendor}</span>
+          <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-300 font-bold text-sm">{row.original.vendor ? row.original.vendor.substring(0, 2).toUpperCase() : '??'}</div>
+          <span onClick={() => onNavigateWithFilter({ store: row.original.vendor })} className="cursor-pointer font-bold text-gray-800 dark:text-gray-100 hover:text-indigo-500 transition-colors truncate max-w-[150px]">{row.original.vendor || 'Unknown Vendor'}</span>
         </div>
       ),
     },
@@ -95,7 +112,7 @@ export const StoreTable: React.FC<StoreTableProps> = ({ data, t, onNavigateWithF
         <div>
           <span className="text-sm font-bold text-gray-800 dark:text-gray-100">{row.original.totalProducts}</span>
           <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-700 rounded-full mt-1">
-            <div className="h-full bg-gradient-to-r from-teal-500 to-indigo-500 rounded-full" style={{ width: `${(row.original.totalProducts / totalProductsSum) * 100}%` }}></div>
+            <div className="h-full bg-gradient-to-r from-teal-500 to-indigo-500 rounded-full" style={{ width: `${totalProductsSum > 0 ? (row.original.totalProducts / totalProductsSum) * 100 : 0}%` }}></div>
           </div>
         </div>
       ),

@@ -5,7 +5,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/WONDER-LAP/',
+  base: '/', // Changed from '/WONDER-LAP/' to '/' for standard hosting
   plugins: [
     react(),
     compression({

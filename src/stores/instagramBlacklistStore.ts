@@ -11,7 +11,8 @@ interface InstagramBlacklistState {
   addPosts: (permalinks: string[]) => void;
   clearBlacklistedPosts: () => void;
   exportInstagramBlacklist: () => string;
-  importInstagramBlacklist: (json: string) => number;
+  exportInstagramBlacklistToCSV: () => string;
+  importInstagramBlacklist: (input: string) => number;
 }
 
 export const useInstagramBlacklistStore = create<InstagramBlacklistState>()(
@@ -42,7 +43,9 @@ export const useInstagramBlacklistStore = create<InstagramBlacklistState>()(
       addPosts: (permalinks) =>
         set((state) => {
           const newSet = new Set(state.blacklistedPosts);
-          permalinks.forEach(p => newSet.add(p));
+          permalinks.forEach(p => {
+              if (p && p.trim().length > 0) newSet.add(p.trim());
+          });
           return { blacklistedPosts: newSet };
         }),
       clearBlacklistedPosts: () => set({ blacklistedPosts: new Set() }),
@@ -51,20 +54,54 @@ export const useInstagramBlacklistStore = create<InstagramBlacklistState>()(
           const state = get();
           return JSON.stringify({
               blacklistedPosts: Array.from(state.blacklistedPosts),
-              // blacklistedUsers: Array.from(state.blacklistedUsers)
           }, null, 2);
       },
+
+      exportInstagramBlacklistToCSV: () => {
+          const state = get();
+          const header = "Post URL\n";
+          const rows = Array.from(state.blacklistedPosts).map(url => `"${url.replace(/"/g, '""')}"`).join("\n");
+          return header + rows;
+      },
       
-      importInstagramBlacklist: (json) => {
+      importInstagramBlacklist: (input) => {
           try {
-              const data = JSON.parse(json);
-              if (Array.isArray(data.blacklistedPosts)) {
+              let urlsToAdd: string[] = [];
+
+              // Try JSON first
+              try {
+                  if (input.trim().startsWith('{') || input.trim().startsWith('[')) {
+                    const data = JSON.parse(input);
+                    if (Array.isArray(data.blacklistedPosts)) {
+                        urlsToAdd = data.blacklistedPosts;
+                    } else if (Array.isArray(data)) {
+                        urlsToAdd = data;
+                    }
+                  } else {
+                      throw new Error("Not JSON");
+                  }
+              } catch (e) {
+                  // Fallback to CSV / Text
+                  const lines = input.split('\n');
+                  urlsToAdd = lines.map(line => {
+                      let cleanLine = line.trim();
+                      if (cleanLine.startsWith('"') && cleanLine.endsWith('"')) {
+                          cleanLine = cleanLine.substring(1, cleanLine.length - 1).replace(/""/g, '"');
+                      }
+                      if (cleanLine.toLowerCase() === 'post url') return '';
+                      return cleanLine;
+                  }).filter(l => l.length > 0);
+              }
+
+              if (urlsToAdd.length > 0) {
                   set((state) => {
                       const newSet = new Set(state.blacklistedPosts);
-                      data.blacklistedPosts.forEach((url: string) => newSet.add(url));
+                      urlsToAdd.forEach((url: string) => {
+                          if (typeof url === 'string' && url.length > 0) newSet.add(url.trim());
+                      });
                       return { blacklistedPosts: newSet };
                   });
-                  return data.blacklistedPosts.length;
+                  return urlsToAdd.length;
               }
               return 0;
           } catch (e) {
