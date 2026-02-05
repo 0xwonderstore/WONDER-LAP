@@ -1,17 +1,19 @@
 [
   {
-    "username": "Fashion Trends",
-    "permalink": "https://www.facebook.com/fashiontrends/posts/101",
-    "media_type": "image",
-    "likes": 1250,
-    "comments": 340,
-    "shares": 85,
-    "timestamp": "2023-10-27T10:00:00Z"
+    "username": "Simplify Store",
+    "permalink": "https://www.facebook.com/reel/4303288779947393/",
+    "media_type": "video",
+    "thumbnail_url": "https://scontent-phl2-1.xx.fbcdn.net/v/t15.5256-10/622974073_843340308702534_7510215816332761038_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=101&ccb=1-7&_nc_sid=5fad0e&_nc_ohc=vFaqVX8qB_MQ7kNvwF_k1nS&_nc_oc=AdnHBNWDSPNU8i1zyAPO7JsfT_MQ6KgsKlH_gzJkQM62nOVIsdQbWSeGRfeJ3CP45l4&_nc_zt=23&_nc_ht=scontent-phl2-1.xx&_nc_gid=xwarApa7EcD8uh1cWPVscA&oh=00_Aftoj4I7aPBag2V1W-bHusrPs45cccS9waxAersHNCCIBQ&oe=69845D03",
+    "likes": 15,
+    "comments": 1,
+    "shares": 0,
+    "timestamp": "2026-01-26T08:37:46.000"
   },
   {
     "username": "Gadget World",
-    "permalink": "https://www.facebook.com/reel/886947394253722/",
+    "permalink": "https://www.facebook.com/gadgetworld/posts/102",
     "media_type": "video",
+    "thumbnail_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&q=80",
     "likes": 890,
     "comments": 120,
     "shares": 45,
@@ -21,6 +23,7 @@
     "username": "Home Decor",
     "permalink": "https://www.facebook.com/homedecor/posts/103",
     "media_type": "image",
+    "thumbnail_url": "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600&q=80",
     "likes": 2100,
     "comments": 560,
     "shares": 230,
