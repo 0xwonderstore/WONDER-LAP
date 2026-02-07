@@ -25,19 +25,17 @@ const FacebookPage = () => {
   
   const { currentPage, postsPerPage, filters, dateRange, sort, sortBy, setCurrentPage, setPostsPerPage, setFilters, setDateRange, setSort, setSortBy, reset } = useFacebookPageStore();
 
+  // Changed queryKey to force refresh and removed Infinity staleTime to ensure fresh data on reload
   const { data: allPosts = [], isLoading: loadingPosts } = useQuery<FacebookPost[]>({
-    queryKey: ['facebookPosts'],
+    queryKey: ['facebookPosts_v2'], 
     queryFn: loadFacebookPosts,
-    staleTime: Infinity,
-    gcTime: Infinity
+    staleTime: 0, 
+    gcTime: 0 
   });
 
   const basePosts = useMemo(() => {
-    const uniquePostsMap = new Map<string, FacebookPost>();
-    for (const post of allPosts) {
-      if (!uniquePostsMap.has(post.permalink)) uniquePostsMap.set(post.permalink, post);
-    }
-    return Array.from(uniquePostsMap.values());
+    // We are no longer filtering duplicates to ensure all posts are shown as requested
+    return allPosts;
   }, [allPosts]);
 
   const allUniqueUsernames = useMemo(() => {
@@ -50,9 +48,10 @@ const FacebookPage = () => {
     if (basePosts.length === 0) return [];
     let posts = basePosts;
 
-    if (blacklistedUsers.size > 0 || blacklistedPosts.size > 0 || pendingHideIds.size > 0) {
-        posts = posts.filter(post => !blacklistedUsers.has(post.username) && !blacklistedPosts.has(post.permalink) && !pendingHideIds.has(post.permalink));
-    }
+    // Disabled blacklist filtering to show EVERYTHING as requested
+    // if (blacklistedUsers.size > 0 || blacklistedPosts.size > 0 || pendingHideIds.size > 0) {
+    //     posts = posts.filter(post => !blacklistedUsers.has(post.username) && !blacklistedPosts.has(post.permalink) && !pendingHideIds.has(post.permalink));
+    // }
 
     if (filters.username) posts = posts.filter((p) => p.username === filters.username);
     if (filters.minLikes !== null && filters.minLikes > 0) posts = posts.filter((p) => p.likes >= filters.minLikes!);
@@ -117,7 +116,7 @@ const FacebookPage = () => {
         </button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {paginatedPosts.map((post) => (<FacebookCard key={post.permalink} post={post} />))}
+        {paginatedPosts.map((post, index) => (<FacebookCard key={`${post.permalink}-${index}`} post={post} />))}
       </div>
       {paginatedPosts.length === 0 && <div className="flex flex-col items-center justify-center py-20 text-gray-500"><p className="text-xl font-medium">{t('noResults')}</p><button onClick={reset} className="mt-4 text-blue-500 hover:underline">{t('resetFilters')}</button></div>}
       {totalPages > 1 && <div className="mt-8"><Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} itemsPerPage={postsPerPage} totalItems={filteredAndSortedPosts.length} t={t} /></div>}

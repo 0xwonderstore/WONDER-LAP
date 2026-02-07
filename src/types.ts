@@ -35,6 +35,7 @@ export interface FacebookPost {
     username: string;
     permalink: string;
     media_type: 'image' | 'video';
+    thumbnail_url?: string; // Added for direct thumbnail support
     likes: number;
     comments: number;
     shares: number;

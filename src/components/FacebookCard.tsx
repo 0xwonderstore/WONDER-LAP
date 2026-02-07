@@ -1,5 +1,5 @@
-import React, { useState, memo, useEffect } from 'react';
-import { Facebook, Heart, MessageCircle, Share2, Calendar, ExternalLink, PlayCircle, Layers, Film, Megaphone, Loader2, ImageOff, RefreshCw } from 'lucide-react';
+import React, { memo } from 'react';
+import { Facebook, Heart, MessageCircle, Share2, Calendar, ExternalLink, PlayCircle, Layers, Film, Megaphone } from 'lucide-react';
 import { FacebookPost } from '../types';
 import { formatDate } from '../utils/productUtils';
 import { useTranslation } from 'react-i18next';
@@ -20,56 +20,6 @@ const FacebookCard: React.FC<FacebookCardProps> = ({ post }) => {
   const favorite = isFavorite(post.permalink);
   const isReel = post.permalink?.includes('/reel/') || post.media_type === 'video';
 
-  // State for Smart Preview
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'failed'>('idle');
-  const [shareUrl, setShareUrl] = useState<string | null>(null);
-
-  const fetchPreview = async (forceRefresh = false) => {
-    if ((status === 'success' && !forceRefresh) || !post.permalink) return;
-
-    setStatus('loading');
-
-    try {
-        // Use our new Cloud Function endpoint
-        // Assuming the function is hosted at /createShareCard or the full URL
-        const endpoint = '/createShareCard'; 
-        
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: post.permalink })
-        });
-
-        if (!response.ok) throw new Error('Preview generation failed');
-
-        const data = await response.json();
-        
-        if (data.thumbnail_url) {
-            setPreviewImage(data.thumbnail_url);
-            setShareUrl(data.share_url);
-            setStatus('success');
-        } else {
-            // Fallback to client-side or error state
-             setStatus('failed');
-        }
-
-    } catch (e) {
-        console.error("Preview fetch error", e);
-        setStatus('failed');
-    }
-  };
-
-  // Initial Fetch on Mount if needed
-  useEffect(() => {
-    if (!previewImage) {
-        // Small delay to prevent layout thrashing
-        const timer = setTimeout(() => fetchPreview(), 500);
-        return () => clearTimeout(timer);
-    }
-  }, [post.permalink]);
-
-
   const handleOpenDirectly = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -86,23 +36,9 @@ const FacebookCard: React.FC<FacebookCardProps> = ({ post }) => {
       }
   };
 
-  const handleCopyLink = async (e: React.MouseEvent) => {
+  const handleCopyLink = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
-    // Prefer the generated share URL if available (better for WhatsApp)
-    let linkToCopy = shareUrl || post.permalink;
-    
-    // If we don't have a share URL yet, try to generate it quickly or just copy permalink
-    if (!shareUrl) {
-        try {
-            // Optimistic copy of permalink first, or wait?
-            // Let's trigger generation if missing, but copy permalink now to be responsive
-             // In background, generate it for next time
-             fetchPreview();
-        } catch (e) {}
-    }
-
-    navigator.clipboard.writeText(linkToCopy);
+    navigator.clipboard.writeText(post.permalink);
     showToast('Link copied to clipboard!', 'success');
   };
 
@@ -112,11 +48,6 @@ const FacebookCard: React.FC<FacebookCardProps> = ({ post }) => {
       window.open(adUrl, '_blank');
   };
   
-  const handleRefreshPreview = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      fetchPreview(true);
-  };
-
   return (
     <motion.div 
       initial={{ opacity: 0, y: 15 }}
@@ -161,70 +92,36 @@ const FacebookCard: React.FC<FacebookCardProps> = ({ post }) => {
             className="relative w-full aspect-square bg-gray-100 dark:bg-[#111] overflow-hidden cursor-pointer group/media border-b border-gray-100 dark:border-gray-800"
             onClick={handleOpenDirectly}
         >
-            {/* 1. Loading State */}
-            {status === 'loading' && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gray-50 dark:bg-[#151515]">
-                    <Loader2 size={32} className="text-blue-500 animate-spin" />
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest animate-pulse">
-                        Resolving Preview...
-                    </span>
+            <img 
+                src={post.thumbnail_url || ''} 
+                alt="Content" 
+                className="w-full h-full object-cover object-center transition-transform duration-700 group-hover/media:scale-105" 
+                loading="lazy"
+                referrerPolicy="no-referrer"
+            />
+            
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-40 group-hover/media:opacity-20 transition-opacity" />
+            
+            {isReel && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 shadow-2xl group-hover/media:scale-110 transition-transform">
+                        <PlayCircle className="w-8 h-8 text-white fill-white/20" />
+                    </div>
                 </div>
             )}
 
-            {/* 2. Success State */}
-            {status === 'success' && previewImage && (
-                <>
-                    <img 
-                        src={previewImage} 
-                        alt="Content" 
-                        className="w-full h-full object-cover object-center transition-transform duration-700 group-hover/media:scale-105" 
-                        loading="lazy"
-                        referrerPolicy="no-referrer"
-                    />
-                    
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-40 group-hover/media:opacity-20 transition-opacity" />
-                    
-                    {isReel && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 shadow-2xl group-hover/media:scale-110 transition-transform">
-                                <PlayCircle className="w-8 h-8 text-white fill-white/20" />
-                            </div>
+            {/* Type Indicator */}
+            <div className="absolute top-3 right-3 z-20">
+                    {isReel ? (
+                        <div className="bg-black/60 backdrop-blur-md p-1.5 rounded-lg border border-white/20 text-white shadow-lg">
+                            <Film size={14} />
+                        </div>
+                    ) : (
+                        <div className="bg-black/60 backdrop-blur-md p-1.5 rounded-lg border border-white/20 text-white shadow-lg">
+                            <Layers size={14} />
                         </div>
                     )}
-
-                    {/* Type Indicator */}
-                    <div className="absolute top-3 right-3 z-20">
-                         {isReel ? (
-                             <div className="bg-black/60 backdrop-blur-md p-1.5 rounded-lg border border-white/20 text-white shadow-lg">
-                                 <Film size={14} />
-                             </div>
-                         ) : (
-                             <div className="bg-black/60 backdrop-blur-md p-1.5 rounded-lg border border-white/20 text-white shadow-lg">
-                                 <Layers size={14} />
-                             </div>
-                         )}
-                    </div>
-                </>
-            )}
-
-            {/* 3. Failed State (Fallback Graphic) */}
-            {status === 'failed' && (
-                <div className="flex flex-col items-center justify-center h-full gap-3 bg-gray-50 dark:bg-[#151515] p-6 text-center group/failed">
-                    <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/10 rounded-full flex items-center justify-center mb-2">
-                         {isReel ? <PlayCircle size={32} className="text-blue-400" /> : <ImageOff size={32} className="text-gray-400" />}
-                    </div>
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                        Preview Not Available
-                    </span>
-                    <button 
-                         onClick={handleRefreshPreview}
-                         className="flex items-center gap-1.5 px-3 py-1.5 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                    >
-                        <RefreshCw size={12} className="text-gray-500" />
-                        <span className="text-[10px] text-gray-500 font-bold">Try Refreshing</span>
-                    </button>
-                </div>
-            )}
+            </div>
         </div>
 
         {/* Footer */}
@@ -255,7 +152,7 @@ const FacebookCard: React.FC<FacebookCardProps> = ({ post }) => {
 
                     <div className="glass-btn-wrapper !w-9 !h-9 !border-gray-200 dark:!border-gray-700 cursor-pointer overflow-hidden flex items-center justify-center">
                         <WhatsappShareButton 
-                            url={shareUrl || post.permalink} 
+                            url={post.permalink} 
                             title={`Check out this post from ${post.username}`}
                             separator=" - "
                             className="flex items-center justify-center w-full h-full"

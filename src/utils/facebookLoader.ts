@@ -1,19 +1,26 @@
 import { FacebookPost } from '../types';
 
-export async function loadFacebookPosts(): Promise<FacebookPost[]> {
-    const modules = import.meta.glob('../data/facebook/*.json');
-    
-    const loadPromises = Object.entries(modules).map(async ([path, loader]) => {
-        try {
-            const module: any = await loader();
-            const posts = Array.isArray(module.default) ? module.default : [];
-            return posts;
-        } catch (error) {
-            console.error(`Error loading Facebook posts from ${path}:`, error);
-            return [];
-        }
-    });
+// Explicit imports to ensure all files are linked and loaded correctly
+import posts1 from '../data/facebook/facebook_posts_1.json';
+import posts2 from '../data/facebook/facebook_posts_2.json';
+import posts3 from '../data/facebook/facebook_posts_3.json';
+import posts4 from '../data/facebook/facebook_posts_4.json';
+import posts5 from '../data/facebook/facebook_posts_5.json';
 
-    const results = await Promise.all(loadPromises);
-    return results.flat();
+export async function loadFacebookPosts(): Promise<FacebookPost[]> {
+    try {
+        // Aggregate all posts from the imported JSON files
+        const allPosts: FacebookPost[] = [
+            ...(posts1 as unknown as FacebookPost[]),
+            ...(posts2 as unknown as FacebookPost[]),
+            ...(posts3 as unknown as FacebookPost[]),
+            ...(posts4 as unknown as FacebookPost[]),
+            ...(posts5 as unknown as FacebookPost[]),
+        ];
+        
+        return allPosts;
+    } catch (error) {
+        console.error("Error loading Facebook posts:", error);
+        return [];
+    }
 }
