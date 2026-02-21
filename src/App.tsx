@@ -20,7 +20,7 @@ import ProductCardSkeleton from './components/ProductCardSkeleton';
 import { Product, InstagramPost, FacebookPost } from './types';
 import { useInstagramBlacklistStore } from './stores/instagramBlacklistStore';
 import { loadInstagramPosts } from './utils/instagramLoader';
-import { loadFacebookPosts } from './utils/facebookLoader'; // Import
+import { loadFacebookPosts } from './utils/facebookLoader';
 import ThemeToggle from './components/ThemeToggle';
 import { useTranslation } from 'react-i18next';
 
@@ -37,7 +37,6 @@ const HiddenItemsPage = React.lazy(() => import('./components/HiddenItemsPage'))
 type Page = 'home' | 'favorites' | 'dashboard' | 'blacklist' | 'instagram' | 'facebook' | 'hidden';
 type InitialFilter = { name?: string; store?: string | string[]; language?: string | string[] };
 
-// Optimized Loading Fallback (Search Bar Loader)
 const LoadingFallback = () => (
   <div className="content-spinner-container">
     <div className="loader">
@@ -46,12 +45,7 @@ const LoadingFallback = () => (
           <span className="bar"></span>
           <span className="bar bar2"></span>
         </div>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 101 105"
-          className="svgIcon"
-        >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 101 105" className="svgIcon">
           <circle r="40" cy="40" cx="40"></circle>
           <line y2="100" x2="100" y1="60" x1="60"></line>
         </svg>
@@ -74,7 +68,6 @@ const App: React.FC = () => {
   const pendingProductIdsRef = useRef<Set<string>>(new Set());
   const productHideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Prefetch data on mount
   const { data: productData, isLoading } = useQuery<LoadProductsResult>({
     queryKey: ['products'],
     queryFn: loadProducts,
@@ -141,89 +134,68 @@ const App: React.FC = () => {
     return counts;
   }, [uniqueProducts]);
 
- const filteredProducts = useMemo(() => {
-    let products = uniqueProducts;
-    if (!products || products.length === 0) return [];
-
+  const filteredProducts = useMemo(() => {
+    const lowercasedKeywords = blacklistedKeywords.map(k => k.toLowerCase());
     const hiddenSet = new Set(hiddenProducts);
-    const blockedStoresSet = new Set(blockedStores);
     const pendingSet = pendingProductIds;
+    const blockedStoresSet = new Set(blockedStores);
 
-    products = products.filter(p => {
+    let productsToDisplay = uniqueProducts.filter(p => {
         if (!p.url) return false;
+
+        // --- Primary Block Filters --- //
+        const nameLower = p.name ? p.name.toLowerCase() : '';
+        if (lowercasedKeywords.some(keyword => nameLower.includes(keyword))) return false;
+        if (p.vendor && blockedStoresSet.has(p.vendor)) return false;
         if (hiddenSet.has(p.url)) return false;
         if (pendingSet.has(p.url)) return false;
-        if (blockedStoresSet.has(p.vendor)) return false;
-        
-        if (blacklistedKeywords && blacklistedKeywords.length > 0) {
-            const titleLower = p.title ? p.title.toLowerCase() : '';
-            for (const k of blacklistedKeywords) {
-                if (titleLower.includes(k.toLowerCase())) return false;
-            }
-        }
+
+        // --- User-defined Search and Filters --- //
+        if (filters.name && !searchProducts([p], filters.name).length) return false;
+        if (Array.isArray(filters.store) && filters.store.length > 0 && (!p.vendor || !filters.store.includes(p.vendor))) return false;
+        if (Array.isArray(filters.language) && filters.language.length > 0 && (!p.language || !filters.language.includes(p.language))) return false;
+        if (dateRange?.from && new Date(p.created_at).getTime() < dateRange.from.getTime()) return false;
+        if (dateRange?.to && new Date(p.created_at).getTime() > dateRange.to.getTime()) return false;
+
         return true;
     });
 
-    if (filters.name) products = searchProducts(products, filters.name);
-
-    if (filters.store && Array.isArray(filters.store) && filters.store.length > 0) {
-        products = products.filter(p => p.vendor && filters.store.includes(p.vendor));
-    }
-
-    if (filters.language && Array.isArray(filters.language) && filters.language.length > 0) {
-        products = products.filter(p => p.language && filters.language.includes(p.language));
-    }
-    
-    if (dateRange?.from) {
-        const fromTime = dateRange.from.getTime();
-        products = products.filter(p => {
-            const productDate = new Date(p.created_at).getTime();
-            return productDate >= fromTime;
-        });
-    }
-    if (dateRange?.to) {
-        const toTime = dateRange.to.getTime();
-        products = products.filter(p => {
-            const productDate = new Date(p.created_at).getTime();
-            return productDate <= toTime;
-        });
-    }
-    
-    return [...products].sort((a, b) => {
+    return [...productsToDisplay].sort((a, b) => {
         const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
         const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
         return dateB - dateA;
     });
 }, [uniqueProducts, blacklistedKeywords, blockedStores, hiddenProducts, pendingProductIds, filters, dateRange]);
 
+
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
   const currentProducts = filteredProducts.slice((productsPage - 1) * productsPerPage, productsPage * productsPerPage);
 
   const navigateTo = useCallback((page: Page) => setCurrentPage(prev => (prev === page ? 'home' : page)), [setCurrentPage]);
   const navigateToHomeWithFilter = useCallback((filter: InitialFilter) => { setInitialFilters(filter); setCurrentPage('home'); }, [setInitialFilters, setCurrentPage]);
-  
-  const handleFilterChange = useCallback((key: string, value: any) => { 
-      setFilters(prev => ({ ...prev, [key]: value })); 
-      setProductsPage(1); 
+
+  const handleFilterChange = useCallback((key: string, value: any) => {
+      setFilters(prev => ({ ...prev, [key]: value }));
+      setProductsPage(1);
   }, [setProductsPage]);
 
-  const handleResetFilters = useCallback(() => { 
-      setFilters({ name: '', store: [], language: [] }); 
-      setDateRange(undefined); 
-      setProductsPage(1); 
+  const handleResetFilters = useCallback(() => {
+      setFilters({ name: '', store: [], language: [] });
+      setDateRange(undefined);
+      setProductsPage(1);
   }, [setProductsPage]);
 
   const processPendingHides = (ids: string[]) => {
     if (productHideTimeoutRef.current) clearTimeout(productHideTimeoutRef.current);
     ids.forEach(id => pendingProductIdsRef.current.add(id));
     setPendingProductIds(new Set(pendingProductIdsRef.current));
-    
+
     showToast(translate('archiving_in_progress', { count: pendingProductIdsRef.current.size }), 'undo', 5000, () => {
        pendingProductIdsRef.current.clear();
        setPendingProductIds(new Set());
        if (productHideTimeoutRef.current) clearTimeout(productHideTimeoutRef.current);
     });
-    
+
     productHideTimeoutRef.current = setTimeout(() => {
        const finalIds = Array.from(pendingProductIdsRef.current);
        if (finalIds.length > 0) hideProducts(finalIds);

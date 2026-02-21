@@ -8,11 +8,11 @@ import { useDashboardData } from '../hooks/useDashboardData';
 import KpiCard from './dashboard/KpiCard';
 import Chart from './dashboard/Chart';
 import SmartInstagramTable from './dashboard/SmartInstagramTable';
-import SmartFacebookTable from './dashboard/SmartFacebookTable'; // Import new component
+import SmartFacebookTable from './dashboard/SmartFacebookTable';
 import { StoreTable, KeywordList, LanguageList } from './dashboard/TabbedLists';
 import { useQuery } from '@tanstack/react-query';
 import { loadInstagramPosts } from '../utils/instagramLoader';
-import { loadFacebookPosts } from '../utils/facebookLoader'; // Import loader
+import { loadFacebookPosts } from '../utils/facebookLoader';
 import DashboardSettings from './DashboardSettings';
 
 const fadeIn = {
@@ -20,6 +20,7 @@ const fadeIn = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
 };
 
+// Reverted exportToCsv to include all columns by default
 const exportToCsv = (data: any[], filename: string) => {
   if (!data || data.length === 0) return;
   const headers = Object.keys(data[0]);
@@ -96,20 +97,21 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, onNavigateWithF
       chartData, 
       visibleInstagramAccounts, 
       allInstagramAccounts,
-      allFacebookPages, // Get FB data
+      allFacebookPages,
       topStores, 
       topLanguages,
       topKeywords 
   } = useDashboardData(products, instagramPosts, facebookPosts);
 
   const handleExport = () => {
-      if (activeTab === 'stores') exportToCsv(topStores, 'stores_data.csv');
-      else if (activeTab === 'instagram') {
+      if (activeTab === 'stores') {
+          exportToCsv(topStores, 'stores_data.csv');
+      } else if (activeTab === 'instagram') {
           const exportData = allInstagramAccounts.map(acc => ({
               ...acc,
               firstPost: acc.firstPost ? acc.firstPost.toISOString().split('T')[0] : '',
               lastPost: acc.lastPost ? acc.lastPost.toISOString().split('T')[0] : '',
-              timestamps: ''
+              timestamps: '' // Exclude timestamps array from export
           }));
           exportToCsv(exportData, 'instagram_accounts_full.csv');
       } else if (activeTab === 'facebook') {
@@ -117,7 +119,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, onNavigateWithF
               ...acc,
               firstPost: acc.firstPost ? acc.firstPost.toISOString().split('T')[0] : '',
               lastPost: acc.lastPost ? acc.lastPost.toISOString().split('T')[0] : '',
-              timestamps: ''
+              timestamps: '' // Exclude timestamps array from export
           }));
           exportToCsv(exportData, 'facebook_pages_full.csv');
       } else if (activeTab === 'keywords') {
@@ -156,7 +158,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, onNavigateWithF
             <div className="flex flex-wrap justify-center sm:justify-start gap-1 w-full sm:w-auto">
                 {[
                     { id: 'instagram', label: t.instagram_feature, icon: <Instagram size={16} /> },
-                    { id: 'facebook', label: 'Facebook', icon: <Facebook size={16} /> }, // New Tab
+                    { id: 'facebook', label: 'Facebook', icon: <Facebook size={16} /> },
                     { id: 'stores', label: t.store, icon: <Layers size={16} /> },
                     { id: 'keywords', label: 'Keywords', icon: <Filter size={16} /> },
                     { id: 'languages', label: t.language_filter, icon: <Globe size={16} /> }
@@ -198,7 +200,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ products, onNavigateWithF
         >
             {activeTab === 'instagram' && <SmartInstagramTable accounts={visibleInstagramAccounts} t={t} />}
             
-            {activeTab === 'facebook' && <SmartFacebookTable pages={allFacebookPages} t={t} />} {/* New Table */}
+            {activeTab === 'facebook' && <SmartFacebookTable pages={allFacebookPages} t={t} />}
             
             {activeTab === 'stores' && (
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">

@@ -1,250 +1,119 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useReactTable, getCoreRowModel, getSortedRowModel, flexRender, SortingState, ColumnDef } from '@tanstack/react-table';
-import { ChevronDown } from 'lucide-react';
-import { useDashboardStore } from '../../stores/dashboardStore';
-import { StoreRow, KeywordItem, LanguageItem } from '../../types';
+import { motion } from 'framer-motion';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { format, parseISO } from 'date-fns';
+import { Languages, Globe, ExternalLink } from 'lucide-react';
 
-// --- Animation Variants ---
-const itemVariants = {
-  hidden: { y: 10, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 120, damping: 20 } },
+const languageNameMap: { [key: string]: string } = {
+  ar: 'Arabic',
+  en: 'English',
+  fr: 'French',
+  es: 'Spanish',
+  de: 'German',
+  // Add more mappings as needed
 };
 
-const tableRowVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.03, duration: 0.2, ease: 'easeInOut' },
-  }),
-};
+const LIST_COLORS = ["#4F46E5", "#7C3AED", "#DB2777", "#F59E0B", "#10B981"];
 
-// --- Shared Components ---
-const MetaAdLibraryLink: React.FC<{ vendor: string; t: any }> = ({ vendor, t }) => {
-  const url = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&q=${encodeURIComponent(vendor)}&search_type=keyword_unordered`;
-  return (
-    <a href={url} target="_blank" rel="noopener noreferrer" title={t.searchInMeta} className="inline-flex items-center justify-center p-2.5 rounded-lg bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 transition-all">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/2021_Facebook_icon.svg/2048px-2021_Facebook_icon.svg.png" alt="Meta AdLibrary" className="w-5 h-5" />
-    </a>
-  );
-};
-
-const ListItem: React.FC<{ children: React.ReactNode; index: number }> = ({ children, index }) => (
-  <motion.div
-    custom={index}
-    initial="hidden"
-    animate="visible"
-    variants={itemVariants}
-    transition={{ delay: index * 0.03 }}
-    className="p-5 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
-  >
-    {children}
-  </motion.div>
-);
-
-// --- Store Table ---
-interface StoreTableProps {
-  data: StoreRow[];
-  t: any;
-  onNavigateWithFilter: (f: { store: string }) => void;
-  totalProductsSum: number;
-}
-
-const PositiveChangeCell: React.FC<{ value: number }> = ({ value }) => {
-    // Safety check for undefined or null value
-    if (value === undefined || value === null) {
-        return <span className="font-bold text-sm text-gray-400 dark:text-gray-500">-</span>;
-    }
+const ListItem = ({ item, t, onNavigate, index, total, type }: any) => {
+    const percentage = total > 0 ? (item.count / total * 100).toFixed(1) : 0;
     return (
-        <span className={`font-bold text-sm ${value > 0 ? 'text-teal-500' : 'text-gray-400 dark:text-gray-500'}`}>{value > 0 ? `+${value}` : '-'}</span>
+        <div className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
+            <div className="flex items-center gap-4 flex-grow min-w-0">
+                <span className="text-gray-400 dark:text-gray-500 font-semibold text-sm w-5 text-right">{index + 1}.</span>
+                <div className="flex-grow min-w-0">
+                  {type === 'language' ? (
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-gray-800 dark:text-white truncate cursor-pointer hover:underline" onClick={() => onNavigate({ language: item.code })}>{languageNameMap[item.code] || item.code}</span>
+                        <span className="text-xs text-gray-400">({item.code})</span>
+                      </div>
+                  ) : (
+                    <span className="font-bold text-gray-800 dark:text-white truncate cursor-pointer hover:underline" onClick={() => onNavigate({ name: item.text })}>{item.text}</span>
+                  )}
+                </div>
+            </div>
+            <div className="flex items-center gap-3 ml-4">
+                <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                   <div className="h-full rounded-full" style={{ width: `${percentage}%`, backgroundColor: LIST_COLORS[index % LIST_COLORS.length] }}></div>
+                </div>
+                <span className="font-mono text-xs text-gray-500 dark:text-gray-400 w-12 text-right">{item.count}</span>
+            </div>
+        </div>
     );
 };
 
-const PercentageCell: React.FC<{ value: number }> = ({ value }) => {
-  // Safety check for undefined or null value
-  if (value === undefined || value === null) {
-      return <span className="font-bold text-sm text-gray-400 dark:text-gray-500">0.0%</span>;
-  }
-  return (
-    <span className={`font-bold text-sm ${value > 10 ? 'text-green-500' : value > 0 ? 'text-yellow-500' : 'text-gray-400 dark:text-gray-500'}`}>
-      {value.toFixed(1)}%
-    </span>
-  );
+const StoreItem = ({ item, t, onNavigate, index, total, type }: any) => {
+    const percentage = total > 0 ? (item.totalProducts / total * 100).toFixed(1) : 0;
+
+    return (
+        <tr className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 text-sm">
+            <td className="p-4 text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">{index + 1}.</td>
+            <td className="p-4 font-bold text-gray-800 dark:text-white whitespace-nowrap">
+                <span className="cursor-pointer hover:underline" onClick={() => onNavigate({ store: item.vendor })}>{item.vendor}</span>
+                {item.storeUrl && (
+                   <a href={item.storeUrl} target="_blank" rel="noopener noreferrer" className="ml-2 text-blue-500 hover:text-blue-600 transition-colors">
+                      <ExternalLink size={14} />
+                   </a>
+                )}
+            </td>
+            <td className="p-4 text-gray-600 dark:text-gray-300 font-mono whitespace-nowrap">{item.totalProducts}</td>
+            <td className="p-4 text-gray-600 dark:text-gray-300 font-mono whitespace-nowrap">{item.newProducts30d}</td>
+            <td className="p-4 text-gray-600 dark:text-gray-300 font-mono whitespace-nowrap">{item.avgDailyProducts}</td>
+            <td className="p-4 w-full">
+                 <div className="w-full h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                   <div className="h-full rounded-full" style={{ width: `${percentage}%`, backgroundColor: LIST_COLORS[index % LIST_COLORS.length] }}></div>
+                </div>
+            </td>
+             <td className="p-4 text-gray-600 dark:text-gray-300 font-mono whitespace-nowrap text-right">{percentage}%</td>
+            <td className="p-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">{item.firstProductAdded}</td>
+            <td className="p-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">{item.lastProductAdded}</td>
+        </tr>
+    );
 };
 
-const ProgressBarCell: React.FC<{ value: number; colorClass: string }> = ({ value, colorClass }) => {
-  // Safety check to ensure value is a number
-  const safeValue = typeof value === 'number' ? value : 0;
-  
-  return (
-    <div className="w-full min-w-[100px]">
-      <div className="flex justify-between mb-1">
-        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{safeValue.toFixed(1)}%</span>
-      </div>
-      <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-        <div className={`h-2 rounded-full ${colorClass}`} style={{ width: `${Math.min(safeValue, 100)}%` }}></div>
-      </div>
-    </div>
-  );
-};
-
-
-export const StoreTable: React.FC<StoreTableProps> = ({ data, t, onNavigateWithFilter, totalProductsSum }) => {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const { storeColumnsVisibility } = useDashboardStore();
-
-  const columns = React.useMemo<ColumnDef<StoreRow>[]>(() => [
-    {
-      accessorKey: 'vendor',
-      header: t.storeName,
-      cell: ({ row }) => (
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-300 font-bold text-sm">{row.original.vendor ? row.original.vendor.substring(0, 2).toUpperCase() : '??'}</div>
-          <span onClick={() => onNavigateWithFilter({ store: row.original.vendor })} className="cursor-pointer font-bold text-gray-800 dark:text-gray-100 hover:text-indigo-500 transition-colors truncate max-w-[150px]">{row.original.vendor || 'Unknown Vendor'}</span>
-        </div>
-      ),
-    },
-    ...(storeColumnsVisibility.totalProducts ? [{
-      accessorKey: 'totalProducts',
-      header: t.totalProducts,
-      cell: ({ row }) => (
-        <div>
-          <span className="text-sm font-bold text-gray-800 dark:text-gray-100">{row.original.totalProducts}</span>
-          <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-700 rounded-full mt-1">
-            <div className="h-full bg-gradient-to-r from-teal-500 to-indigo-500 rounded-full" style={{ width: `${totalProductsSum > 0 ? (row.original.totalProducts / totalProductsSum) * 100 : 0}%` }}></div>
-          </div>
-        </div>
-      ),
-    }] : []),
-    ...(storeColumnsVisibility.newProducts30d ? [{ accessorKey: 'newProducts30d', header: t.dashboard_newProducts30d_store, cell: ({ row }) => <PositiveChangeCell value={row.original.newProducts30d} /> }] : []),
-    ...(storeColumnsVisibility.newProducts60d ? [{ accessorKey: 'newProducts60d', header: t.dashboard_newProducts60d_store, cell: ({ row }) => <PositiveChangeCell value={row.original.newProducts60d} /> }] : []),
-    ...(storeColumnsVisibility.newProducts90d ? [{ accessorKey: 'newProducts90d', header: t.dashboard_newProducts90d_store, cell: ({ row }) => <PositiveChangeCell value={row.original.newProducts90d} /> }] : []),
-    ...(storeColumnsVisibility.newProducts180d ? [{ accessorKey: 'newProducts180d', header: t.dashboard_newProducts180d_store, cell: ({ row }) => <PositiveChangeCell value={row.original.newProducts180d} /> }] : []),
-    ...(storeColumnsVisibility.newProducts30dPercentage ? [{ accessorKey: 'newProducts30dPercentage', header: t.dashboard_newProducts30d_percentage_store, cell: ({ row }) => <PercentageCell value={row.original.newProducts30dPercentage} /> }] : []),
-    ...(storeColumnsVisibility.newProducts60dPercentage ? [{ accessorKey: 'newProducts60dPercentage', header: t.dashboard_newProducts60d_percentage_store, cell: ({ row }) => <PercentageCell value={row.original.newProducts60dPercentage} /> }] : []),
-    ...(storeColumnsVisibility.newProducts90dPercentage ? [{ accessorKey: 'newProducts90dPercentage', header: t.dashboard_newProducts90d_percentage_store, cell: ({ row }) => <PercentageCell value={row.original.newProducts90dPercentage} /> }] : []),
-    ...(storeColumnsVisibility.newProducts180dPercentage ? [{ accessorKey: 'newProducts180dPercentage', header: t.dashboard_newProducts180d_percentage_store, cell: ({ row }) => <PercentageCell value={row.original.newProducts180dPercentage} /> }] : []),
-    
-    // New Activity Rate Columns
-    ...(storeColumnsVisibility.activityRate30d ? [{ 
-        accessorKey: 'activityRate30d', 
-        header: t.dashboard_activityRate30d, 
-        cell: ({ row }) => <ProgressBarCell value={row.original.activityRate30d} colorClass="bg-green-500" /> 
-    }] : []),
-    ...(storeColumnsVisibility.activityRate60d ? [{ 
-        accessorKey: 'activityRate60d', 
-        header: t.dashboard_activityRate60d, 
-        cell: ({ row }) => <ProgressBarCell value={row.original.activityRate60d} colorClass="bg-blue-500" /> 
-    }] : []),
-    ...(storeColumnsVisibility.activityRate90d ? [{ 
-        accessorKey: 'activityRate90d', 
-        header: t.dashboard_activityRate90d, 
-        cell: ({ row }) => <ProgressBarCell value={row.original.activityRate90d} colorClass="bg-orange-500" /> 
-    }] : []),
-    ...(storeColumnsVisibility.activityRate180d ? [{ 
-        accessorKey: 'activityRate180d', 
-        header: t.dashboard_activityRate180d, 
-        cell: ({ row }) => <ProgressBarCell value={row.original.activityRate180d} colorClass="bg-red-500" /> 
-    }] : []),
-
-    ...(storeColumnsVisibility.lastProductAdded ? [{
-      accessorKey: 'lastProductAdded',
-      header: t.dashboard_lastProductAdded,
-      cell: ({ row }) => <span className="text-sm font-medium text-gray-500 dark:text-gray-400 font-mono">{row.original.lastProductAdded}</span>,
-    }] : []),
-    ...(storeColumnsVisibility.firstProductAdded ? [{
-      accessorKey: 'firstProductAdded',
-      header: t.dashboard_firstProductAdded,
-      cell: ({ row }) => <span className="text-sm font-medium text-gray-500 dark:text-gray-400 font-mono">{row.original.firstProductAdded}</span>,
-    }] : []),
-    ...(storeColumnsVisibility.metaAdLibrary ? [{
-      id: 'metaAdLibrary',
-      header: () => <div className="text-center">{t.searchInMeta}</div>,
-      cell: ({ row }) => (<div className="flex justify-center items-center"><MetaAdLibraryLink vendor={row.original.vendor} t={t} /></div>),
-    }] : []),
-  ], [t, onNavigateWithFilter, storeColumnsVisibility, totalProductsSum]);
-
-  const table = useReactTable({ data, columns, state: { sorting }, onSortingChange: setSorting, getCoreRowModel: getCoreRowModel(), getSortedRowModel: getSortedRowModel() });
-
-  return (
+export const StoreTable = ({ data, t, onNavigateWithFilter, totalProductsSum }: any) => (
     <div className="overflow-x-auto">
-      <table className="w-full text-left rtl:text-right border-collapse">
-        <thead>
-          {table.getHeaderGroups().map(hg => (
-            <tr key={hg.id} className="border-b border-gray-100 dark:border-gray-700">
-              {hg.headers.map(h => (
-                <th key={h.id} className={`p-5 text-xs uppercase tracking-wider text-gray-400 dark:text-gray-500 font-bold ${h.column.getCanSort() ? 'cursor-pointer select-none' : ''}`} onClick={h.column.getToggleSortingHandler()}>
-                  <div className="flex items-center gap-2">
-                    {flexRender(h.column.columnDef.header, h.getContext())}
-                    {{ asc: <ChevronDown size={14} className="rotate-180" />, desc: <ChevronDown size={14} /> }[h.column.getIsSorted() as string]}
-                  </div>
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          <AnimatePresence>
-            {table.getRowModel().rows.map((row, i) => (
-              <motion.tr
-                custom={i}
-                variants={tableRowVariants}
-                initial="hidden"
-                animate="visible"
-                key={row.id}
-                className="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-              >
-                {row.getVisibleCells().map(cell => (
-                  <td key={cell.id} className="p-5 align-middle">{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+        <table className="w-full text-left">
+            <thead>
+                <tr className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-900/50">
+                    <th className="p-4 font-semibold">#</th>
+                    <th className="p-4 font-semibold">{t.store || 'Store'}</th>
+                    <th className="p-4 font-semibold">{t.dashboard_totalProducts || 'Total Products'}</th>
+                    <th className="p-4 font-semibold">{t.dashboard_newProducts30d || 'New in 30d'}</th>
+                    <th className="p-4 font-semibold">{t.avg_daily_products || 'Avg. Daily'}</th>
+                    <th className="p-4 font-semibold w-1/3">{t.product_share || 'Product Share'}</th>
+                    <th className="p-4 font-semibold"></th>
+                    <th className="p-4 font-semibold">{t.first_product_added || 'First Added'}</th>
+                    <th className="p-4 font-semibold">{t.last_product_added || 'Last Added'}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {data.map((item: any, i: number) => (
+                    <StoreItem key={item.vendor} item={item} t={t} onNavigate={onNavigateWithFilter} index={i} total={totalProductsSum} type="store" />
                 ))}
-              </motion.tr>
-            ))}
-          </AnimatePresence>
-        </tbody>
-      </table>
+            </tbody>
+        </table>
     </div>
-  );
+);
+
+export const KeywordList = ({ data, t, onNavigateWithFilter }: any) => {
+    const totalCount = data.reduce((sum: number, item: any) => sum + item.value, 0);
+    return (
+        <div>
+            {data.map((item: any, i: number) => (
+                <ListItem key={item.text} item={{ text: item.text, count: item.value }} t={t} onNavigate={onNavigateWithFilter} index={i} total={totalCount} type="keyword" />
+            ))}
+        </div>
+    );
 };
 
-// --- Keyword List ---
-interface KeywordListProps {
-  data: KeywordItem[];
-  t: any;
-  onNavigateWithFilter: (f: { name: string }) => void;
-}
-
-export const KeywordList: React.FC<KeywordListProps> = ({ data, t, onNavigateWithFilter }) => (
-  <div className="divide-y divide-gray-100 dark:divide-gray-700">
-    {data.map(({ text, value }, index) => (
-      <ListItem key={text} index={index}>
-        <div className="flex items-center gap-4">
-          <span className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold ${index < 3 ? 'bg-amber-400/20 text-amber-500' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>#{index + 1}</span>
-          <span onClick={() => onNavigateWithFilter({ name: text })} className="font-bold text-gray-800 dark:text-gray-100 cursor-pointer hover:text-indigo-500 transition-colors text-lg">{text}</span>
+export const LanguageList = ({ data, t, onNavigateWithFilter }: any) => {
+    const totalCount = data.reduce((sum: number, item: any) => sum + item.count, 0);
+    return (
+        <div>
+            {data.map((item: any, i: number) => (
+                 <ListItem key={item.code} item={item} t={t} onNavigate={onNavigateWithFilter} index={i} total={totalCount} type="language" />
+            ))}
         </div>
-        <span className="font-mono text-sm font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600">{value}</span>
-      </ListItem>
-    ))}
-  </div>
-);
-
-// --- Language List ---
-interface LanguageListProps {
-  data: LanguageItem[];
-  t: any;
-  onNavigateWithFilter: (f: { language: string }) => void;
-}
-
-export const LanguageList: React.FC<LanguageListProps> = ({ data, t, onNavigateWithFilter }) => (
-  <div className="divide-y divide-gray-100 dark:divide-gray-700">
-    {data.map(({ code, count }, index) => (
-      <ListItem key={code} index={index}>
-        <div className="flex items-center gap-4">
-          <span className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold ${index < 3 ? 'bg-rose-400/20 text-rose-500' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>#{index + 1}</span>
-          <span onClick={() => onNavigateWithFilter({ language: code })} className="font-bold text-gray-800 dark:text-gray-100 cursor-pointer hover:text-indigo-500 transition-colors text-lg uppercase">{t[code] || code}</span>
-        </div>
-        <span className="font-mono text-sm font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600">{count}</span>
-      </ListItem>
-    ))}
-  </div>
-);
+    );
+};

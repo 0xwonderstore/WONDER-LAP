@@ -6,13 +6,11 @@ import { instagramLanguageMapping } from '../data/instagramLanguageMapping';
 export const useDashboardData = (products: Product[], posts: InstagramPost[], fbPosts: FacebookPost[] = []) => {
   return useMemo(() => {
     const now = new Date();
-    // 180 days for broader trend analysis
     const trendStart = subDays(now, 180);
     const thirtyDaysAgo = subDays(now, 30);
     const sixtyDaysAgo = subDays(now, 60); 
     const dateInterval = eachDayOfInterval({ start: trendStart, end: now });
 
-    // --- 0. Optimization: Deduplicate & Pre-parse ---
     const uniquePostsMap = new Map<string, InstagramPost & { parsedDate?: Date }>();
     posts.forEach(post => {
         if (post.permalink && !uniquePostsMap.has(post.permalink)) {
@@ -22,7 +20,6 @@ export const useDashboardData = (products: Product[], posts: InstagramPost[], fb
     });
     const uniquePosts = Array.from(uniquePostsMap.values());
 
-    // Deduplicate Facebook Posts
     const uniqueFbPostsMap = new Map<string, FacebookPost & { parsedDate?: Date }>();
     fbPosts.forEach(post => {
         if (post.permalink && !uniqueFbPostsMap.has(post.permalink)) {
@@ -32,17 +29,12 @@ export const useDashboardData = (products: Product[], posts: InstagramPost[], fb
     });
     const uniqueFbPosts = Array.from(uniqueFbPostsMap.values());
 
-
-    // --- 1. General KPI Data ---
     const uniqueStores = new Set(products.map(p => p.vendor).filter(Boolean)).size;
     
-    // Interactions (Instagram Only for now in Main KPI as requested context, or combined if desired later)
-    // Keeping "Total Interactions" for Instagram context based on previous steps, but we can add separate logic.
     const totalLikes = uniquePosts.reduce((sum, p) => sum + (p.likes || 0), 0);
     const totalComments = uniquePosts.reduce((sum, p) => sum + (p.comments || 0), 0);
     const totalInteractions = totalLikes + totalComments;
     
-    // Calculate Current vs Previous Period for Growth
     const newProducts30d = products.reduce((count, p) => {
         if (p.created_at && parseISO(p.created_at) >= thirtyDaysAgo) return count + 1;
         return count;
@@ -66,7 +58,6 @@ export const useDashboardData = (products: Product[], posts: InstagramPost[], fb
         return count;
     }, 0);
 
-    // --- 2. Chart Data (Time Series) - EXCLUDING Facebook ---
     const chartMap = new Map<string, { products: number; posts: number }>();
     dateInterval.forEach(date => {
         chartMap.set(format(date, 'yyyy-MM-dd'), { products: 0, posts: 0 });
@@ -92,7 +83,6 @@ export const useDashboardData = (products: Product[], posts: InstagramPost[], fb
         posts: counts.posts
     }));
 
-    // --- 3. Instagram Accounts Analysis ---
     const instagramAccountsMap = new Map<string, any>();
     uniquePosts.forEach(post => {
         if (!instagramAccountsMap.has(post.username)) {
@@ -126,7 +116,6 @@ export const useDashboardData = (products: Product[], posts: InstagramPost[], fb
 
     const visibleInstagramAccounts = allInstagramAccounts;
 
-    // --- 3.5 Facebook Pages Analysis (NEW) ---
     const facebookPagesMap = new Map<string, any>();
     uniqueFbPosts.forEach(post => {
         if (!facebookPagesMap.has(post.username)) {
@@ -159,15 +148,13 @@ export const useDashboardData = (products: Product[], posts: InstagramPost[], fb
             avgShares: page.postsCount > 0 ? Math.round(page.totalShares / page.postsCount) : 0,
             avgInteraction: page.postsCount > 0 ? Math.round(totalInteractions / page.postsCount) : 0
         };
-    }).sort((a, b) => b.postsCount - a.postsCount); // Sort by activity volume
+    }).sort((a, b) => b.postsCount - a.postsCount);
 
-
-    // --- 4. Store Analysis ---
     const storesMap = new Map<string, any>();
     products.forEach(product => {
         const vendor = product.vendor || 'Unknown';
         if (!storesMap.has(vendor)) {
-            storesMap.set(vendor, { vendor, totalProducts: 0, timestamps: [], newProducts30d: 0 });
+            storesMap.set(vendor, { vendor, totalProducts: 0, timestamps: [], newProducts30d: 0, storeUrl: '' });
         }
         const store = storesMap.get(vendor);
         store.totalProducts += 1;
@@ -175,6 +162,12 @@ export const useDashboardData = (products: Product[], posts: InstagramPost[], fb
             const pDate = parseISO(product.created_at);
             store.timestamps.push(pDate);
             if (pDate >= thirtyDaysAgo) store.newProducts30d += 1;
+        }
+        if (!store.storeUrl && product.url) {
+           try {
+             const urlObject = new URL(product.url);
+             store.storeUrl = `${urlObject.protocol}//${urlObject.hostname}`;
+           } catch (e) { /* Invalid URL, ignore */ }
         }
     });
 
@@ -189,6 +182,7 @@ export const useDashboardData = (products: Product[], posts: InstagramPost[], fb
 
          return {
              vendor: store.vendor,
+             storeUrl: store.storeUrl,
              totalProducts: total,
              newProducts30d: store.newProducts30d,
              newProducts30dPercentage: calcPercent(store.newProducts30d),
@@ -199,7 +193,6 @@ export const useDashboardData = (products: Product[], posts: InstagramPost[], fb
          };
     }).sort((a, b) => b.totalProducts - a.totalProducts);
 
-    // --- 5. Languages ---
     const languagesStats: Record<string, number> = {};
     products.forEach(p => { if (p.language) languagesStats[p.language] = (languagesStats[p.language] || 0) + 1; });
     const distinctLanguages = new Set(Object.keys(languagesStats));
@@ -210,7 +203,6 @@ export const useDashboardData = (products: Product[], posts: InstagramPost[], fb
     const totalLanguages = distinctLanguages.size;
     const topLanguages = Object.entries(languagesStats).map(([code, count]) => ({ code, count })).sort((a, b) => b.count - a.count).slice(0, 10);
 
-    // --- 6. Keywords ---
     const stopWords = new Set(['the', 'and', 'for', 'with', 'new', 'free', 'from', 'size', 'color', 'black', 'white', 'blue', 'red', 'collection', 'style', 'fashion', 'men', 'women', 'kids']);
     const keywordMap = new Map<string, number>();
     products.forEach(p => {
@@ -239,7 +231,7 @@ export const useDashboardData = (products: Product[], posts: InstagramPost[], fb
         chartData,
         visibleInstagramAccounts,
         allInstagramAccounts,
-        allFacebookPages, // Export this
+        allFacebookPages,
         topStores,
         topLanguages,
         topKeywords
