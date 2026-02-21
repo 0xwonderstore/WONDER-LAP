@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Disclosure, Transition } from '@headlessui/react';
 import { 
   LayoutGrid, 
@@ -14,10 +14,9 @@ import {
   Trash2,
   CheckCircle2
 } from 'lucide-react';
-import Select from './Select';
-import MultiSelect, { ColorVariant } from './MultiSelect';
+import MultiSelect from './MultiSelect';
 import { DateRange } from 'react-day-picker';
-import DateRangePicker from './DateRangePicker'; // Default import
+import DateRangePicker from './DateRangePicker';
 import { format } from 'date-fns';
 
 interface FilterComponentProps {
@@ -43,81 +42,33 @@ interface FilterComponentProps {
 const FilterComponent: React.FC<FilterComponentProps> = ({
   t, stores, languages, languageCounts, filters, date, setDate, onFilterChange, onResetFilters, viewMode, onViewModeChange, productsPerPage, onProductsPerPageChange
 }) => {
-  // Typewriter Effect State
-  const [displayText, setDisplayText] = useState('');
-  const [index, setIndex] = useState(0);
-  const [subIndex, setSubIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [blink, setBlink] = useState(true);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
-
-  const placeholders = [
-    t.searchPlaceholder || "Search products...",
-    "iPhone 15 Pro",
-    "Nike Air Max",
-    "PlayStation 5",
-    "Samsung Galaxy",
-    "MacBook Air",
-    "Gaming Laptop",
-    "Wireless Headphones"
-  ];
-
-  // Blinking cursor effect
-  useEffect(() => {
-    const timeout2 = setTimeout(() => {
-      setBlink((prev) => !prev);
-    }, 500);
-    return () => clearTimeout(timeout2);
-  }, [blink]);
-
-  // Typewriter logic
-  useEffect(() => {
-    if (index === placeholders.length) {
-        setIndex(0);
-        return;
-    }
-
-    if (subIndex === placeholders[index].length + 1 && !isDeleting) {
-      const timeout = setTimeout(() => {
-        setIsDeleting(true);
-      }, 2000); 
-      return () => clearTimeout(timeout);
-    }
-
-    if (subIndex === 0 && isDeleting) {
-      setIsDeleting(false);
-      setIndex((prev) => (prev + 1) % placeholders.length);
-      return;
-    }
-
-    const timeout = setTimeout(() => {
-      setSubIndex((prev) => prev + (isDeleting ? -1 : 1));
-    }, isDeleting ? 75 : 150);
-
-    return () => clearTimeout(timeout);
-  }, [subIndex, index, isDeleting, placeholders]);
-
-  useEffect(() => {
-      setDisplayText(placeholders[index].substring(0, subIndex));
-  }, [subIndex, index, placeholders]);
-
   
-  const isFilterActive = filters.name !== '' || filters.store.length > 0 || filters.language.length > 0 || (date?.from !== undefined);
+  // Keywords are derived directly from the filter string
+  const keywords = filters.name.split(/[\s,]+/).map(kw => kw.trim()).filter(Boolean);
 
-  const perPageOptions = [24, 50, 100, 200];
+  const handleRemoveKeyword = (keywordToRemove: string) => {
+    const newKeywords = keywords.filter(kw => kw !== keywordToRemove);
+    onFilterChange('name', newKeywords.join(' '));
+  };
+
+  const isFilterActive = keywords.length > 0 || filters.store.length > 0 || filters.language.length > 0 || (date?.from !== undefined);
+
+  const perPageOptions = [24, 52, 100, 200];
   const storeOptions = stores.map(s => ({ value: s, label: s }));
   const languageOptions = languages.map(l => ({ value: l, label: `${l.toUpperCase()} (${languageCounts[l] || 0})` }));
 
-  // Helper to render active filter badges
   const renderActiveFilterBadges = () => {
     const badges = [];
-    if (filters.name) {
-      badges.push(
-        <span key="search" className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-blue-500 text-white animate-scale-in shadow-md cursor-default">
-          "{filters.name}"
-          <button onClick={(e) => { e.stopPropagation(); onFilterChange('name', ''); }} className="ml-2 p-0.5 rounded-full hover:bg-white/20 transition-colors"><X className="w-3.5 h-3.5" /></button>
-        </span>
-      );
+    if (keywords.length > 0) {
+        keywords.forEach(keyword => {
+        badges.push(
+          <span key={`search-${keyword}`} className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-blue-500 text-white animate-scale-in shadow-md cursor-default">
+            "{keyword}"
+            <button onClick={(e) => { e.stopPropagation(); handleRemoveKeyword(keyword); }} className="ml-2 p-0.5 rounded-full hover:bg-white/20 transition-colors"><X className="w-3.5 h-3.5" /></button>
+          </span>
+        );
+      });
     }
     if (filters.store.length > 0) {
       badges.push(
@@ -152,7 +103,6 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
         {({ open }) => (
           <div className={`bg-white dark:bg-gray-800 rounded-[2rem] shadow-xl shadow-gray-200/50 dark:shadow-black/20 border border-gray-100 dark:border-gray-700 transition-all duration-500 ease-in-out ${open ? 'ring-1 ring-brand-primary/10' : ''} ${!open ? 'overflow-hidden' : ''}`}>
             
-            {/* Header */}
             <Disclosure.Button className="w-full px-8 py-6 flex justify-between items-center bg-white dark:bg-gray-800 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-all duration-300 outline-none group z-10 relative">
               <div className="flex items-center gap-5">
                  <div className={`p-3.5 rounded-2xl transition-all duration-500 ${open ? 'bg-gradient-to-tr from-brand-primary to-purple-600 text-white shadow-lg shadow-brand-primary/30 rotate-3 scale-110' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 group-hover:bg-gray-200 dark:group-hover:bg-gray-600'}`}>
@@ -179,7 +129,6 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
               </div>
             </Disclosure.Button>
 
-            {/* Panel Content */}
             <Transition
               enter="transition duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
               enterFrom="transform scale-95 opacity-0 max-h-0"
@@ -189,14 +138,11 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
               leaveTo="transform scale-95 opacity-0 max-h-0"
             >
               <Disclosure.Panel className="px-8 pb-10 pt-2 relative overflow-visible">
-                {/* Decorative Line */}
                 <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700 to-transparent opacity-50" />
                 
-                {/* Filters Grid - Completely rebuilt for visual consistency */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 mt-6 relative z-20">
                     
-                    {/* Search - Blue Variant */}
-                    <div className="h-[72px] relative group z-40">
+                    <div className="lg:col-span-2 h-[72px] relative group z-40">
                          <div className={`relative w-full h-full bg-white dark:bg-gray-800 border rounded-2xl px-4 py-3 flex items-center justify-between transition-all duration-300
                              ${isSearchFocused 
                                 ? 'ring-4 ring-blue-500/20 border-blue-500 shadow-lg scale-[1.02]' 
@@ -208,7 +154,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                                     <Search className={`w-4 h-4 transition-colors duration-300 ${isSearchFocused ? 'text-blue-500' : 'text-gray-500 dark:text-gray-400'}`} />
                                 </div>
                                 <div className="flex flex-col flex-1">
-                                     {filters.name && (
+                                     {keywords.length > 0 && (
                                          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-0.5 animate-fade-in">
                                             {t.search}
                                          </span>
@@ -219,14 +165,9 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                                         onFocus={() => setIsSearchFocused(true)}
                                         onBlur={() => setIsSearchFocused(false)}
                                         onChange={(e) => onFilterChange('name', e.target.value)}
-                                        placeholder={isSearchFocused ? "" : `${displayText}${blink && !filters.name ? '|' : ''}`}
+                                        placeholder={t.searchPlaceholder || 'Paste keywords here...'}
                                         className="w-full bg-transparent border-none p-0 focus:ring-0 text-sm font-medium text-gray-800 dark:text-gray-100 placeholder-gray-400"
                                      />
-                                     {!filters.name && !isSearchFocused && (
-                                         <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 absolute top-3.5 left-[3.25rem] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                                             {t.search}
-                                         </span>
-                                     )}
                                 </div>
                              </div>
                              {filters.name && (
@@ -238,20 +179,20 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                                 </button>
                              )}
                          </div>
-                         {/* Search Badge Pill */}
-                         {filters.name && (
+                         {keywords.length > 0 && (
                             <div className="absolute top-full left-0 mt-3 w-full z-10 pointer-events-none">
                                 <div className="flex flex-wrap gap-2 pointer-events-auto">
-                                    <div className="flex items-center gap-1.5 bg-blue-500 text-white shadow-lg shadow-gray-200 dark:shadow-black/20 rounded-lg pl-2.5 pr-1 py-1 text-[10px] font-bold uppercase tracking-wider animate-pop-in border border-white/20">
-                                        <span className="max-w-[150px] truncate">{filters.name}</span>
-                                        <button onClick={() => onFilterChange('name', '')} className="hover:bg-white/20 text-white rounded-md p-0.5 transition-colors"><X size={10} strokeWidth={3} /></button>
-                                    </div>
+                                    {keywords.map(keyword => (
+                                        <div key={keyword} className="flex items-center gap-1.5 bg-blue-500 text-white shadow-lg shadow-gray-200 dark:shadow-black/20 rounded-lg pl-2.5 pr-1 py-1 text-[10px] font-bold uppercase tracking-wider animate-pop-in border border-white/20">
+                                            <span className="max-w-[150px] truncate">{keyword}</span>
+                                            <button onClick={() => handleRemoveKeyword(keyword)} className="hover:bg-white/20 text-white rounded-md p-0.5 transition-colors"><X size={10} strokeWidth={3} /></button>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                          )}
                     </div>
 
-                    {/* Store - Purple Variant */}
                     <div className="h-[72px] relative z-30">
                         <MultiSelect 
                             options={storeOptions} 
@@ -263,7 +204,6 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                         />
                     </div>
 
-                    {/* Date - Green Variant */}
                     {setDate && (
                         <div className="h-[72px] relative z-30">
                             <DateRangePicker 
@@ -276,7 +216,6 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                         </div>
                     )}
 
-                    {/* Language - Orange Variant */}
                     <div className="h-[72px] relative z-20">
                         <MultiSelect 
                             options={languageOptions} 
@@ -289,7 +228,6 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                     </div>
                 </div>
 
-                {/* Active Filters Row */}
                 {isFilterActive && (
                     <div className="flex flex-wrap items-center gap-3 mb-10 p-5 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-inner relative z-10 animate-fade-in-up">
                         <span className="text-xs font-bold text-gray-500 dark:text-gray-400 mr-1 flex items-center gap-2 uppercase tracking-wider">
@@ -309,10 +247,8 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                     </div>
                 )}
 
-                {/* Footer Controls - Refined */}
                 <div className="flex flex-col sm:flex-row justify-between items-center pt-8 border-t border-gray-100 dark:border-gray-700 gap-8 relative z-10">
                     
-                    {/* View Density */}
                     <div className="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-start">
                          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
                             <Layers className="w-4 h-4" /> {t.show}:
@@ -334,7 +270,6 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
                         </div>
                     </div>
 
-                    {/* View Layout */}
                     <div className="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-end">
                          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:flex items-center gap-2">
                             View:

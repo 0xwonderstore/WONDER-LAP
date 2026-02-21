@@ -8,6 +8,8 @@ import ProductCard from './ProductCard';
 import { useLanguageStore } from '../stores/languageStore';
 import { translations } from '../translations';
 import { searchProducts, countDuplicates } from '../utils/productUtils';
+import { DateRange } from 'react-day-picker';
+import { isWithinInterval } from 'date-fns';
 
 interface ProductViewProps {
   products: Product[];
@@ -16,6 +18,7 @@ interface ProductViewProps {
   onClearInitialFilters: () => void;
   initialFilters: { store?: string; name?: string; language?: string } | null;
   onNavigateWithFilter: (filter: { store?: string; name?: string; language?: string }) => void;
+  date?: DateRange | undefined;
 }
 
 const ProductView: React.FC<ProductViewProps> = ({
@@ -24,7 +27,8 @@ const ProductView: React.FC<ProductViewProps> = ({
   stores,
   initialFilters,
   onClearInitialFilters,
-  onNavigateWithFilter
+  onNavigateWithFilter,
+  date
 }) => {
   const { language } = useLanguageStore();
   const t = translations[language];
@@ -68,19 +72,23 @@ const ProductView: React.FC<ProductViewProps> = ({
     if (filters.language) {
       filtered = filtered.filter(p => p.language === filters.language);
     }
+
+    if (date?.from) {
+      filtered = filtered.filter(p => {
+        const productDate = new Date(p.created_at);
+        if (date.to) {
+          return isWithinInterval(productDate, { start: date.from, end: date.to });
+        }
+        return isWithinInterval(productDate, { start: date.from, end: date.from });
+      });
+    }
     
     return filtered.sort((a, b) => {
         if (!a.created_at || !b.created_at) return 0;
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     });
-  }, [products, filters]);
+  }, [products, filters, date]);
 
-  // Calculate duplicates for the currently visible products or all processed products?
-  // Usually better to calculate for all processed products so the count is accurate across pages if needed,
-  // but if we want to show global duplicates, we should calculate on 'products' prop.
-  // Let's calculate on 'processedProducts' to show duplicates within the current filter context,
-  // OR calculate on 'products' to show duplicates across the whole dataset. 
-  // Global duplicates seems more useful.
   const duplicateCounts = useMemo(() => countDuplicates(products), [products]);
 
   const totalPages = Math.ceil(processedProducts.length / productsPerPage);

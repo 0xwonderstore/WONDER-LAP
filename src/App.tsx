@@ -109,7 +109,7 @@ const App: React.FC = () => {
 
   const [viewMode, setViewMode] = useLocalStorage<'grid' | 'table'>('viewMode', 'grid');
   const [productsPage, setProductsPage] = useLocalStorage('productsPage', 1);
-  const [productsPerPage, setProductsPerPage] = useLocalStorage('productsPerPage', 24);
+  const [productsPerPage, setProductsPerPage] = useLocalStorage('productsPerPage', 52);
   const [filters, setFilters] = useState({ name: '', store: [], language: [] });
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
@@ -141,7 +141,7 @@ const App: React.FC = () => {
     return counts;
   }, [uniqueProducts]);
 
-  const filteredProducts = useMemo(() => {
+ const filteredProducts = useMemo(() => {
     let products = uniqueProducts;
     if (!products || products.length === 0) return [];
 
@@ -165,18 +165,28 @@ const App: React.FC = () => {
     });
 
     if (filters.name) products = searchProducts(products, filters.name);
-    // @ts-ignore
-    if (filters.store && filters.store.length > 0) products = products.filter(p => filters.store.includes(p.vendor));
-    // @ts-ignore
-    if (filters.language && filters.language.length > 0) products = products.filter(p => filters.language.includes(p.language));
+
+    if (filters.store && Array.isArray(filters.store) && filters.store.length > 0) {
+        products = products.filter(p => p.vendor && filters.store.includes(p.vendor));
+    }
+
+    if (filters.language && Array.isArray(filters.language) && filters.language.length > 0) {
+        products = products.filter(p => p.language && filters.language.includes(p.language));
+    }
     
     if (dateRange?.from) {
         const fromTime = dateRange.from.getTime();
-        products = products.filter(p => new Date(p.created_at).getTime() >= fromTime);
+        products = products.filter(p => {
+            const productDate = new Date(p.created_at).getTime();
+            return productDate >= fromTime;
+        });
     }
     if (dateRange?.to) {
         const toTime = dateRange.to.getTime();
-        products = products.filter(p => new Date(p.created_at).getTime() <= toTime);
+        products = products.filter(p => {
+            const productDate = new Date(p.created_at).getTime();
+            return productDate <= toTime;
+        });
     }
     
     return [...products].sort((a, b) => {
@@ -184,7 +194,7 @@ const App: React.FC = () => {
         const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
         return dateB - dateA;
     });
-  }, [uniqueProducts, blacklistedKeywords, blockedStores, hiddenProducts, pendingProductIds, filters, dateRange]);
+}, [uniqueProducts, blacklistedKeywords, blockedStores, hiddenProducts, pendingProductIds, filters, dateRange]);
 
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
   const currentProducts = filteredProducts.slice((productsPage - 1) * productsPerPage, productsPage * productsPerPage);
@@ -236,7 +246,7 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (currentPage) {
-      case 'favorites': return <FavoritesPage allProducts={filteredProducts} instagramPosts={allInstagramPosts} facebookPosts={allFacebookPosts} onNavigateWithFilter={navigateToHomeWithFilter} />;
+      case 'favorites': return <FavoritesPage allProducts={uniqueProducts} instagramPosts={allInstagramPosts} facebookPosts={allFacebookPosts} onNavigateWithFilter={navigateToHomeWithFilter} />;
       case 'dashboard': return <DashboardPage products={filteredProducts} allProductsRaw={allProductsRaw} totalBeforeFilter={totalBeforeFilter} onNavigateWithFilter={navigateToHomeWithFilter} isLoading={isLoading} />;
       case 'blacklist': return <BlacklistPage />;
       case 'instagram': return <InstagramPage />;
@@ -247,7 +257,7 @@ const App: React.FC = () => {
             <div className="animate-fade-in-up relative z-10">
                  <div className="mb-8 flex justify-end">
                     <button 
-                        onClick={() => processPendingHides(currentProducts.map(p => p.url))} 
+                        onClick={() => processPendingHides(currentProducts.map(p => p.url))}
                         disabled={currentProducts.length === 0} 
                         className="uiverse-hide-button bg-red-600 hover:bg-red-700 !w-auto !px-6 !rounded-full group"
                     >
@@ -257,10 +267,14 @@ const App: React.FC = () => {
                         </span>
                     </button>
                  </div>
-                 <FilterComponent t={t} stores={uniqueStores} languages={availableLanguages} languageCounts={languageCounts} filters={filters} date={dateRange} setDate={setDateRange} onFilterChange={handleFilterChange} onResetFilters={handleResetFilters} viewMode={viewMode} onViewModeChange={setViewMode} productsPerPage={productsPerPage} onPostsPerPageChange={setProductsPerPage} />
-                {isLoading ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">{Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}</div> : currentProducts.length > 0 ? (
+                 <FilterComponent t={t} stores={uniqueStores} languages={availableLanguages} languageCounts={languageCounts} filters={filters} date={dateRange} setDate={setDateRange} onFilterChange={handleFilterChange} onResetFilters={handleResetFilters} viewMode={viewMode} onViewModeChange={setViewMode} productsPerPage={productsPerPage} onProductsPerPageChange={setProductsPerPage} />
+                {isLoading ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">{Array.from({ length: productsPerPage }).map((_, i) => <ProductCardSkeleton key={i} />)}</div> : currentProducts.length > 0 ? (
                     <>
-                        {viewMode === 'grid' ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">{currentProducts.map(p => <div key={p.url} className="animate-fade-in-up"><ProductCard product={p} t={t} onNavigateWithFilter={navigateToHomeWithFilter} /></div>)}</div> : <ProductTable products={currentProducts} t={t} onNavigateWithFilter={navigateToHomeWithFilter} />}
+                        {viewMode === 'grid' ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">{
+                                currentProducts.map(p => <div key={p.url} className="animate-fade-in-up"><ProductCard product={p} t={t} onNavigateWithFilter={navigateToHomeWithFilter} /></div>)
+                            }</div>
+                        ) : <ProductTable products={currentProducts} t={t} onNavigateWithFilter={navigateToHomeWithFilter} />}
                         <Pagination currentPage={productsPage} totalPages={totalPages} onPageChange={setProductsPage} totalItems={filteredProducts.length} itemsPerPage={productsPerPage} />
                     </>
                 ) : <EmptyState title={t.noResults} hint={t.noResultsHint} />}

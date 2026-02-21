@@ -161,9 +161,9 @@ const FacebookCard: React.FC<FacebookCardProps> = ({ post }) => {
                         </WhatsappShareButton>
                     </div>
 
-                    <label className="glass-btn-wrapper !w-9 !h-9 cursor-pointer !border-gray-200 dark:!border-gray-700">
+                    <label className="glass-btn-wrapper !w-9 !h-9 cursor-pointer !border-gray-200 dark:!border-gray-700 flex items-center justify-center">
                         <input type="checkbox" checked={favorite} onChange={handleFavoriteChange} className="hidden" />
-                        <Heart size={18} className={`${favorite ? 'fill-red-500 text-red-500 animate-pulse' : 'text-gray-400'}`} />
+                        <Heart size={18} className={`${favorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
                     </label>
                 </div>
             </div>

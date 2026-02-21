@@ -10,6 +10,11 @@ const SegmentedControl = <T extends string>({ tabs, activeTab, onTabChange }: Se
   const [indicatorStyle, setIndicatorStyle] = useState({});
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
 
+  // Guard against undefined or empty tabs array
+  if (!tabs || tabs.length === 0) {
+    return null;
+  }
+
   useEffect(() => {
     const activeTabIndex = tabs.findIndex(tab => tab.id === activeTab);
     const activeTabNode = tabsRef.current[activeTabIndex];

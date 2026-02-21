@@ -75,7 +75,7 @@ export const translations = {
 
     // FilterComponent.tsx
     searchByName: 'البحث بالاسم',
-    searchPlaceholder: 'ابحث عن المنتجات...',
+    searchPlaceholder: 'أضف كلمة مفتاحية واضغط Enter...',
     selectStore: 'اختر متجرًا',
     allStores: 'جميع المتاجر',
     show: 'عرض',
@@ -307,7 +307,7 @@ export const translations = {
 
     // FilterComponent.tsx
     searchByName: 'Search by name',
-    searchPlaceholder: 'Search products...',
+    searchPlaceholder: 'Add keyword and press Enter...',
     selectStore: 'Select store',
     allStores: 'All stores',
     show: 'Show',

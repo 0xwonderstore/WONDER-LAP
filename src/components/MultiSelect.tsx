@@ -76,7 +76,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({ options, selected = [], onCha
   const [searchTerm, setSearchTerm] = useState('');
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const styles = colorStyles[variant];
+  const styles = colorStyles[variant] || colorStyles.brand;
 
   // Close when clicking outside
   useEffect(() => {
@@ -135,14 +135,14 @@ const MultiSelect: React.FC<MultiSelectProps> = ({ options, selected = [], onCha
             </div>
             
             <div className="flex flex-col items-start overflow-hidden">
-                {selected.length > 0 && (
+                {(isOpen || selected.length > 0) && (
                      <span className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${styles.text}`}>
                         {label}
                      </span>
                 )}
                 
                 {selected.length === 0 ? (
-                    <span className="text-gray-500 dark:text-gray-400 text-sm font-medium truncate">{label}</span>
+                    <span className="text-gray-500 dark:text-gray-400 text-sm font-medium truncate">{isOpen ? '' : label}</span>
                 ) : (
                     <div className="flex flex-wrap gap-1.5 items-center">
                          <span className="text-sm font-bold text-gray-800 dark:text-gray-100 truncate">
