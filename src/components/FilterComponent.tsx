@@ -54,7 +54,7 @@ const FilterComponent: React.FC<FilterComponentProps> = ({
 
   const isFilterActive = keywords.length > 0 || filters.store.length > 0 || filters.language.length > 0 || (date?.from !== undefined);
 
-  const perPageOptions = [24, 52, 100, 200];
+  const perPageOptions = [24, 52, 100, 200, 500];
   const storeOptions = stores.map(s => ({ value: s, label: s }));
   const languageOptions = languages.map(l => ({ value: l, label: `${l.toUpperCase()} (${languageCounts[l] || 0})` }));
 

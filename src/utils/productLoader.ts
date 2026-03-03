@@ -85,6 +85,7 @@ export async function loadProducts(): Promise<LoadProductsResult> {
     // Advanced Deduplication
     const seenUrls = new Set<string>();
     const seenTitles = new Set<string>(); // Key: vendor + title (lowercased)
+    const seenImageUrls = new Set<string>();
     
     const uniqueProducts = allProducts.filter(product => {
         // Validity Check
@@ -92,18 +93,30 @@ export async function loadProducts(): Promise<LoadProductsResult> {
             return false;
         }
 
-        // 1. Check Normalized URL
+        // 1. Check for duplicate image URLs
+        const hasDuplicateImage = product.images.some(image => image.src && seenImageUrls.has(image.src));
+        if (hasDuplicateImage) {
+            return false;
+        }
+
+        // 2. Check Normalized URL
         if (seenUrls.has(product.url)) {
             return false; 
         }
 
-        // 2. Check Duplicate Title within same Store
+        // 3. Check Duplicate Title within same Store
         // Normalize title: trim and lowercase
         const titleKey = `${product.vendor}::${product.name.trim().toLowerCase()}`;
         if (seenTitles.has(titleKey)) {
             return false;
         }
-
+        
+        // Add to sets if unique
+        product.images.forEach(image => {
+            if (image.src) {
+                seenImageUrls.add(image.src);
+            }
+        });
         seenUrls.add(product.url);
         seenTitles.add(titleKey);
         
