@@ -39,21 +39,36 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({
 
   const perPageOptions = [24, 52, 100, 200];
 
-  // Categorize favorites
+  const productMap = useMemo(() => 
+    new Map(allProducts.map(p => [normalizeUrl(p.url), p])),
+  [allProducts]);
+  
+  const instagramMap = useMemo(() => 
+    new Map(instagramPosts.map(p => [normalizeUrl(p.permalink), p])),
+  [instagramPosts]);
+
+  const facebookMap = useMemo(() =>
+    new Map(facebookPosts.map(p => [normalizeUrl(p.permalink), p])),
+  [facebookPosts]);
+
   const categorizedFavorites = useMemo(() => {
-    const favSet = new Set(favoriteUrls);
-    
-    const products = allProducts.filter(p => favSet.has(normalizeUrl(p.url)))
+    const products = Array.from(favoriteUrls)
+        .map(url => productMap.get(url))
+        .filter((p): p is Product => p !== undefined)
         .map(p => ({ type: 'product' as const, data: p, date: new Date(p.created_at).getTime() }));
         
-    const instagram = instagramPosts.filter(p => favSet.has(normalizeUrl(p.permalink)))
+    const instagram = Array.from(favoriteUrls)
+        .map(url => instagramMap.get(url))
+        .filter((p): p is InstagramPost => p !== undefined)
         .map(p => ({ type: 'instagram' as const, data: p, date: new Date(p.timestamp).getTime() }));
         
-    const facebook = facebookPosts.filter(p => favSet.has(normalizeUrl(p.permalink)))
+    const facebook = Array.from(favoriteUrls)
+        .map(url => facebookMap.get(url))
+        .filter((p): p is FacebookPost => p !== undefined)
         .map(p => ({ type: 'facebook' as const, data: p, date: new Date(p.timestamp).getTime() }));
 
     return { products, instagram, facebook };
-  }, [allProducts, instagramPosts, facebookPosts, favoriteUrls]);
+  }, [favoriteUrls, productMap, instagramMap, facebookMap]);
 
   // Filter based on active tab
   const displayItems = useMemo(() => {
