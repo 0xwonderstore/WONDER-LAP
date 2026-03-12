@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import ProductCard from './ProductCard';
 import InstagramCard from './InstagramCard';
 import FacebookCard from './FacebookCard';
@@ -12,6 +12,7 @@ import { Heart, Trash2, ArrowUpDown, Download, Facebook, Instagram, Package, Sha
 import { motion, AnimatePresence } from 'framer-motion';
 import { normalizeUrl } from '../utils/urlUtils';
 import SegmentedControl from './SegmentedControl';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 type FavoriteTab = 'all' | 'products' | 'instagram' | 'facebook';
 
@@ -32,10 +33,10 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({
   const t = translations[language] as any;
   const { favoriteUrls, removeAllFavorites } = useFavoritesStore();
   
-  const [activeTab, setActiveTab] = useState<FavoriteTab>('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
-  const [itemsPerPage, setItemsPerPage] = useState(24);
+  const [activeTab, setActiveTab] = useLocalStorage<FavoriteTab>('favoritesPage_activeTab', 'all');
+  const [currentPage, setCurrentPage] = useLocalStorage('favoritesPage_currentPage', 1);
+  const [sortOrder, setSortOrder] = useLocalStorage<'newest' | 'oldest'>('favoritesPage_sortOrder', 'newest');
+  const [itemsPerPage, setItemsPerPage] = useLocalStorage('favoritesPage_itemsPerPage', 24);
 
   const perPageOptions = [24, 52, 100, 200];
 

@@ -54,6 +54,8 @@ const LoadingFallback = () => (
   </div>
 );
 
+const EMPTY_ARRAY: any[] = [];
+
 const App: React.FC = () => {
   const { t: translate } = useTranslation();
   const [darkMode, setDarkMode] = useLocalStorage('darkMode', false);
@@ -75,22 +77,22 @@ const App: React.FC = () => {
     gcTime: 1000 * 60 * 30,
   });
 
-  const { data: allInstagramPosts = [] } = useQuery<InstagramPost[]>({
+  const { data: allInstagramPosts } = useQuery<InstagramPost[]>({
     queryKey: ['instagramPosts'],
     queryFn: loadInstagramPosts,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
   });
 
-  const { data: allFacebookPosts = [] } = useQuery<FacebookPost[]>({
+  const { data: allFacebookPosts } = useQuery<FacebookPost[]>({
     queryKey: ['facebookPosts'],
     queryFn: loadFacebookPosts,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
   });
 
-  const uniqueProducts: Product[] = useMemo(() => productData?.uniqueProducts || [], [productData]);
-  const allProductsRaw: Product[] = useMemo(() => productData?.allProducts || [], [productData]);
+  const uniqueProducts: Product[] = useMemo(() => productData?.uniqueProducts || EMPTY_ARRAY, [productData]);
+  const allProductsRaw: Product[] = useMemo(() => productData?.allProducts || EMPTY_ARRAY, [productData]);
   const totalBeforeFilter = productData?.totalBeforeFilter || 0;
   const t = translations[language] as any;
 
@@ -218,12 +220,12 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (currentPage) {
-      case 'favorites': return <FavoritesPage allProducts={uniqueProducts} instagramPosts={allInstagramPosts} facebookPosts={allFacebookPosts} onNavigateWithFilter={navigateToHomeWithFilter} />;
+      case 'favorites': return <FavoritesPage allProducts={uniqueProducts} instagramPosts={allInstagramPosts || EMPTY_ARRAY} facebookPosts={allFacebookPosts || EMPTY_ARRAY} onNavigateWithFilter={navigateToHomeWithFilter} />;
       case 'dashboard': return <DashboardPage products={filteredProducts} allProductsRaw={allProductsRaw} totalBeforeFilter={totalBeforeFilter} onNavigateWithFilter={navigateToHomeWithFilter} isLoading={isLoading} />;
       case 'blacklist': return <BlacklistPage />;
       case 'instagram': return <InstagramPage />;
       case 'facebook': return <FacebookPage />;
-      case 'hidden': return <HiddenItemsPage products={uniqueProducts} instagramPosts={allInstagramPosts} />;
+      case 'hidden': return <HiddenItemsPage products={uniqueProducts} instagramPosts={allInstagramPosts || EMPTY_ARRAY} />;
       default: 
         return (
             <div className="animate-fade-in-up relative z-10">
